@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.mxerp</groupId>
+        <artifactId>mxerp</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <artifactId>mxerp-kernel</artifactId>
+    <name>mxerp-kernel</name>
+    <description>mxerp-kernel</description>
+
+    <dependencies>
+        <!-- Jakarta Persistence API 提供 JPA 标准注解，供 domain 层编译期使用。-->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+        <!-- Hibernate 专有注解（@SQLRestriction 等）-->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>

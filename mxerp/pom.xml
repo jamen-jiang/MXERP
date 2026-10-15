@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.mxerp</groupId>
+    <artifactId>mxerp</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>mxerp</name>
+    <description>mxerp</description>
+
+    <modules>
+        <module>start</module>
+        <module>mxerp-kernel</module>
+        <module>mxerp-basedata</module>
+        <module>mxerp-inventory</module>
+        <module>mxerp-production</module>
+        <module>mxerp-sales</module>
+        <module>mxerp-inventory/mxerp-inventory-domain</module>
+        <module>mxerp-inventory/mxerp-inventory-infrastructure</module>
+        <module>mxerp-inventory/mxerp-inventory-adapter</module>
+        <module>mxerp-inventory/mxerp-inventory-application</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jjwt.version>0.12.6</jjwt.version>
+        <lombok.version>1.18.36</lombok.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <swagger.version>2.2.55</swagger.version>
+        <axon.version>5.3.2</axon.version>
+        <mybatis.version>3.5.17</mybatis.version>
+        <knife4j.version>5.6.0</knife4j.version>
+        <jobrunr.version>9.0.1</jobrunr.version>
+        <poi.version>5.5.1</poi.version>
+        <yauaa.version>7.28.1</yauaa.version>
+        <redisson.version>4.7.0</redisson.version>
+        <commonsnet.version>3.13.0</commonsnet.version>
+        <querydsl.version>5.1.0</querydsl.version>
+    </properties>
+
+    <dependencies>
+        <!-- Lombok：简化 Java 代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Apache Commons Lang3：字符串、集合等工具类 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <!-- JSpecify：空安全注解（@NullMarked、@Nullable） -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
