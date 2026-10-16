@@ -23,10 +23,6 @@
         <module>mxerp-inventory</module>
         <module>mxerp-production</module>
         <module>mxerp-sales</module>
-        <module>mxerp-inventory/mxerp-inventory-domain</module>
-        <module>mxerp-inventory/mxerp-inventory-infrastructure</module>
-        <module>mxerp-inventory/mxerp-inventory-adapter</module>
-        <module>mxerp-inventory/mxerp-inventory-application</module>
     </modules>
 
     <properties>

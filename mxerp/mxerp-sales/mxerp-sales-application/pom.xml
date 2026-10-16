@@ -9,4 +9,23 @@
         <version>1.0.0</version>
     </parent>
     <artifactId>mxerp-sales-application</artifactId>
+
+    <dependencies>
+        <!-- Axon Framework：CQRS 命令与查询分发 -->
+        <dependency>
+            <groupId>io.axoniq.framework</groupId>
+            <artifactId>axoniq-spring-boot-starter</artifactId>
+            <version>${axon.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.axoniq.framework</groupId>
+                    <artifactId>axon-server-connector</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.axoniq</groupId>
+                    <artifactId>axonserver-connector-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
 </project>

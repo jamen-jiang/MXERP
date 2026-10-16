@@ -35,3 +35,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### WorkBuddy AI（本地元数据，不入库）###
+.workbuddy-ai/
