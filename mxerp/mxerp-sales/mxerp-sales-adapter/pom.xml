@@ -9,4 +9,25 @@
         <version>1.0.0</version>
     </parent>
     <artifactId>mxerp-sales-adapter</artifactId>
+
+    <dependencies>
+        <!-- 本上下文应用层：入站适配器（REST/定时任务等）调用应用层用例 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-sales-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 本上下文基础设施层：入站适配器可直接使用仓储实现与技术组件 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-sales-infrastructure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 共享适配器：Web MVC / AOP / Knife4j 等统一由此提供，各上下文无需重复声明 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-shared-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

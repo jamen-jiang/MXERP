@@ -11,21 +11,17 @@
     <artifactId>mxerp-production-application</artifactId>
 
     <dependencies>
-        <!-- Axon Framework：CQRS 命令与查询分发 -->
+        <!-- 本上下文领域层：聚合根、领域服务、领域事件等 -->
         <dependency>
-            <groupId>io.axoniq.framework</groupId>
-            <artifactId>axoniq-spring-boot-starter</artifactId>
-            <version>${axon.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.axoniq.framework</groupId>
-                    <artifactId>axon-server-connector</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.axoniq</groupId>
-                    <artifactId>axonserver-connector-java</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-production-domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 共享应用层：Spring / Swagger 注解 / MapStruct / POI / Axon 等统一由此提供，各上下文无需重复声明 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-shared-application</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -16,5 +16,11 @@
             <artifactId>mxerp-basedata-application</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 共享基础设施：JPA / Redis / POI / JobRunr 等技术组件统一由此提供，各上下文无需重复声明 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-shared-infrastructure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
