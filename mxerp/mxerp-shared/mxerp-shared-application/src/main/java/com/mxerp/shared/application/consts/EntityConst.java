@@ -25,4 +25,7 @@ public final class EntityConst {
 
   /** 用户 */
   public static final String USER = "user";
+
+  /** 公司 */
+  public static final String COMPANY = "company";
 }

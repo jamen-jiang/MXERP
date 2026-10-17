@@ -1,7 +1,8 @@
 package com.mxerp.shared.infrastructure.config.security;
 
-import com.mxerp.shared.infrastructure.security.filter.JwtAuthenticationFilter;
 import com.mxerp.shared.infrastructure.security.CompatiblePasswordEncoder;
+import com.mxerp.shared.infrastructure.security.filter.JwtAuthenticationFilter;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,10 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
-
-import java.util.Set;
 
 /** Spring Security 配置类（适配 Spring Boot 4 / Security 7） */
 @Slf4j
