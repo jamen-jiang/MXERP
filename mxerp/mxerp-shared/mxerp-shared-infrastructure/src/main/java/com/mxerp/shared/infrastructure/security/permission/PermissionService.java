@@ -2,6 +2,7 @@ package com.mxerp.shared.infrastructure.security.permission;
 
 import com.mxerp.shared.infrastructure.security.user.LoginUser;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class PermissionService {
    * @param permissions 权限字符串（可变参数）
    * @return true 表示拥有任意一个权限
    */
-  public boolean hasPermi(String... permissions) {
+  public boolean hasPermi(String @Nullable ... permissions) {
     if (permissions == null || permissions.length == 0) {
       return false;
     }
@@ -69,6 +70,7 @@ public class PermissionService {
    *
    * @return 登录用户（可空），未登录返回 null
    */
+  @Nullable
   private LoginUser getLoginUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null || !(authentication.getPrincipal() instanceof LoginUser loginUser)) {

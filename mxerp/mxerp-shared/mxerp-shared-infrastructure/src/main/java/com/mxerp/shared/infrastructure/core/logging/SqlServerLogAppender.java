@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 /**
  * 自定义 Logback Appender，异步将日志写入 SQL Server。
@@ -250,6 +251,7 @@ public class SqlServerLogAppender extends AppenderBase<ILoggingEvent> {
    * @param event 日志事件
    * @return 异常堆栈字符串，无异常返回 null
    */
+  @Nullable
   private String getExceptionString(ILoggingEvent event) {
     if (event.getThrowableProxy() == null) {
       return null;
@@ -263,6 +265,7 @@ public class SqlServerLogAppender extends AppenderBase<ILoggingEvent> {
    * @param event 日志事件
    * @return XML 字符串，无属性返回 null
    */
+  @Nullable
   private String getPropertiesXml(ILoggingEvent event) {
     Map<String, String> mdc = event.getMDCPropertyMap();
     if (mdc == null || mdc.isEmpty()) {
@@ -286,7 +289,7 @@ public class SqlServerLogAppender extends AppenderBase<ILoggingEvent> {
    * @param s 原始字符串
    * @return 转义后的字符串
    */
-  private static String escapeXml(String s) {
+  private static String escapeXml(@Nullable String s) {
     if (s == null) {
       return "";
     }

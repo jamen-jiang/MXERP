@@ -13,6 +13,7 @@ import com.mxerp.system.application.security.token.TokenIssuer;
 import com.mxerp.system.application.security.token.TokenPair;
 import java.util.UUID;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -189,6 +190,7 @@ public class JwtTokenIssuer implements TokenIssuer {
    * @return 登出结果，refresh token 无效时返回 null
    */
   @Override
+  @Nullable
   public SignOutResult revoke(@NonNull String refreshToken) {
     // 1. 校验刷新令牌；无效直接返回 null
     if (!jwtProvider.isValidToken(refreshToken)) {
@@ -228,6 +230,7 @@ public class JwtTokenIssuer implements TokenIssuer {
    *
    * @return 客户端 IP
    */
+  @Nullable
   private String getClientIp() {
     HttpContext httpContext = HttpContextHolder.getContext();
     if (httpContext == null) {

@@ -3,6 +3,7 @@ package com.mxerp.shared.infrastructure.security.token;
 import com.mxerp.shared.infrastructure.core.http.HttpContext;
 import com.mxerp.shared.infrastructure.core.http.HttpContextHolder;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -107,6 +108,7 @@ public class TokenService {
    * @param sessionId 会话标识
    * @return 刷新令牌，不存在返回 null
    */
+  @Nullable
   public String getRefreshToken(long userId, @NonNull String sessionId) {
     Object value = redisTemplate.opsForValue().get(refreshKey(userId, sessionId));
     return value == null ? null : value.toString();
@@ -162,7 +164,11 @@ public class TokenService {
    *     否则会话会在 access token 过期后消失，"踢人下线"将漏掉仅剩刷新令牌有效的会话
    */
   public void registerLogin(
-      long userId, String username, @NonNull String jti, String clientIp, long expireMillis) {
+      long userId,
+      String username,
+      @NonNull String jti,
+      @Nullable String clientIp,
+      long expireMillis) {
     // 1. 把 jti 加到用户的 token 集合
     String tokensKey = USER_TOKENS_PREFIX + userId;
     redisTemplate.opsForSet().add(tokensKey, jti);
@@ -347,6 +353,7 @@ public class TokenService {
    * @param userId 用户 ID
    * @return 元信息 Map，不存在返回 null
    */
+  @Nullable
   private Map<String, Object> loadUserMeta(String userId) {
     Map<Object, Object> raw = redisTemplate.opsForHash().entries(USER_META_PREFIX + userId);
     if (raw == null || raw.isEmpty()) {

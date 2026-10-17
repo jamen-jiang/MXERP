@@ -26,70 +26,69 @@ public interface RankJpa extends JpaRepository<Rank, Long>, JpaSpecificationExec
   List<Rank> findByParentId(long parentId);
 
   /**
-   * 判断同一父级下职级名称是否已存在（可排除指定Id）
+   * 查询指定职级及其所有子职级（包含自身）
    *
-   * @param name 职级名称
-   * @param parentId 父级Id（可空，null 表示父级为 null）
-   * @param id 排除的职级Id（可空）
-   * @return true 表示已存在
-   */
-  default boolean existsByNameAndParentIdExcludeId(
-      String name, @Nullable Long parentId, @Nullable Long id) {
-    Specification<Rank> spec =
-        (root, query, cb) -> {
-          List<Predicate> predicates = new ArrayList<>();
-          predicates.add(cb.equal(root.get("name"), name));
-          if (parentId == null) {
-            predicates.add(cb.isNull(root.get("parentId")));
-          } else {
-            predicates.add(cb.equal(root.get("parentId"), parentId));
-          }
-          if (id != null) {
-            predicates.add(cb.notEqual(root.get("id"), id));
-          }
-          return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    return exists(spec);
-  }
-
-  /**
-   * 查询指定职级及其所有子职级（含自身，用 Level 路径匹配）
-   *
-   * @param id 职级Id
-   * @return 职级及其子孙列表
+   * @param id 职级ID
+   * @return 指定职级及其所有子职级列表（包含自身）
    */
   default List<Rank> findWithChildren(long id) {
-    return findAll(buildDescendantsSpec(Set.of(id)));
+    Specification<Rank> spec =
+        (root, query, cb) ->
+            cb.or(
+                cb.equal(root.get("id"), id),
+                cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
+    return findAll(spec);
   }
 
   /**
-   * 按Id集合查职级（含子孙，用 Level 路径匹配）
+   * 按Id集合查职级（含子孙，Level 路径包含）
    *
    * @param ids 职级Id集合
-   * @return 职级列表，ids 为空时返回空列表
+   * @return 匹配的职级列表（包含指定Id本身及其子孙职级）；若 ids 为空则返回空列表
    */
   default List<Rank> findByIdsOrDescendants(Set<Long> ids) {
     if (ids.isEmpty()) {
       return List.of();
     }
-    return findAll(buildDescendantsSpec(ids));
+    Specification<Rank> spec =
+        (root, query, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+          predicates.add(root.get("id").in(ids));
+          Predicate[] levelPredicates =
+              ids.stream()
+                  .map(
+                      id ->
+                          cb.like(
+                              cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"))
+                  .toArray(Predicate[]::new);
+          predicates.add(cb.or(levelPredicates));
+          return cb.or(predicates.toArray(new Predicate[0]));
+        };
+    return findAll(spec);
   }
 
   /**
-   * 构造「自身或子孙」条件
+   * 判断同一父级下职级名称是否已存在（可排除自身）
    *
-   * @param ids 职级Id集合
-   * @return 查询条件
+   * @param name 职级名称
+   * @param parentId 父级Id（可空）
+   * @param id 排除的职级Id（可空）
+   * @return 是否存在
    */
-  private Specification<Rank> buildDescendantsSpec(Set<Long> ids) {
-    return (root, query, cb) -> {
-      List<Predicate> predicates = new ArrayList<>();
-      predicates.add(root.get("id").in(ids));
-      for (Long id : ids) {
-        predicates.add(
-            cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
-      }
-      return cb.or(predicates.toArray(new Predicate[0]));
-    };
+  default boolean existsByNameAndParentIdExcludeId(
+      String name, @Nullable Long parentId, @Nullable Long id) {
+    Specification<Rank> spec =
+        (root, query, cb) -> {
+          var predicate = cb.equal(root.get("name"), name);
+          predicate =
+              parentId == null
+                  ? cb.and(predicate, cb.isNull(root.get("parentId")))
+                  : cb.and(predicate, cb.equal(root.get("parentId"), parentId));
+          if (id != null) {
+            predicate = cb.and(predicate, cb.notEqual(root.get("id"), id));
+          }
+          return predicate;
+        };
+    return exists(spec);
   }
 }

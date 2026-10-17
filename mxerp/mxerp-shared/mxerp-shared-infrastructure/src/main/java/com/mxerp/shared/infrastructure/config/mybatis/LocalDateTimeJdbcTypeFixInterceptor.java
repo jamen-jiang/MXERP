@@ -67,6 +67,15 @@ public class LocalDateTimeJdbcTypeFixInterceptor implements Interceptor {
     return invocation.proceed();
   }
 
+  /**
+   * 递归拆解 MyBatis 参数对象上的 JDK 动态代理，拿到真实目标对象
+   *
+   * <p>MyBatis 传给拦截器的参数常常是 Mapper 接口的代理，直接读字段读不到值；这里通过
+   * {@code InvocationHandler.target} 逐层解包。解包失败时原样返回，保证拦截器不影响正常调用。
+   *
+   * @param target 原始参数对象
+   * @return 解包后的目标对象；无法解包时返回入参本身
+   */
   private Object unwrapProxy(Object target) {
     if (Proxy.isProxyClass(target.getClass())) {
       Object handler = Proxy.getInvocationHandler(target);

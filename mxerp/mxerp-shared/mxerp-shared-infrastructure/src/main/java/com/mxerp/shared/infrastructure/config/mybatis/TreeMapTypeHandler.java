@@ -11,6 +11,7 @@ import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
+import org.jspecify.annotations.Nullable;
 
 /** TreeMap 与 JSON 字符串互转的 TypeHandler（只读场景） */
 @MappedTypes(TreeMap.class)
@@ -80,7 +81,8 @@ public class TreeMapTypeHandler extends BaseTypeHandler<TreeMap<String, Object>>
    * @param json JSON 字符串
    * @return 属性值（可空），空字符串返回 null
    */
-  private TreeMap<String, Object> parse(String json) throws SQLException {
+  @Nullable
+  private TreeMap<String, Object> parse(@Nullable String json) throws SQLException {
     if (json == null || json.isBlank()) {
       return null;
     }

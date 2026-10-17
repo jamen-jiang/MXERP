@@ -1,5 +1,6 @@
 package com.mxerp.shared.infrastructure.security;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -32,7 +33,7 @@ public class CompatiblePasswordEncoder implements PasswordEncoder {
    * @return true 表示匹配
    */
   @Override
-  public boolean matches(CharSequence rawPassword, String encodedPassword) {
+  public boolean matches(CharSequence rawPassword, @Nullable String encodedPassword) {
     if (encodedPassword == null || encodedPassword.isEmpty()) {
       return false;
     }
@@ -50,7 +51,7 @@ public class CompatiblePasswordEncoder implements PasswordEncoder {
    * @param encodedPassword 数据库中存储的密码（可空）
    * @return true 表示明文
    */
-  public boolean isPlaintext(String encodedPassword) {
+  public boolean isPlaintext(@Nullable String encodedPassword) {
     return encodedPassword != null && !encodedPassword.isEmpty() && !isBCrypt(encodedPassword);
   }
 

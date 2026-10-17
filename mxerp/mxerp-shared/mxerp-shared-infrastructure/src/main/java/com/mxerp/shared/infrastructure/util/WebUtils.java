@@ -5,6 +5,7 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /** Web 工具：获取 IP、解析 UserAgent */
 public final class WebUtils {
@@ -42,7 +43,7 @@ public final class WebUtils {
    * @param request 请求对象
    * @return 客户端 IP，非 IPv4 时统一返回 127.0.0.1
    */
-  public static String getClientIp(HttpServletRequest request) {
+  public static String getClientIp(@Nullable HttpServletRequest request) {
     if (request == null) {
       return "";
     }
@@ -110,7 +111,8 @@ public final class WebUtils {
    * @param field UserAgentAnalyzer 的字段名
    * @return 解析结果，Unknown 或空 UA 时返回 null
    */
-  private static String resolve(HttpServletRequest request, String field) {
+  @Nullable
+  private static String resolve(@Nullable HttpServletRequest request, String field) {
     if (request == null) {
       return null;
     }

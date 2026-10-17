@@ -1,6 +1,7 @@
 package com.mxerp.system.application.security.token;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /** 令牌颁发端口 应用层通过此接口完成"登录 / 刷新令牌"，不关心底层是 JWT 还是别的实现 */
 public interface TokenIssuer {
@@ -30,5 +31,6 @@ public interface TokenIssuer {
    * @param refreshToken 刷新令牌
    * @return 登出结果，refresh token 无效时返回 null
    */
+  @Nullable
   SignOutResult revoke(@NonNull String refreshToken);
 }

@@ -1,6 +1,7 @@
 package com.mxerp.shared.infrastructure.security.user;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +52,7 @@ public class LoginUserCache {
    * @param userId 用户Id
    * @return 登录用户（可空），不存在返回 null
    */
+  @Nullable
   public LoginUser get(long userId) {
     String key = PREFIX + userId;
     Object value = redisTemplate.opsForValue().get(key);

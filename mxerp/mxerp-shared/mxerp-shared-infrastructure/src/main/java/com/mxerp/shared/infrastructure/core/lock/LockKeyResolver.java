@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -35,7 +36,7 @@ public final class LockKeyResolver {
    * @param expression SpEL 表达式
    * @return 锁 key
    */
-  public static String resolve(ProceedingJoinPoint pjp, String expression) {
+  public static String resolve(ProceedingJoinPoint pjp, @Nullable String expression) {
     MethodSignature signature = (MethodSignature) pjp.getSignature();
     Method method = signature.getMethod();
     if (expression == null || expression.isBlank()) {
@@ -54,7 +55,7 @@ public final class LockKeyResolver {
    * @param condition SpEL 条件
    * @return true 表示满足条件
    */
-  public static boolean evaluateCondition(ProceedingJoinPoint pjp, String condition) {
+  public static boolean evaluateCondition(ProceedingJoinPoint pjp, @Nullable String condition) {
     if (condition == null || condition.isBlank()) {
       return true;
     }

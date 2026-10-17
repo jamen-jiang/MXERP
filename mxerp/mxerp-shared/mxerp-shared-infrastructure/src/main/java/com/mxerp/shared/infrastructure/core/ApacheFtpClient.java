@@ -14,6 +14,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +60,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 文件内容（可空），文件不存在返回 null
    */
   @Override
+  @Nullable
   public byte[] get(@NonNull String path) {
     FTPClient client = connect();
     try (InputStream stream = client.retrieveFileStream(path)) {
@@ -252,7 +254,7 @@ public class ApacheFtpClient implements FtpClient {
    *
    * @param client FTP客户端
    */
-  private void disconnect(FTPClient client) {
+  private void disconnect(@Nullable FTPClient client) {
     if (client == null || !client.isConnected()) {
       return;
     }

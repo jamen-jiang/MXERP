@@ -9,6 +9,7 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 /** Hibernate 审计事件监听：在 insert/update 前填充审计字段，domain 层不感知 */
@@ -100,6 +101,7 @@ public class AuditEventListener implements PreInsertEventListener, PreUpdateEven
    * @param name 字段名
    * @return 字段，找不到返回 null
    */
+  @Nullable
   private Field findField(Class<?> clazz, String name) {
     Class<?> current = clazz;
     while (current != null && current != Object.class) {

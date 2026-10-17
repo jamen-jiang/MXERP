@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
@@ -29,6 +30,7 @@ public final class HttpContextHolder {
    *
    * @return 当前上下文，无请求时返回 null
    */
+  @Nullable
   public static HttpContext getContext() {
     HttpContext httpContext = CURRENT.get();
     if (httpContext != null) {
@@ -101,6 +103,7 @@ public final class HttpContextHolder {
    * @param request 请求对象
    * @return accessToken，不存在返回 null
    */
+  @Nullable
   private static String resolveToken(HttpServletRequest request) {
     String authorization = request.getHeader("Authorization");
     if (StringUtils.isBlank(authorization) || !authorization.startsWith(BEARER_PREFIX)) {

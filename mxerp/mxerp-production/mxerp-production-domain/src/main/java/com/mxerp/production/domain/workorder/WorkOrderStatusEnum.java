@@ -1,0 +1,46 @@
+package com.mxerp.production.domain.workorder;
+
+import com.mxerp.shared.domain.enums.BaseEnum;
+import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
+
+/** 工单状态 */
+@NullMarked
+@Getter
+public enum WorkOrderStatusEnum implements BaseEnum {
+
+  /** 草稿：可改数量、可换路线 */
+  DRAFT("Draft", "草稿"),
+
+  /** 已下达：路线已快照成工序，不可再改 */
+  RELEASED("Released", "已下达"),
+
+  /** 生产中：至少一道工序已开工 */
+  IN_PROGRESS("InProgress", "生产中"),
+
+  /** 已完工：末道工序完工且数量平衡 */
+  COMPLETED("Completed", "已完工"),
+
+  /** 已关闭：财务/库存已结案，不再允许变更 */
+  CLOSED("Closed", "已关闭"),
+
+  /** 已取消 */
+  CANCELLED("Cancelled", "已取消");
+
+  /** 编码 */
+  private final String code;
+
+  /** 名称 */
+  private final String name;
+
+  /**
+   * 构造器
+   *
+   * @param code 编码
+   * @param name 名称
+   */
+  WorkOrderStatusEnum(String code, String name) {
+    this.code = code;
+    this.name = name;
+  }
+}

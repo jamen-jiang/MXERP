@@ -2,6 +2,7 @@ package com.mxerp.shared.domain.util;
 
 import com.mxerp.shared.domain.enums.BaseEnum;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /** 枚举工具 */
 public final class EnumUtils {
@@ -16,6 +17,7 @@ public final class EnumUtils {
    * @param <E> 枚举类型
    * @return 枚举（可空），不存在返回 null
    */
+  @Nullable
   public static <E extends Enum<E> & BaseEnum> E fromCode(
       @NonNull Class<E> enumClass, @NonNull String code) {
     for (E e : enumClass.getEnumConstants()) {

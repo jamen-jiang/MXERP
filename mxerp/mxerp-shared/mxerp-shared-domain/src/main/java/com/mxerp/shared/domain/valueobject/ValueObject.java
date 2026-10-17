@@ -24,7 +24,7 @@ public abstract class ValueObject implements Serializable {
    * @return 相等返回 true
    */
   @Override
-  public final boolean equals(Object o) {
+  public final boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

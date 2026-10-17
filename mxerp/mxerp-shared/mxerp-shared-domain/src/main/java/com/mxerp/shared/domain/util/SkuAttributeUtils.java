@@ -3,6 +3,7 @@ package com.mxerp.shared.domain.util;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 
 /** 关键属性工具类 */
 public final class SkuAttributeUtils {
@@ -16,7 +17,7 @@ public final class SkuAttributeUtils {
    * @param keyAttributes 关键属性值（可空）
    * @return 拼接后的文本，无属性时返回空字符串
    */
-  public static String toText(TreeMap<String, Object> keyAttributes) {
+  public static String toText(@Nullable TreeMap<String, Object> keyAttributes) {
     if (keyAttributes == null || keyAttributes.isEmpty()) {
       return "";
     }

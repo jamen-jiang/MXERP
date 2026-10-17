@@ -2,6 +2,7 @@ package com.mxerp.shared.infrastructure.security.user;
 
 import lombok.Getter;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -75,14 +76,14 @@ public class LoginUser implements UserDetails, Serializable {
       @NonNull String userName,
       @NonNull String password,
       @NonNull String name,
-      String mobilePhone,
-      String email,
+      @Nullable String mobilePhone,
+      @Nullable String email,
       boolean superAdmin,
-      Set<Long> appIds,
-      Set<String> licenses,
-      Set<Long> companyIds,
-      Set<Long> departmentIds,
-      Set<Long> postIds) {
+      @Nullable Set<Long> appIds,
+      @Nullable Set<String> licenses,
+      @Nullable Set<Long> companyIds,
+      @Nullable Set<Long> departmentIds,
+      @Nullable Set<Long> postIds) {
     this.userId = userId;
     this.userName = userName;
     this.password = password;

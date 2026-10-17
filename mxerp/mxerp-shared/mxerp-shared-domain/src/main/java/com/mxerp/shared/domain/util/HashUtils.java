@@ -3,6 +3,7 @@ package com.mxerp.shared.domain.util;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.jspecify.annotations.Nullable;
 
 /** 哈希工具 */
 public final class HashUtils {
@@ -15,7 +16,7 @@ public final class HashUtils {
    * @param input 输入字符串
    * @return 小写十六进制 MD5，输入为空返回空字符串
    */
-  public static String computeMd5(String input) {
+  public static String computeMd5(@Nullable String input) {
     if (input == null || input.isEmpty()) {
       return "";
     }

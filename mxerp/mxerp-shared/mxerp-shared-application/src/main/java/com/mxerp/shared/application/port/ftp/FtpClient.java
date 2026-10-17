@@ -3,6 +3,7 @@ package com.mxerp.shared.application.port.ftp;
 import java.io.InputStream;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /** FTP 客户端接口 */
 public interface FtpClient {
@@ -13,6 +14,7 @@ public interface FtpClient {
    * @param path FTP 文件路径
    * @return 文件内容（可空），文件不存在返回 null
    */
+  @Nullable
   byte[] get(@NonNull String path);
 
   /**

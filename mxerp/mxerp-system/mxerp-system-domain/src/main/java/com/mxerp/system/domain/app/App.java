@@ -151,6 +151,13 @@ public class App extends UpdateAggregateRoot implements Parent {
     this.level = level;
   }
 
+  /**
+   * 校验并规范化应用类型
+   *
+   * @param type 应用类型代码（可空）
+   * @return 去除首尾空格后的类型代码
+   * @throws DomainException 类型为空或不在 {@link AppTypeEnum} 范围内时抛出
+   */
   private static String validateType(@Nullable String type) {
     String trimmed = StringUtils.trimToNull(type);
     if (trimmed == null || EnumUtils.fromCode(AppTypeEnum.class, trimmed) == null) {

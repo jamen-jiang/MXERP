@@ -1,6 +1,7 @@
 package com.mxerp.shared.application.enums;
 
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 /** Api 状态 */
 @Getter
@@ -53,6 +54,7 @@ public enum ApiStatusEnum {
    * @param code 状态码
    * @return 对应枚举；找不到返回 null
    */
+  @Nullable
   public static ApiStatusEnum fromCode(int code) {
     for (ApiStatusEnum value : values()) {
       if (value.code == code) {

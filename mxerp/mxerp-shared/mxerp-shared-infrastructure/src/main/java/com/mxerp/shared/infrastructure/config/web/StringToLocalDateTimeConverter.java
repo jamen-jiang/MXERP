@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
 
   @Override
+  @Nullable
   public LocalDateTime convert(@NonNull String source) {
     // 空串 -> null，避免前端传 deliveryOnStart= 时报 typeMismatch
     if (source.isBlank()) {
