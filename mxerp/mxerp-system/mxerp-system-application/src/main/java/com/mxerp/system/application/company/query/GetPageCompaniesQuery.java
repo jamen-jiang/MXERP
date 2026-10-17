@@ -15,16 +15,6 @@ import org.jspecify.annotations.Nullable;
 @Schema(description = "分页查询公司列表")
 public class GetPageCompaniesQuery extends PageRequest implements Query {
 
-  /** 区域（可空） */
-  @Schema(description = "区域")
-  @Nullable
-  private String region;
-
-  /** 组别（可空） */
-  @Schema(description = "组别")
-  @Nullable
-  private String group;
-
   /** 公司代码（可空，模糊匹配） */
   @Schema(description = "公司代码")
   @Nullable

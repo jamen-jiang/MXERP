@@ -3,31 +3,30 @@ package com.mxerp.system.infrastructure.signinlog;
 import com.mxerp.system.application.signentry.port.SignEntryRecorder;
 import com.mxerp.system.application.signinlog.command.AddSignInLogCommand;
 import com.mxerp.system.domain.signinlog.SignEntryTypeEnum;
+import com.mxerp.shared.application.port.job.BackgroundExecutor;
 import com.mxerp.shared.infrastructure.core.http.HttpContext;
 import com.mxerp.shared.infrastructure.core.http.HttpContextHolder;
 import java.time.LocalDateTime;
-import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
-import org.jobrunr.scheduling.BackgroundJob;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 /**
- * 登录入口日志记录器实现：负责补全 Web 上下文信息，并通过 JobRunr 异步发送日志命令
+ * 登录入口日志记录器实现：负责补全 Web 上下文信息，并通过后台执行器异步发送日志命令
  * （不阻塞主流程）
  */
 @Component
 public class SignEntryRecorderImpl implements SignEntryRecorder {
 
-  /** 命令网关 */
-  private final CommandGateway commandGateway;
+  /** 后台执行器端口 */
+  private final BackgroundExecutor backgroundExecutor;
 
   /**
    * 构造器注入
    *
-   * @param commandGateway 命令网关
+   * @param backgroundExecutor 后台执行器端口
    */
-  public SignEntryRecorderImpl(CommandGateway commandGateway) {
-    this.commandGateway = commandGateway;
+  public SignEntryRecorderImpl(BackgroundExecutor backgroundExecutor) {
+    this.backgroundExecutor = backgroundExecutor;
   }
 
   /**
@@ -105,7 +104,7 @@ public class SignEntryRecorderImpl implements SignEntryRecorder {
             errorMessage,
             exception);
 
-    // 通过 JobRunr 异步发送命令（不阻塞主流程）
-    BackgroundJob.<CommandGateway>enqueue(x -> x.sendAndWait(command));
+    // 通过后台执行器异步发送命令（不阻塞主流程）
+    backgroundExecutor.dispatch(command);
   }
 }

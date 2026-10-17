@@ -2,8 +2,6 @@ package com.mxerp.system.application.company.query;
 
 import com.mxerp.shared.application.response.BaseResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -89,8 +87,4 @@ public class CompanyResponse extends BaseResponse {
   @Schema(description = "备注")
   @Nullable
   private String remark;
-
-  /** 联系人列表 */
-  @Schema(description = "联系人列表", requiredMode = Schema.RequiredMode.REQUIRED)
-  private List<CompanyContactResponse> companyContacts = new ArrayList<>();
 }

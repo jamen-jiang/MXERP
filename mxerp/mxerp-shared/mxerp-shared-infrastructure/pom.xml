@@ -165,7 +165,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <!-- WebSocket + STOMP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
         <!-- ================= User-Agent 解析 ================= -->
         <dependency>
             <groupId>nl.basjes.parse.useragent</groupId>
