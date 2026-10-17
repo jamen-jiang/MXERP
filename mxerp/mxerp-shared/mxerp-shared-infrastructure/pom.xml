@@ -24,8 +24,14 @@
             <artifactId>mxerp-shared-domain</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 共享应用层：TokenIssuer / CurrentUser 等跨上下文端口在此定义，本层实现它们 -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-shared-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-        <!-- ================= 持久化：JPA / Hibernate / SQL Server / Flyway ================= -->
+        <!-- ================= 持久化：JPA / MyBatis-Plus / SQL Server / Flyway ================= -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -44,6 +50,16 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-sqlserver</artifactId>
+        </dependency>
+        <!-- MyBatis-Plus：Spring Boot 4 专属 Starter（Flowable 自带的 MyBatis 由它统一提供） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+        </dependency>
+        <!-- MyBatis-Plus 分页插件依赖的 JSqlParser -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
         </dependency>
 
         <!-- ================= 缓存 / 分布式锁：Redis / Redisson ================= -->
@@ -65,6 +81,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- Servlet API：JwtAuthenticationFilter / HttpContextHolder / WebUtils 需要 -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Spring MVC：SecurityConfig / PermitAllUrlScanner 需要 RequestMappingHandlerMapping -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -78,6 +105,11 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <!-- Swagger 模型（Jakarta 版）：HttpContextHolder 使用 @Operation / @Tag -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-models-jakarta</artifactId>
         </dependency>
 
         <!-- ================= 序列化：Jackson 3（Spring Boot 4 默认） ================= -->
@@ -132,16 +164,6 @@
                     <artifactId>mybatis-spring</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- ================= ORM 补充：MyBatis-Plus ================= -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-jsqlparser</artifactId>
         </dependency>
 
         <!-- ================= User-Agent 解析 ================= -->

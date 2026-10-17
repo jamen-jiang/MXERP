@@ -76,6 +76,22 @@
             <artifactId>mxerp-production-infrastructure</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 5. 系统管理上下文                            -->
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-system-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-system-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mxerp</groupId>
+            <artifactId>mxerp-system-infrastructure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Spring Boot Web MVC：HTTP 服务 -->
         <dependency>

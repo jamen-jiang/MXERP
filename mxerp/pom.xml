@@ -19,6 +19,7 @@
     <modules>
         <module>start</module>
         <module>mxerp-shared</module>
+        <module>mxerp-system</module>
         <module>mxerp-basedata</module>
         <module>mxerp-inventory</module>
         <module>mxerp-production</module>

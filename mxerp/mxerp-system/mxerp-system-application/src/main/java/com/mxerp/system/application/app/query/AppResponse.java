@@ -1,0 +1,68 @@
+package com.mxerp.system.application.app.query;
+
+import com.mxerp.shared.application.response.BaseResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+/** 应用响应 */
+@NullMarked
+@Getter
+@Setter
+@Schema(description = "应用响应")
+public class AppResponse extends BaseResponse {
+
+  /** 应用Id */
+  @Schema(description = "应用Id", requiredMode = Schema.RequiredMode.REQUIRED)
+  private Long id;
+
+  /** 类型 */
+  @Schema(description = "类型", requiredMode = Schema.RequiredMode.REQUIRED)
+  private String type;
+
+  /** 父Id（可空） */
+  @Schema(description = "父Id")
+  @Nullable
+  private Long parentId;
+
+  /** 应用级别（可空） */
+  @Schema(description = "应用级别")
+  @Nullable
+  private String level;
+
+  /** 名称（可空） */
+  @Schema(description = "名称")
+  @Nullable
+  private String name;
+
+  /** 路径（可空） */
+  @Schema(description = "路径")
+  @Nullable
+  private String path;
+
+  /** 组件路径（可空） */
+  @Schema(description = "组件路径")
+  @Nullable
+  private String component;
+
+  /** 路由重定向（可空） */
+  @Schema(description = "路由重定向")
+  @Nullable
+  private String redirect;
+
+  /** 许可证（可空） */
+  @Schema(description = "许可证")
+  @Nullable
+  private String license;
+
+  /** 备注（可空） */
+  @Schema(description = "备注")
+  @Nullable
+  private String remark;
+
+  /** 路由元数据 */
+  @Schema(description = "路由元数据", requiredMode = Schema.RequiredMode.REQUIRED)
+  private MetaResponse meta;
+}
