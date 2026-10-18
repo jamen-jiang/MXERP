@@ -15,11 +15,8 @@ public enum WorkOrderOperationStatusEnum implements BaseEnum {
   /** 可开工：前置工序已完工（首道工序下达即为可开工） */
   READY("Ready", "可开工"),
 
-  /** 加工中 */
+  /** 加工中：自制工序为开工，外协工序为已发出 */
   IN_PROGRESS("InProgress", "加工中"),
-
-  /** 外协中：外协工序已发出，等待回厂 */
-  OUTSOURCED("Outsourced", "外协中"),
 
   /** 已完工 */
   COMPLETED("Completed", "已完工"),

@@ -2,6 +2,7 @@ package com.mxerp.production.domain.routing;
 
 import com.mxerp.shared.domain.entity.BaseDeleteEntity;
 import com.mxerp.shared.domain.exception.DomainException;
+import com.mxerp.shared.domain.util.EnumUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Nationalized;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -18,8 +20,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * 工艺路线工序
  *
- * <p>描述「这道工序在这个产品上怎么做」：顺序、工作中心、工时、批量。工序本身是什么由
- * {@code Operation} 定义，这里只引用它的 Id。
+ * <p>描述「这道工序在这个产品上怎么做」：顺序、工作中心、工时、取时公式、批量与费率卡引用。工序本身是什么由
+ * {@code Operation} 定义，这里只引用它的 Id。价格不在这一行，只留一个 {@code rateId} 指向
+ * {@code OperationRate}——调价不该逼着路线升版，所以把钱单独做成带生效期的卡。
  */
 @NullMarked
 @Getter
@@ -38,7 +41,7 @@ import org.jspecify.annotations.Nullable;
 public class RoutingOperation extends BaseDeleteEntity {
 
   /** 工艺路线Id */
-  @Column(name = "RoutingId")
+  @Column(name = "RoutingId", nullable = false)
   private Long routingId;
 
   /** 工序顺序 */
@@ -65,7 +68,17 @@ public class RoutingOperation extends BaseDeleteEntity {
   @Column(name = "QueueTime", nullable = false, precision = 18, scale = 2)
   private BigDecimal queueTime;
 
-  /** 标准批量（可空）：按批生产的工序使用，如镀膜一炉装几片 */
+  /** 费率卡Id（可空，指向 OperationRate 系列）：为空表示这道工序不计加工成本 */
+  @Column(name = "RateId")
+  @Nullable
+  private Long rateId;
+
+  /** 工时取时公式：按件时加工工时是单件工时，按批时是每批工时 */
+  @Nationalized
+  @Column(name = "TimeFormula", nullable = false, length = 50)
+  private String timeFormula;
+
+  /** 标准批量（可空）：按批取时时必填，表示一批能同时处理多少 */
   @Column(name = "StandardBatchSize", precision = 18, scale = 2)
   @Nullable
   private BigDecimal standardBatchSize;
@@ -98,6 +111,8 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @param setupTime 准备工时（分钟）
    * @param runTime 加工工时（分钟）
    * @param queueTime 排队工时（分钟）
+   * @param rateId 费率卡Id（可空，为空表示不计加工成本）
+   * @param timeFormula 工时取时公式编码
    * @param standardBatchSize 标准批量（可空）
    * @param isOutsourced 是否外协
    * @param isOptional 是否可选工序
@@ -111,6 +126,8 @@ public class RoutingOperation extends BaseDeleteEntity {
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
+      @Nullable Long rateId,
+      String timeFormula,
       @Nullable BigDecimal standardBatchSize,
       boolean isOutsourced,
       boolean isOptional,
@@ -123,6 +140,8 @@ public class RoutingOperation extends BaseDeleteEntity {
         setupTime,
         runTime,
         queueTime,
+        rateId,
+        timeFormula,
         standardBatchSize,
         isOutsourced,
         isOptional,
@@ -139,6 +158,8 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @param setupTime 准备工时（分钟）
    * @param runTime 加工工时（分钟）
    * @param queueTime 排队工时（分钟）
+   * @param rateId 费率卡Id（可空，为空表示不计加工成本）
+   * @param timeFormula 工时取时公式编码
    * @param standardBatchSize 标准批量（可空）
    * @param isOutsourced 是否外协
    * @param isOptional 是否可选工序
@@ -152,6 +173,8 @@ public class RoutingOperation extends BaseDeleteEntity {
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
+      @Nullable Long rateId,
+      String timeFormula,
       @Nullable BigDecimal standardBatchSize,
       boolean isOutsourced,
       boolean isOptional,
@@ -164,6 +187,8 @@ public class RoutingOperation extends BaseDeleteEntity {
         setupTime,
         runTime,
         queueTime,
+        rateId,
+        timeFormula,
         standardBatchSize,
         isOutsourced,
         isOptional,
@@ -176,8 +201,8 @@ public class RoutingOperation extends BaseDeleteEntity {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * <p>把「主键/顺序校验 → 工时非负校验 → 批量与返工校验 → 赋值」收敛到一处，避免构造器和
-   * {@link #modify} 各写一遍导致规则漂移。
+   * <p>把「主键/顺序校验 → 工时非负校验 → 取时公式与批量校验 → 返工校验 → 赋值」收敛到一处，
+   * 避免构造器和 {@link #modify} 各写一遍导致规则漂移。
    *
    * @param sequence 工序顺序
    * @param operationId 工序Id
@@ -185,11 +210,14 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @param setupTime 准备工时（分钟）
    * @param runTime 加工工时（分钟）
    * @param queueTime 排队工时（分钟）
+   * @param rateId 费率卡Id（可空，为空表示不计加工成本）
+   * @param timeFormula 工时取时公式编码
    * @param standardBatchSize 标准批量（可空）
    * @param isOutsourced 是否外协
    * @param isOptional 是否可选工序
    * @param reworkOperationId 返工回到的工序Id（可空）
    * @param remark 备注（可空）
+   * @throws DomainException 顺序、工序、工作中心、费率卡、工时、取时公式、批量、返工工序非法时抛出
    */
   private void apply(
       Integer sequence,
@@ -198,6 +226,8 @@ public class RoutingOperation extends BaseDeleteEntity {
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
+      @Nullable Long rateId,
+      String timeFormula,
       @Nullable BigDecimal standardBatchSize,
       boolean isOutsourced,
       boolean isOptional,
@@ -212,12 +242,27 @@ public class RoutingOperation extends BaseDeleteEntity {
     if (workCenterId <= 0) {
       throw new DomainException("工作中心不能为空");
     }
+    // 费率卡可空（为空即这道工序不计成本），一旦填写必须是有效Id
+    if (rateId != null && rateId <= 0) {
+      throw new DomainException("费率卡不能为空");
+    }
     validateNonNegative("准备工时", setupTime);
     validateNonNegative("加工工时", runTime);
     validateNonNegative("排队工时", queueTime);
-    // 标准批量可空（按件生产时不需要），一旦填写必须大于 0
+    String trimmedFormula = StringUtils.trimToNull(timeFormula);
+    if (trimmedFormula == null) {
+      throw new DomainException("工时取时公式不能为空");
+    }
+    if (EnumUtils.fromCode(TimeFormulaEnum.class, trimmedFormula) == null) {
+      throw new DomainException("工时取时公式" + trimmedFormula + "有误!");
+    }
+    // 标准批量可空（按件取时不需要），一旦填写必须大于 0
     if (standardBatchSize != null && standardBatchSize.signum() <= 0) {
       throw new DomainException("标准批量必须大于0");
+    }
+    // 按批取时时，批次数要靠标准批量算，缺了它整道工序的工时无法计算
+    if (TimeFormulaEnum.BATCH.getCode().equals(trimmedFormula) && standardBatchSize == null) {
+      throw new DomainException("工序按批计算工时，必须维护标准批量");
     }
     // 返工工序可空（为空表示返工回本工序），一旦填写必须是有效Id
     if (reworkOperationId != null && reworkOperationId <= 0) {
@@ -230,6 +275,8 @@ public class RoutingOperation extends BaseDeleteEntity {
     this.setupTime = setupTime;
     this.runTime = runTime;
     this.queueTime = queueTime;
+    this.rateId = rateId;
+    this.timeFormula = trimmedFormula;
     this.standardBatchSize = standardBatchSize;
     this.isOutsourced = isOutsourced;
     this.isOptional = isOptional;
@@ -238,7 +285,7 @@ public class RoutingOperation extends BaseDeleteEntity {
   }
 
   /**
-   * 校验工时字段非负
+   * 校验数值字段非负
    *
    * <p>参数类型在 {@code @NullMarked} 下即非空契约，调用方必须保证不为 {@code null}，因此这里只判负数。
    *

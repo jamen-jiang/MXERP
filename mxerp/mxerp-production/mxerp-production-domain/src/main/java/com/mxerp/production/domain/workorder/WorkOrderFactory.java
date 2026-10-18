@@ -1,7 +1,10 @@
 package com.mxerp.production.domain.workorder;
 
 import com.mxerp.shared.domain.exception.DomainException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /** 工单工厂，负责创建工单 */
 @NullMarked
@@ -20,43 +23,58 @@ public class WorkOrderFactory {
   }
 
   /**
-   * 创建工单（单号由 OrderAddedEvent 的监听器分配）
-   *
-   * @param data 工单数据
-   * @return 工单聚合
-   */
-  public WorkOrder create(WorkOrderData data) {
-    return create(data, "");
-  }
-
-  /**
    * 创建工单
    *
-   * @param data 工单数据
+   * @param spuId 产出SPU
+   * @param skuId 产出SKU
+   * @param quantity 计划数量
+   * @param unitId 单位Id
+   * @param sourceType 来源类型编码
+   * @param sourceId 来源单据Id（可空，库存补货时为空）
+   * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
+   * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
+   * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param plannedStartTime 计划开工时间（可空）
+   * @param plannedEndTime 计划完工时间（可空）
+   * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
+   * @param remark 备注（可空）
    * @param number 工单号（传空串表示由 OrderAddedEvent 的监听器分配）
    * @return 工单聚合
    * @throws DomainException 单号已存在时抛出
    */
-  public WorkOrder create(WorkOrderData data, String number) {
+  public WorkOrder create(
+      Long spuId,
+      Long skuId,
+      BigDecimal quantity,
+      Long unitId,
+      String sourceType,
+      @Nullable Long sourceId,
+      @Nullable String sourceNumber,
+      @Nullable Long bomId,
+      @Nullable Long routingId,
+      @Nullable LocalDateTime plannedStartTime,
+      @Nullable LocalDateTime plannedEndTime,
+      @Nullable Long warehouseId,
+      @Nullable String remark,
+      String number) {
     // 单号非空时才校验唯一，空串代表尚未分配
     if (!number.isBlank() && workOrderRepository.isExistByNumberExcludeId(number)) {
       throw new DomainException("工单号" + number + "已存在!");
     }
     return new WorkOrder(
-        data.skuId(),
-        data.quantity(),
-        data.unitId(),
-        data.sourceType(),
-        data.sourceId(),
-        data.sourceNumber(),
-        data.bomId(),
-        data.routingId(),
-        data.plannedStartTime(),
-        data.plannedEndTime(),
-        data.wipWarehouseId(),
-        data.fgWarehouseId(),
-        data.scrapWarehouseId(),
-        data.remark(),
+        spuId,
+        skuId,
+        quantity,
+        unitId,
+        sourceType,
+        sourceId,
+        sourceNumber,
+        bomId,
+        routingId,
+        plannedStartTime,
+        plannedEndTime,
+        warehouseId,
+        remark,
         number);
   }
 }

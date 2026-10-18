@@ -13,10 +13,7 @@ public enum IssueModeEnum implements BaseEnum {
   PIECE("Piece", "按件"),
 
   /** 按批：按生产批次整批领用（染色剂） */
-  BATCH("Batch", "按批"),
-
-  /** 按炉：按设备炉次整炉领用（镀膜靶材） */
-  FURNACE("Furnace", "按炉");
+  BATCH("Batch", "按批");
 
   /** 编码 */
   private final String code;

@@ -27,8 +27,7 @@ public class WorkCenterFactory {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 工作中心聚合
@@ -38,14 +37,13 @@ public class WorkCenterFactory {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
     // 校验工作中心代码唯一
     if (workCenterRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("工作中心代码" + code + "已存在!");
     }
-    return new WorkCenter(code, name, type, capacityPerDay, costRate, disabled, remark);
+    return new WorkCenter(code, name, type, capacityMinutesPerDay, disabled, remark);
   }
 }

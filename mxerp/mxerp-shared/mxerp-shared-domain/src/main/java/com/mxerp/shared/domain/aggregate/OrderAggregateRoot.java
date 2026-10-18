@@ -1,5 +1,6 @@
 package com.mxerp.shared.domain.aggregate;
 
+import com.mxerp.shared.domain.enums.SerialNumberTypeEnum;
 import com.mxerp.shared.domain.event.AddAuditLogEvent;
 import com.mxerp.shared.domain.event.OrderAddedEvent;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -36,9 +37,9 @@ public abstract class OrderAggregateRoot extends UpdateAggregateRoot {
   /**
    * 获取流水号类型
    *
-   * @return 返回流水号类型
+   * @return 本单据在流水号规则里的类型
    */
-  public abstract String getSerialNumberType();
+  public abstract SerialNumberTypeEnum getSerialNumberType();
 
   /** 分配单号，只能分配一次 */
   public void assignNumber(String number) {

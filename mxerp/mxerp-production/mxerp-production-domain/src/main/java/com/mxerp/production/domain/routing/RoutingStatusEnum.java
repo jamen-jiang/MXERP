@@ -9,13 +9,13 @@ import org.jspecify.annotations.NullMarked;
 @Getter
 public enum RoutingStatusEnum implements BaseEnum {
 
-  /** 草稿 */
+  /** 草稿：可随意改工序 */
   DRAFT("Draft", "草稿"),
 
-  /** 已发布 */
+  /** 已发布：可用于工单下达，改动需升版 */
   RELEASED("Released", "已发布"),
 
-  /** 已作废 */
+  /** 已作废：新工单不可用，历史工单不受影响 */
   OBSOLETE("Obsolete", "已作废");
 
   /** 编码 */

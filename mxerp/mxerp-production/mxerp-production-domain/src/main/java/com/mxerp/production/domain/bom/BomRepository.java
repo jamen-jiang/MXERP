@@ -1,6 +1,7 @@
 package com.mxerp.production.domain.bom;
 
 import com.mxerp.shared.domain.repository.Repository;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -27,14 +28,16 @@ public interface BomRepository extends Repository<Bom> {
   List<Bom> getListBySkuId(Long skuId);
 
   /**
-   * 取父件当前生效的已发布 BOM
+   * 取父件在指定时点生效的 BOM 版本
    *
-   * <p>工单下达时用它挑默认 BOM：状态为已发布、且当前时间落在生效区间内，按生效时间倒序取第一条。
+   * <p>工单下达按这一刻挑版本，而不是按「当前最新」：补一张上个月的生产单，应该拿到上个月那版配方。
+   * 生效区间左闭右开，同一父件的已发布版本不重叠，所以至多命中一条；命中多条时按生效时间倒序取最近一版。
    *
    * @param skuId 父件SKU
-   * @return BOM（可空），没有生效版本时返回 null
+   * @param moment 判定时点
+   * @return BOM（可空），该时点没有生效版本时返回 null
    */
-  @Nullable Bom getReleasedBySkuId(Long skuId);
+  @Nullable Bom getEffectiveBySkuIdAt(Long skuId, LocalDateTime moment);
 
   /**
    * 判断父件SKU + 版本是否存在

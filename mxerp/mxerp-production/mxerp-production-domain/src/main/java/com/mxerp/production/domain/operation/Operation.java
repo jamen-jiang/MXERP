@@ -55,8 +55,8 @@ public class Operation extends UpdateAggregateRoot {
   @Nullable
   private Long defaultWorkCenterId;
 
-  /** 标准批量（可空）：一次能同时处理的数量，如镀膜一炉 20 片 */
-  @Column(name = "BatchSize", precision = 18, scale = 4)
+  /** 标准批量（可空）：一次能同时处理的数量 */
+  @Column(name = "BatchSize", precision = 18, scale = 2)
   @Nullable
   private BigDecimal batchSize;
 

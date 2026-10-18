@@ -90,14 +90,14 @@ public class Attribute extends UpdateAggregateRoot {
   @Nullable
   private String remark;
 
-  /** 属性项列表（只读） */
+  /** 属性值列表（只读） */
   @OneToMany(
       fetch = FetchType.EAGER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       orphanRemoval = true)
   @JoinColumn(name = "AttributeId")
   @SQLRestriction("IsDeleted = 0")
-  private List<AttributeItem> attributeItems = new ArrayList<>();
+  private List<AttributeValue> attributeValues = new ArrayList<>();
 
   /** 校验规则列表（只读） */
   @OneToMany(
@@ -109,12 +109,12 @@ public class Attribute extends UpdateAggregateRoot {
   private List<AttributeValidateRule> attributeValidateRules = new ArrayList<>();
 
   /**
-   * 获取属性项列表（只读）
+   * 获取属性值列表（只读）
    *
    * @return 不可变列表
    */
-  public List<AttributeItem> getAttributeItems() {
-    return Collections.unmodifiableList(attributeItems);
+  public List<AttributeValue> getAttributeValues() {
+    return Collections.unmodifiableList(attributeValues);
   }
 
   /**
@@ -188,7 +188,7 @@ public class Attribute extends UpdateAggregateRoot {
   }
 
   /**
-   * 新增属性项
+   * 新增属性值
    *
    * @param value 属性值
    * @param name 属性值名称
@@ -196,54 +196,54 @@ public class Attribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @throws DomainException 属性值在该属性下已存在时抛出
    */
-  public void addItem(String value, String name, Boolean isDefault, @Nullable Integer sort) {
-    if (isExistItem(value)) {
-      throw new DomainException("属性" + this.name + ":属性项" + value + " 已存在!");
+  public void addValue(String value, String name, Boolean isDefault, @Nullable Integer sort) {
+    if (isExistValue(value)) {
+      throw new DomainException("属性" + this.name + ":属性值" + value + " 已存在!");
     }
-    AttributeItem item = new AttributeItem(value, name, isDefault, sort);
-    attributeItems.add(item);
+    AttributeValue attributeValue = new AttributeValue(value, name, isDefault, sort);
+    attributeValues.add(attributeValue);
   }
 
   /**
-   * 修改属性项
+   * 修改属性值
    *
    * <p>属性值（{@code value}）创建后不可修改，这里只能改名称、默认标记与排序。
    *
-   * @param itemId 属性项Id
+   * @param valueId 属性值Id
    * @param name 属性值名称
    * @param isDefault 是否默认项
    * @param sort 排序（可空）
-   * @throws DomainException 属性项不存在时抛出
+   * @throws DomainException 属性值不存在时抛出
    */
-  public void modifyItem(Long itemId, String name, Boolean isDefault, @Nullable Integer sort) {
-    AttributeItem item =
-        attributeItems.stream()
-            .filter(i -> Objects.equals(i.getId(), itemId))
+  public void modifyValue(Long valueId, String name, Boolean isDefault, @Nullable Integer sort) {
+    AttributeValue attributeValue =
+        attributeValues.stream()
+            .filter(i -> Objects.equals(i.getId(), valueId))
             .findFirst()
             .orElse(null);
-    if (item == null) {
-      throw new DomainException("属性" + this.name + ":属性项不存在!");
+    if (attributeValue == null) {
+      throw new DomainException("属性" + this.name + ":属性值不存在!");
     }
-    item.modify(name, isDefault, sort);
+    attributeValue.modify(name, isDefault, sort);
   }
 
   /**
-   * 删除属性项（逻辑删除）
+   * 删除属性值（逻辑删除）
    *
-   * <p>找不到对应属性项时静默返回，保证删除操作幂等。
+   * <p>找不到对应属性值时静默返回，保证删除操作幂等。
    *
-   * @param itemId 属性项Id
+   * @param valueId 属性值Id
    */
-  public void deleteItem(Long itemId) {
-    AttributeItem item =
-        attributeItems.stream()
-            .filter(i -> Objects.equals(i.getId(), itemId))
+  public void deleteValue(Long valueId) {
+    AttributeValue attributeValue =
+        attributeValues.stream()
+            .filter(i -> Objects.equals(i.getId(), valueId))
             .findFirst()
             .orElse(null);
-    if (item == null) {
+    if (attributeValue == null) {
       return;
     }
-    item.delete();
+    attributeValue.delete();
   }
 
   /**
@@ -390,15 +390,15 @@ public class Attribute extends UpdateAggregateRoot {
   // ==================== 私有：存在性判断 ====================
 
   /**
-   * 判断属性值是否已存在于当前属性的属性项列表中
+   * 判断属性值是否已存在于当前属性的属性值列表中
    *
-   * <p>已逻辑删除的属性项不参与判断，这样删除后可以重新添加同名属性值。
+   * <p>已逻辑删除的属性值不参与判断，这样删除后可以重新添加同名属性值。
    *
    * @param value 属性值
    * @return true：已存在
    */
-  private boolean isExistItem(String value) {
-    return attributeItems.stream().anyMatch(i -> i.getValue().equals(value) && !i.getIsDeleted());
+  private boolean isExistValue(String value) {
+    return attributeValues.stream().anyMatch(i -> i.getValue().equals(value) && !i.getIsDeleted());
   }
 
   /**

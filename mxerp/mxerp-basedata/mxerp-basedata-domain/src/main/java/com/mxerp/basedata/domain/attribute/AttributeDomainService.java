@@ -12,39 +12,40 @@ import org.jspecify.annotations.Nullable;
 public class AttributeDomainService {
 
   /**
-   * 同步属性项列表（按 Value 业务标识匹配：删除不在输入中的、更新已存在的、添加新的）
+   * 同步属性值列表（按 Value 业务标识匹配：删除不在输入中的、更新已存在的、添加新的）
    *
    * @param attribute 属性聚合
-   * @param attributeItems 目标属性项列表（可空）
+   * @param attributeValues 目标属性值列表（可空）
    */
-  public void syncAttributeItems(
-      Attribute attribute, @Nullable List<AttributeItemData> attributeItems) {
-    List<AttributeItemData> target = attributeItems == null ? List.of() : attributeItems;
+  public void syncAttributeValues(
+      Attribute attribute, @Nullable List<AttributeValueData> attributeValues) {
+    List<AttributeValueData> target = attributeValues == null ? List.of() : attributeValues;
 
-    // 1. 删除未在输入中出现的属性项（按 Value 匹配）
-    List<AttributeItem> toRemoves =
-        attribute.getAttributeItems().stream()
+    // 1. 删除未在输入中出现的属性值（按 Value 匹配）
+    List<AttributeValue> toRemoves =
+        attribute.getAttributeValues().stream()
             .filter(i -> target.stream().noneMatch(d -> Objects.equals(d.value(), i.getValue())))
             .toList();
-    for (AttributeItem item : toRemoves) {
-      attribute.deleteItem(item.getId());
+    for (AttributeValue attributeValue : toRemoves) {
+      attribute.deleteValue(attributeValue.getId());
     }
 
-    // 2. 建立"Value → 已存在属性项Id"的映射（只统计未删除的）
+    // 2. 建立"Value → 已存在属性值Id"的映射（只统计未删除的）
     Map<String, Long> existingDict =
-        attribute.getAttributeItems().stream()
+        attribute.getAttributeValues().stream()
             .filter(i -> !i.getIsDeleted())
-            .collect(Collectors.toMap(AttributeItem::getValue, AttributeItem::getId, (a, b) -> a));
+            .collect(
+                Collectors.toMap(AttributeValue::getValue, AttributeValue::getId, (a, b) -> a));
 
     // 3. 遍历输入：存在则修改，不存在则添加
-    for (AttributeItemData item : target) {
-      Long id = existingDict.get(item.value());
+    for (AttributeValueData data : target) {
+      Long id = existingDict.get(data.value());
       if (id != null) {
         // 存在：修改
-        attribute.modifyItem(id, item.name(), item.isDefault(), item.sort());
+        attribute.modifyValue(id, data.name(), data.isDefault(), data.sort());
       } else {
         // 不存在：添加
-        attribute.addItem(item.value(), item.name(), item.isDefault(), item.sort());
+        attribute.addValue(data.value(), data.name(), data.isDefault(), data.sort());
       }
     }
   }

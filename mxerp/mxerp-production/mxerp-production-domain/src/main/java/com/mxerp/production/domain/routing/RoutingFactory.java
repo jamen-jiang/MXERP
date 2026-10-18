@@ -22,12 +22,11 @@ public class RoutingFactory {
   }
 
   /**
-   * 创建工艺路线
+   * 创建工艺路线（草稿）
    *
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
-   * @param status 状态
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
@@ -38,7 +37,6 @@ public class RoutingFactory {
       String code,
       String name,
       String version,
-      String status,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
@@ -46,6 +44,6 @@ public class RoutingFactory {
     if (routingRepository.isExistByCodeAndVersionExcludeId(code, version)) {
       throw new DomainException("工艺路线" + code + "的版本" + version + "已存在!");
     }
-    return new Routing(code, name, version, status, effectiveFrom, effectiveTo, remark);
+    return new Routing(code, name, version, effectiveFrom, effectiveTo, remark);
   }
 }

@@ -10,8 +10,8 @@ import org.jspecify.annotations.NullMarked;
 @Getter
 public class OrderAddedEvent extends DomainEvent {
 
-  /** 类型 */
-  private final String type;
+  /** 订单 */
+  private final OrderAggregateRoot order;
 
   /**
    * 构造器
@@ -20,6 +20,18 @@ public class OrderAddedEvent extends DomainEvent {
    */
   public OrderAddedEvent(OrderAggregateRoot order) {
     super(order);
-    this.type = order.getSerialNumberType();
+    this.order = order;
+  }
+
+  /**
+   * 流水号类型编码（对应 {@code SerialNumberTypeEnum#getCode()}，流水号规则按它取前缀）
+   *
+   * <p>到用的时候才问单据，不在这里存字符串：本事件是基类构造器里建出来的，那会儿子类自己的字段还没归位，
+   * 类型又是由单据自己的字段算出来的。事件是 save 之后才发布的，那时单据已经装配齐。
+   *
+   * @return 流水号类型编码
+   */
+  public String getType() {
+    return order.getSerialNumberType().getCode();
   }
 }

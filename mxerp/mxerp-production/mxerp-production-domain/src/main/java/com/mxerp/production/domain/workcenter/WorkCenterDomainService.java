@@ -33,8 +33,7 @@ public class WorkCenterDomainService {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 工作中心聚合
@@ -43,8 +42,7 @@ public class WorkCenterDomainService {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
     // 按代码查工作中心
@@ -52,11 +50,9 @@ public class WorkCenterDomainService {
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model =
-          workCenterFactory.create(
-              code, name, type, capacityPerDay, costRate, disabled, remark);
+      model = workCenterFactory.create(code, name, type, capacityMinutesPerDay, disabled, remark);
     } else {
-      modify(model, code, name, type, capacityPerDay, costRate, disabled, remark);
+      modify(model, code, name, type, capacityMinutesPerDay, disabled, remark);
     }
 
     return model;
@@ -69,8 +65,7 @@ public class WorkCenterDomainService {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 工作中心聚合
@@ -80,15 +75,14 @@ public class WorkCenterDomainService {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
     WorkCenter model = workCenterRepository.get(id);
     if (model == null) {
       throw new DomainException("工作中心" + id + "不存在!");
     }
-    modify(model, code, name, type, capacityPerDay, costRate, disabled, remark);
+    modify(model, code, name, type, capacityMinutesPerDay, disabled, remark);
     return model;
   }
 
@@ -99,8 +93,7 @@ public class WorkCenterDomainService {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
@@ -109,14 +102,13 @@ public class WorkCenterDomainService {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
     // 校验工作中心代码唯一
     if (workCenterRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("工作中心代码" + code + "已存在!");
     }
-    model.modify(code, name, type, capacityPerDay, costRate, disabled, remark);
+    model.modify(code, name, type, capacityMinutesPerDay, disabled, remark);
   }
 }

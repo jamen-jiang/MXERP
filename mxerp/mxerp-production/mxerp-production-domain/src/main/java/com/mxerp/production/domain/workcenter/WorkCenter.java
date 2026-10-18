@@ -17,7 +17,12 @@ import org.hibernate.annotations.Nationalized;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 工作中心 */
+/**
+ * 工作中心
+ *
+ * <p>只承载产能维度的事实：这是什么类型的资源、一天能处理多少。价格不在这里——同一天镀膜线给 A 产品计 80 元/小时、
+ * 给 B 产品计 120 元/小时是正常需求，费率属于「这道工序在这条路线里怎么用」，见 {@code RoutingOperation}。
+ */
 @NullMarked
 @Getter
 @Setter(AccessLevel.PROTECTED)
@@ -49,13 +54,9 @@ public class WorkCenter extends UpdateAggregateRoot {
   @Column(name = "Type", nullable = false, length = 50)
   private String type;
 
-  /** 日产能（工时或件数） */
-  @Column(name = "CapacityPerDay", nullable = false, precision = 18, scale = 4)
-  private BigDecimal capacityPerDay;
-
-  /** 费率（元/小时） */
-  @Column(name = "CostRate", nullable = false, precision = 18, scale = 4)
-  private BigDecimal costRate;
+  /** 每天可用工时（分钟，例如一天开 8 小时就是 480） */
+  @Column(name = "CapacityMinutesPerDay", nullable = false, precision = 18, scale = 2)
+  private BigDecimal capacityMinutesPerDay;
 
   /** 是否停用 */
   @Column(name = "Disabled", nullable = false)
@@ -73,8 +74,7 @@ public class WorkCenter extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
@@ -82,11 +82,10 @@ public class WorkCenter extends UpdateAggregateRoot {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
-    apply(code, name, type, capacityPerDay, costRate, disabled, remark);
+    apply(code, name, type, capacityMinutesPerDay, disabled, remark);
   }
 
   /**
@@ -95,8 +94,7 @@ public class WorkCenter extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
@@ -104,11 +102,10 @@ public class WorkCenter extends UpdateAggregateRoot {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
-    apply(code, name, type, capacityPerDay, costRate, disabled, remark);
+    apply(code, name, type, capacityMinutesPerDay, disabled, remark);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -122,8 +119,7 @@ public class WorkCenter extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param type 类型
-   * @param capacityPerDay 日产能
-   * @param costRate 费率
+   * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
@@ -131,8 +127,7 @@ public class WorkCenter extends UpdateAggregateRoot {
       String code,
       String name,
       String type,
-      BigDecimal capacityPerDay,
-      BigDecimal costRate,
+      BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
@@ -150,14 +145,14 @@ public class WorkCenter extends UpdateAggregateRoot {
     if (EnumUtils.fromCode(WorkCenterTypeEnum.class, trimmedType) == null) {
       throw new DomainException("工作中心类型" + trimmedType + "有误!");
     }
-    validateNonNegative("日产能", capacityPerDay);
-    validateNonNegative("费率", costRate);
+    if (capacityMinutesPerDay.signum() <= 0) {
+      throw new DomainException("每天可用工时必须大于0");
+    }
 
     this.code = trimmedCode;
     this.name = trimmedName;
     this.type = trimmedType;
-    this.capacityPerDay = capacityPerDay;
-    this.costRate = costRate;
+    this.capacityMinutesPerDay = capacityMinutesPerDay;
     this.disabled = disabled;
     this.remark = remark;
   }
