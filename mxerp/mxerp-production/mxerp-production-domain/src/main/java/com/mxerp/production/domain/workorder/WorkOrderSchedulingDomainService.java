@@ -20,9 +20,13 @@ import org.jspecify.annotations.NullMarked;
 /**
  * 工单排产服务：把工序按工作中心的产能排到具体时段
  *
- * <p>方向按 SAP / D365 的默认做法：从工单的计划完工时间往前倒排；倒排推到「现在」之前就说明交期做不到，
+ * <p>方向按 SAP / D365 的默认做法：从工单的交期往前倒排；倒排推到「现在」之前就说明交期做不到，
  * 改从「现在」正排，算出一个更晚的完工时间。倒排算的是「最晚什么时候开工还来得及」，正排算的是
  * 「最早什么时候能做完」——同一套工序时长，两个方向各用一次。
+ *
+ * <p>交期（{@code dueTime}）是需求侧的承诺，本服务只读它、从不写它；写回的只有计划起止。所以赶不上交期时
+ * 结果是「计划完工比交期晚」这条能被看见的事实（{@code WorkOrder.isPlannedLate}），而不是把交期改成做得到的
+ * 那天——一改就把承诺抹掉了，没人知道原本答应客户的是哪天，也就没人去谈加急或改期。
  *
  * <p>产能按工作中心每天可用分钟数算，不排班次：每天从 {@link #WORKDAY_START} 开始，干满
  * {@code capacityMinutesPerDay} 分钟就收工。哪天不上班由 {@link WorkingCalendar} 说了算，非工作日整天跳过。
@@ -67,12 +71,14 @@ public class WorkOrderSchedulingDomainService {
   }
 
   /**
-   * 排一张工单：按计划完工时间倒排，倒不进未来就改从「现在」正排
+   * 排一张工单：按交期倒排，倒不进未来就改从「现在」正排
+   *
+   * <p>没填交期的单直接正排：没有承诺要守，只需给出最早能完工的日子。
    *
    * @param id 工单Id
    * @param now 当前时间（调用方传入，便于测试与补排）
-   * @return 排产后的工单聚合
-   * @throws DomainException 工单不存在、没有工序、计划完工时间为空、或工作中心日产能未维护时抛出
+   * @return 排产后的工单聚合；赶不上交期时 {@code isPlannedLate()} 为真，交期保持原样
+   * @throws DomainException 工单不存在、没有工序、或工作中心不可用时抛出
    */
   public WorkOrder schedule(long id, LocalDateTime now) {
     WorkOrder model = getExist(id);
@@ -86,16 +92,16 @@ public class WorkOrderSchedulingDomainService {
   /**
    * 批量排产：按优先级依次排，后排的会绕开先排的
    *
-   * <p>排序口径：优先级小的先排；优先级相同按计划完工时间早的先排；都相同按 Id 先后。先排的单先占设备，
-   * 后排在剩下空档里找位置——这就是「有限产能」在批量上的含义。
+   * <p>排序口径：优先级小的先排；优先级相同按交期早的先排，没交期的排在有交期之后；都相同按 Id 先后。
+   * 先排的单先占设备，后排在剩下空档里找位置——这就是「有限产能」在批量上的含义。
    *
    * <p>已经在库里排过的其他工单照样会被绕开（{@link WorkOrderRepository#getReservations}），
    * 本次批量里刚排完的也会立即被后面的单看见。
    *
    * @param ids 要排的工单Id
    * @param now 当前时间
-   * @return 排好序并完成排产的工单列表
-   * @throws DomainException 某张工单不存在、没有工序、或计划完工时间为空时抛出
+   * @return 排好序并完成排产的工单列表，赶不上交期的那张 {@code isPlannedLate()} 为真
+   * @throws DomainException 某张工单不存在、没有工序、或工作中心不可用时抛出
    */
   public List<WorkOrder> scheduleBatch(List<Long> ids, LocalDateTime now) {
     if (ids.isEmpty()) {
@@ -108,8 +114,7 @@ public class WorkOrderSchedulingDomainService {
     models.sort(
         Comparator.comparing(WorkOrder::getSchedulingPriority)
             .thenComparing(
-                WorkOrder::getPlannedEndTime,
-                Comparator.nullsLast(Comparator.naturalOrder()))
+                WorkOrder::getDueTime, Comparator.nullsLast(Comparator.naturalOrder()))
             .thenComparing(WorkOrder::getId));
     List<WorkCenterReservation> reservations =
         new ArrayList<>(
@@ -128,10 +133,13 @@ public class WorkOrderSchedulingDomainService {
   /**
    * 排一张工单并把结果写回聚合
    *
+   * <p>交期只读不写：倒排塞不进未来就走正排，把「最早能做完」记在计划完工上，交期留原值——两个日期一比，
+   * 赶不上这件事就摆在工单上让人看见，而不是被排产抹平。
+   *
    * @param model 工单
    * @param now 当前时间
    * @param reservations 别的工单已占用的设备时段
-   * @throws DomainException 没有工序、没有计划完工时间、或工作中心不可用时抛出
+   * @throws DomainException 没有工序、或工作中心不可用时抛出
    */
   private void scheduleOne(
       WorkOrder model, LocalDateTime now, List<WorkCenterReservation> reservations) {
@@ -139,20 +147,21 @@ public class WorkOrderSchedulingDomainService {
     if (operations.isEmpty()) {
       throw new DomainException("工单" + model.getNumber() + "没有工序，不能排产");
     }
-    LocalDateTime deadline = model.getPlannedEndTime();
-    if (deadline == null) {
-      throw new DomainException("工单" + model.getNumber() + "没有计划完工时间，无法倒排");
-    }
-
     Map<Long, BigDecimal> capacityByWorkCenter = loadCapacity(operations);
+    LocalDateTime deadline = model.getDueTime();
+    if (deadline == null) {
+      // 没交期可守，正排给出最早能完工的日期
+      model.applySchedule(
+          placeForward(operations, capacityByWorkCenter, reservations, model.getQuantity(), now));
+      return;
+    }
     List<WorkOrder.OperationPlan> backward =
         placeBackward(
             operations, capacityByWorkCenter, reservations, model.getQuantity(), deadline);
     if (backward.get(0).startTime().isBefore(now)) {
-      // 倒排推到了过去，说明按交期做不完，改成正排给出最早能完工的日期
+      // 倒排推到了过去，说明按交期做不完：正排算出最早能完工的那天，交期保持不动
       model.applySchedule(
-          placeForward(
-              operations, capacityByWorkCenter, reservations, model.getQuantity(), now));
+          placeForward(operations, capacityByWorkCenter, reservations, model.getQuantity(), now));
     } else {
       model.applySchedule(backward);
     }

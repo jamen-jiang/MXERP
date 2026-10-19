@@ -97,6 +97,7 @@ public class WorkOrderDomainService {
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param dueTime 交期（可空，承诺的完工时间，排产只对照不修改）
    * @param plannedStartTime 计划开工时间（可空）
    * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
@@ -113,6 +114,7 @@ public class WorkOrderDomainService {
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      @Nullable LocalDateTime dueTime,
       @Nullable LocalDateTime plannedStartTime,
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
@@ -128,6 +130,7 @@ public class WorkOrderDomainService {
         sourceNumber,
         bomId,
         routingId,
+        dueTime,
         plannedStartTime,
         plannedEndTime,
         warehouseId,
@@ -148,6 +151,7 @@ public class WorkOrderDomainService {
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param dueTime 交期（可空，承诺的完工时间，排产只对照不修改）
    * @param plannedStartTime 计划开工时间（可空）
    * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
@@ -166,6 +170,7 @@ public class WorkOrderDomainService {
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      @Nullable LocalDateTime dueTime,
       @Nullable LocalDateTime plannedStartTime,
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
@@ -181,6 +186,7 @@ public class WorkOrderDomainService {
         sourceNumber,
         bomId,
         routingId,
+        dueTime,
         plannedStartTime,
         plannedEndTime,
         warehouseId,

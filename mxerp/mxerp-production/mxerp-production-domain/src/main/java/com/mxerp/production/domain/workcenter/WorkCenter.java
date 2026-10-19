@@ -148,6 +148,10 @@ public class WorkCenter extends UpdateAggregateRoot {
     if (capacityMinutesPerDay.signum() <= 0) {
       throw new DomainException("每天可用工时必须大于0");
     }
+    // 列是 scale=2，但排产按整数分钟取用，带小数会当场崩：7 小时半要写 450，不许写 450.5
+    if (capacityMinutesPerDay.remainder(BigDecimal.ONE).signum() != 0) {
+      throw new DomainException("每天可用工时必须是整数分钟");
+    }
 
     this.code = trimmedCode;
     this.name = trimmedName;
@@ -155,20 +159,5 @@ public class WorkCenter extends UpdateAggregateRoot {
     this.capacityMinutesPerDay = capacityMinutesPerDay;
     this.disabled = disabled;
     this.remark = remark;
-  }
-
-  /**
-   * 校验数值字段非负
-   *
-   * <p>参数类型在 {@code @NullMarked} 下即非空契约，调用方必须保证不为 {@code null}，因此这里只判负数。
-   *
-   * @param field 字段中文名，用于拼装错误提示
-   * @param value 待校验的数值
-   * @throws DomainException 值为负数时抛出
-   */
-  private void validateNonNegative(String field, BigDecimal value) {
-    if (value.signum() < 0) {
-      throw new DomainException(field + "不能为负数");
-    }
   }
 }

@@ -42,6 +42,11 @@ import org.jspecify.annotations.Nullable;
  * <p>{@code spuId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
  * 到一起看，靠它分组。产品类型不在这里抄：它记在 {@code Sku} 主数据上，工单再存一份就成了两处说法，
  * 而且「半成品/成品」这种分法在报表上并不比按 SPU 分组更准。
+ *
+ * <p>交期与计划完工是两个日期，不能一列两用。{@code dueTime} 是答应客户的承诺，属于需求侧，排产永不修改；
+ * {@code plannedEndTime} 是排产算出来的结果，可以反复重排。两者一比就是有没有赶不上交期（{@link
+ * #isPlannedLate()}）：这个偏差必须留在单子上看得见，让计划员去谈加急或改期，而不是排产顺手把承诺改成
+ * 自己做得到的那天。口径取自 SAP 的基本完成日期／计划完成日期、D365 的交货日期／计划生产结束。
  */
 @NullMarked
 @Getter
@@ -125,12 +130,17 @@ public class WorkOrder extends OrderAggregateRoot {
   @Column(name = "SchedulingPriority", nullable = false)
   private Integer schedulingPriority;
 
-  /** 计划开工时间（可空） */
+  /** 交期（可空，承诺的完工时间）：需求侧给的日期，排产只对照它、不修改它 */
+  @Column(name = "DueTime")
+  @Nullable
+  private LocalDateTime dueTime;
+
+  /** 计划开工时间（可空，排产写入） */
   @Column(name = "PlannedStartTime")
   @Nullable
   private LocalDateTime plannedStartTime;
 
-  /** 计划完工时间（可空） */
+  /** 计划完工时间（可空，排产写入；晚于交期就是赶不上） */
   @Column(name = "PlannedEndTime")
   @Nullable
   private LocalDateTime plannedEndTime;
@@ -190,6 +200,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param sourceNumber 来源单号（可空）
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
+   * @param dueTime 交期（可空，承诺的完工时间）
    * @param plannedStartTime 计划开工时间（可空）
    * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
@@ -206,6 +217,7 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      @Nullable LocalDateTime dueTime,
       @Nullable LocalDateTime plannedStartTime,
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
@@ -222,6 +234,7 @@ public class WorkOrder extends OrderAggregateRoot {
         sourceNumber,
         bomId,
         routingId,
+        dueTime,
         plannedStartTime,
         plannedEndTime,
         warehouseId,
@@ -264,6 +277,9 @@ public class WorkOrder extends OrderAggregateRoot {
    * <p>排产算法在 {@code WorkOrderSchedulingDomainService} 里，本方法只负责落定：工序顺序与计划时段一一对应，
    * 工单的计划开工取首道、计划完工取末道。草稿也能排——排产只是算日期，不动库存也不动工单状态。
    *
+   * <p>这里写的是计划起止，{@code dueTime} 那份承诺一律不写：排产赶不上交期时要把「赶不上」露出来，
+   * 而不是把交期改成自己做得到的那天，改了就再也没人知道当初答应的是哪天。
+   *
    * @param plans 按工序顺序排列的计划时段，数量必须与工序数一致
    * @throws DomainException 计划时段数量对不上、时段倒挂、或工序时段与工单时段对不上时抛出
    */
@@ -291,6 +307,23 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param endTime 计划完工时间
    */
   public record OperationPlan(LocalDateTime startTime, LocalDateTime endTime) {}
+
+  /**
+   * 排产结果是否赶不上交期
+   *
+   * <p>只看两个已经落定的日期：计划完工晚于交期就是赶不上。没交期（{@code dueTime} 为空）不作判断，
+   * 没排产（{@code plannedEndTime} 为空）也一样——此时还没有结论可报。
+   *
+   * <p>排产不会因为它抛异常：计划员要的是「这单最早 11 月 2 日 能做完，比答应客户的 10 月 25 日 晚了」，
+   * 拿着这个数去谈加急或改期，而不是让算日期的一步把承诺抹平。
+   *
+   * @return true 表示排产出的完工时间晚于交期
+   */
+  public boolean isPlannedLate() {
+    return this.dueTime != null
+        && this.plannedEndTime != null
+        && this.plannedEndTime.isAfter(this.dueTime);
+  }
 
   /**
    * 调整排产优先级
@@ -322,6 +355,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param sourceNumber 来源单号（可空）
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
+   * @param dueTime 交期（可空，承诺的完工时间）
    * @param plannedStartTime 计划开工时间（可空）
    * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
@@ -338,6 +372,7 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      @Nullable LocalDateTime dueTime,
       @Nullable LocalDateTime plannedStartTime,
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
@@ -355,6 +390,7 @@ public class WorkOrder extends OrderAggregateRoot {
         sourceNumber,
         bomId,
         routingId,
+        dueTime,
         plannedStartTime,
         plannedEndTime,
         warehouseId,
@@ -975,6 +1011,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param sourceNumber 来源单号（可空）
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
+   * @param dueTime 交期（可空，承诺的完工时间）
    * @param plannedStartTime 计划开工时间（可空）
    * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
@@ -991,6 +1028,7 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      @Nullable LocalDateTime dueTime,
       @Nullable LocalDateTime plannedStartTime,
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
@@ -1029,6 +1067,7 @@ public class WorkOrder extends OrderAggregateRoot {
     this.sourceNumber = sourceNumber;
     this.bomId = bomId;
     this.routingId = routingId;
+    this.dueTime = dueTime;
     this.plannedStartTime = plannedStartTime;
     this.plannedEndTime = plannedEndTime;
     this.warehouseId = warehouseId;
