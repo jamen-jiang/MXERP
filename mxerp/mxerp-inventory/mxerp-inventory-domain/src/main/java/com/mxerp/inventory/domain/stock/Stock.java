@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
  * 库存（一个SKU在一个仓位的某个库存状态上的在库快照）
  *
  * <p>一行回答的是「这个SKU，在这个仓库（可能再加一个库位）、这个库存状态上，现在有多少」：定位键是四列
- * {@code VariantId + WarehouseId + LocationId + StockStatus}，数量用SKU基本单位计，不另存单位列。{@code ProductId}
+ * {@code VariantId + WarehouseId + LocationId + StockStatus}，数量用SKU基本单位计，不另存单位列。{@code MaterialId}
  * 是SKU所属的SPU，只给「按系列汇总有多少货」这类查询当分组列用，不参与定位，也不是键的一部分。
  *
  * <p>库位这一维可空：没分拣到货架时数量只记到仓库，LocationId 留空；一旦要按位置拣货再落到具体库位。
@@ -56,8 +56,8 @@ import org.jspecify.annotations.Nullable;
 public class Stock extends UpdateAggregateRoot {
 
   /** SPU（汇总维度，不参与定位键） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** SKU */
   @Column(name = "VariantId", nullable = false)
@@ -88,7 +88,7 @@ public class Stock extends UpdateAggregateRoot {
   /**
    * 构造器，新建的行数量为零，之后由入库动作累加
    *
-   * @param productId SKU所属SPU（汇总维度）
+   * @param materialId SKU所属SPU（汇总维度）
    * @param variantId SKU
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
@@ -96,12 +96,12 @@ public class Stock extends UpdateAggregateRoot {
    * @throws DomainException SPU或SKU或仓库不合法、库位Id非法、库存状态不在枚举内时抛出
    */
   Stock(
-      Long productId,
+      Long materialId,
       Long variantId,
       Long warehouseId,
       @Nullable Long locationId,
       String stockStatus) {
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("SPU不能为空");
     }
     if (variantId <= 0) {
@@ -118,7 +118,7 @@ public class Stock extends UpdateAggregateRoot {
       throw new DomainException("库存状态" + stockStatus + "有误!");
     }
 
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;

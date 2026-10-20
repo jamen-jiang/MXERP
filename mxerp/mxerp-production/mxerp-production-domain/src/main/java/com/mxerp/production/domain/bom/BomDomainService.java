@@ -37,7 +37,7 @@ public class BomDomainService {
    * <p>导入只维护草稿版本：状态是发布/作废推进出来的，不接受 Excel 里填的状态，否则一份表就能把已发布
    * 配方退回草稿、把冻结的版本改开。
    *
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -46,7 +46,7 @@ public class BomDomainService {
    * @return BOM 聚合
    */
   public Bom importGenerate(
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
@@ -57,9 +57,9 @@ public class BomDomainService {
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = bomFactory.create(productId, variantId, version, effectiveFrom, effectiveTo, remark);
+      model = bomFactory.create(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
     } else {
-      modify(model, productId, variantId, version, effectiveFrom, effectiveTo, remark);
+      modify(model, materialId, variantId, version, effectiveFrom, effectiveTo, remark);
     }
 
     return model;
@@ -69,7 +69,7 @@ public class BomDomainService {
    * 修改 BOM 表头
    *
    * @param id BOM Id
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -80,14 +80,14 @@ public class BomDomainService {
    */
   public Bom modify(
       long id,
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     Bom model = getExist(id);
-    modify(model, productId, variantId, version, effectiveFrom, effectiveTo, remark);
+    modify(model, materialId, variantId, version, effectiveFrom, effectiveTo, remark);
     return model;
   }
 
@@ -95,7 +95,7 @@ public class BomDomainService {
    * 修改 BOM 表头
    *
    * @param model BOM 聚合
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -105,7 +105,7 @@ public class BomDomainService {
    */
   public void modify(
       Bom model,
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
@@ -115,7 +115,7 @@ public class BomDomainService {
     if (bomRepository.isExistByVariantIdAndVersionExcludeId(variantId, version, model.getId())) {
       throw new DomainException("该父件的 BOM 版本" + version + "已存在!");
     }
-    model.modify(productId, variantId, version, effectiveFrom, effectiveTo, remark);
+    model.modify(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
   }
 
   // ==================== 版本与生效链 ====================
@@ -212,7 +212,7 @@ public class BomDomainService {
 
     Bom model =
         bomFactory.create(
-            source.getProductId(),
+            source.getMaterialId(),
             source.getVariantId(),
             version,
             effectiveFrom,
@@ -221,7 +221,7 @@ public class BomDomainService {
     for (BomLine line : source.getBomLines()) {
       model.addLine(
           line.getSequence(),
-          line.getProductId(),
+          line.getMaterialId(),
           line.getVariantId(),
           line.getQuantity(),
           line.getLossRate(),
@@ -288,7 +288,7 @@ public class BomDomainService {
         bom.modifyLine(
             id,
             data.sequence(),
-            data.productId(),
+            data.materialId(),
             data.variantId(),
             data.quantity(),
             data.lossRate(),
@@ -302,7 +302,7 @@ public class BomDomainService {
         // 不存在：添加
         bom.addLine(
             data.sequence(),
-            data.productId(),
+            data.materialId(),
             data.variantId(),
             data.quantity(),
             data.lossRate(),

@@ -39,7 +39,7 @@ public class StockDomainService {
    * <p>入库、出库、挪状态都带库存状态：状态是定位键的一维，不带就等于默认「动的是可用那一行」，那待检放行、
    * 冻结清点这些动作就没法表达了。跨状态的挪动见 {@link #move}，它把「从一行减、往另一行加」绑成一次调用。
    *
-   * @param productId SKU所属SPU（只在新建行时写入，按系列汇总用）
+   * @param materialId SKU所属SPU（只在新建行时写入，按系列汇总用）
    * @param variantId SKU
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空，空表示数量记到仓库这一层）
@@ -48,7 +48,7 @@ public class StockDomainService {
    * @return 库存行（新建的为未落库实体，由调用方保存）
    */
   public Stock inbound(
-      Long productId,
+      Long materialId,
       Long variantId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -56,7 +56,7 @@ public class StockDomainService {
       BigDecimal quantity) {
     Stock model = stockRepository.getByKey(variantId, warehouseId, locationId, stockStatus);
     if (model == null) {
-      model = new Stock(productId, variantId, warehouseId, locationId, stockStatus);
+      model = new Stock(materialId, variantId, warehouseId, locationId, stockStatus);
     }
     model.inbound(quantity);
     return model;
@@ -145,7 +145,7 @@ public class StockDomainService {
    * 更多的数就是编造账。可用行上的预留会参与这道闸的算法——所以「可用 → 冻结」会把别人欠着发的那部分挡住，
    * 这正是想要的：欠下的料不该转头冻进去；要冻就先退掉那张单的预留。
    *
-   * @param productId SKU所属产品（只在新建到状态那行时用）
+   * @param materialId SKU所属物料（只在新建到状态那行时用）
    * @param variantId SKU
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
@@ -156,7 +156,7 @@ public class StockDomainService {
    * @throws DomainException 转出与转入相同、或转出那行不够时抛出
    */
   public List<Stock> move(
-      Long productId,
+      Long materialId,
       Long variantId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -168,7 +168,7 @@ public class StockDomainService {
     }
     Stock from = getExist(variantId, warehouseId, locationId, fromStockStatus);
     from.outbound(quantity, false);
-    Stock to = inbound(productId, variantId, warehouseId, locationId, toStockStatus, quantity);
+    Stock to = inbound(materialId, variantId, warehouseId, locationId, toStockStatus, quantity);
     return List.of(from, to);
   }
 

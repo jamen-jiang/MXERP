@@ -92,7 +92,7 @@ public class BackflushIssueDomainService {
       WorkOrderMaterial material = line.material();
       model.addLine(
           material.getId(),
-          material.getProductId(),
+          material.getMaterialId(),
           material.getVariantId(),
           line.quantity(),
           material.getUnitId(),

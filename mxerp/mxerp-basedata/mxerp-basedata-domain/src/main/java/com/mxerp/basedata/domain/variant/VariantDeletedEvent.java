@@ -11,11 +11,11 @@ import org.jspecify.annotations.Nullable;
 @Getter
 public class VariantDeletedEvent extends DomainEvent {
 
-  /** 产品Id */
-  private final Long productId;
+  /** 物料Id */
+  private final Long materialId;
 
   /** 规格属性值（删除那一刻快照，代码 → 值） */
-  @Nullable private final TreeMap<String, Object> productAttributes;
+  @Nullable private final TreeMap<String, Object> specificationAttributes;
 
   /**
    * 构造器
@@ -24,7 +24,7 @@ public class VariantDeletedEvent extends DomainEvent {
    */
   public VariantDeletedEvent(Variant variant) {
     super(variant);
-    this.productId = variant.getProductId();
-    this.productAttributes = variant.productAttributeValues();
+    this.materialId = variant.getMaterialId();
+    this.specificationAttributes = variant.specificationAttributeValues();
   }
 }

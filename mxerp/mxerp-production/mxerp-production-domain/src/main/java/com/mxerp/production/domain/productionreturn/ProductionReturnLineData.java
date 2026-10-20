@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * 生产退料单行数据
  *
  * @param workOrderMaterialId 工单用料行Id
- * @param productId 物料SPU
+ * @param materialId 物料SPU
  * @param variantId 物料SKU
  * @param appliedQuantity 申请退料数量
  * @param unitId 单位Id
@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public record ProductionReturnLineData(
     Long workOrderMaterialId,
-    Long productId,
+    Long materialId,
     Long variantId,
     BigDecimal appliedQuantity,
     Long unitId,

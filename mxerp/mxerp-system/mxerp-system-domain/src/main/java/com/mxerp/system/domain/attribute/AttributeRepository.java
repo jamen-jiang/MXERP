@@ -12,7 +12,7 @@ public interface AttributeRepository extends Repository<Attribute> {
   /**
    * 按持有者类型 + 代码查询
    *
-   * @param entityType 持有者表名（如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（如 {@code Material} / {@code Variant}）
    * @param code 属性代码
    * @return 属性（可空），不存在返回 null
    */
@@ -21,7 +21,7 @@ public interface AttributeRepository extends Repository<Attribute> {
   /**
    * 按持有者类型查询列表
    *
-   * @param entityType 持有者表名（如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（如 {@code Material} / {@code Variant}）
    * @return 属性列表
    */
   List<Attribute> getListByEntityType(String entityType);
@@ -29,7 +29,7 @@ public interface AttributeRepository extends Repository<Attribute> {
   /**
    * 判断属性代码在持有者类型下是否已存在
    *
-   * @param entityType 持有者表名（如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（如 {@code Material} / {@code Variant}）
    * @param code 属性代码
    * @param id 排除的属性Id（可空）
    * @return true 表示已存在
@@ -39,7 +39,7 @@ public interface AttributeRepository extends Repository<Attribute> {
   /**
    * 判断属性代码在持有者类型下是否已存在
    *
-   * @param entityType 持有者表名（如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（如 {@code Material} / {@code Variant}）
    * @param code 属性代码
    * @return true 表示已存在
    */

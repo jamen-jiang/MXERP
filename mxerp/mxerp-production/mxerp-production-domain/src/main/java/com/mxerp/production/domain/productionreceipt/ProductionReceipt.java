@@ -57,8 +57,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
   private String workOrderNumber;
 
   /** 产出SPU（快照） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 产出SKU（快照） */
   @Column(name = "VariantId", nullable = false)
@@ -106,7 +106,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param productId 产出SPU（快照）
+   * @param materialId 产出SPU（快照）
    * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
@@ -118,7 +118,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
   ProductionReceipt(
       Long workOrderId,
       String workOrderNumber,
-      Long productId,
+      Long materialId,
       Long variantId,
       Long unitId,
       Long warehouseId,
@@ -130,7 +130,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
     apply(
         workOrderId,
         workOrderNumber,
-        productId,
+        materialId,
         variantId,
         unitId,
         warehouseId,
@@ -157,7 +157,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param productId 产出SPU（快照）
+   * @param materialId 产出SPU（快照）
    * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
@@ -169,7 +169,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
   public void modify(
       Long workOrderId,
       String workOrderNumber,
-      Long productId,
+      Long materialId,
       Long variantId,
       Long unitId,
       Long warehouseId,
@@ -180,7 +180,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
     apply(
         workOrderId,
         workOrderNumber,
-        productId,
+        materialId,
         variantId,
         unitId,
         warehouseId,
@@ -255,7 +255,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param productId 产出SPU（快照）
+   * @param materialId 产出SPU（快照）
    * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
@@ -267,7 +267,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
   private void apply(
       Long workOrderId,
       String workOrderNumber,
-      Long productId,
+      Long materialId,
       Long variantId,
       Long unitId,
       Long warehouseId,
@@ -281,7 +281,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
     if (trimmedWorkOrderNumber == null) {
       throw new DomainException("工单号不能为空");
     }
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("产出SPU不能为空");
     }
     if (variantId <= 0) {
@@ -302,7 +302,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
 
     this.workOrderId = workOrderId;
     this.workOrderNumber = trimmedWorkOrderNumber;
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.unitId = unitId;
     this.warehouseId = warehouseId;

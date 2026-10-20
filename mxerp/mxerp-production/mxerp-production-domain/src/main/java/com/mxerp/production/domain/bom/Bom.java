@@ -32,9 +32,9 @@ import org.jspecify.annotations.Nullable;
  * <p>父件与子件都是 SKU，所以 BOM 本质是 SKU 对 SKU 的自关联：成品、毛坯、靶材、包装袋都挂在同一张
  * Variant 表上，谁有 BOM 谁就能被展开。多层 BOM 不需要额外字段——毛坯 SKU 自己再有一份 BOM 就是三层。
  *
- * <p>唯一键是 {@code variantId + version}，不用 {@code code}：BOM 是产品的附属数据，没有独立编码。
+ * <p>唯一键是 {@code variantId + version}，不用 {@code code}：BOM 是物料的附属数据，没有独立编码。
  *
- * <p>{@code productId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。产品类型
+ * <p>{@code materialId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。物料类型
  * 不在这里存：它记在 {@code Variant} 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
  *
  * <p><b>版本与生效链。</b>同一父件可以并存多个版本，用生效日期接力：状态只有三条路——草稿可随便改，
@@ -51,7 +51,7 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Bom",
     indexes = {
-      @Index(name = "IX_Bom_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_Bom_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_Bom_VariantId", columnList = "VariantId"),
       @Index(name = "IX_Bom_Status", columnList = "Status")
       // 注意：VariantId + Version 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
@@ -59,8 +59,8 @@ import org.jspecify.annotations.Nullable;
 public class Bom extends UpdateAggregateRoot {
 
   /** 父件SPU（按系列查 BOM 用） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 父件SKU */
   @Column(name = "VariantId", nullable = false)
@@ -113,7 +113,7 @@ public class Bom extends UpdateAggregateRoot {
   /**
    * 构造器：新建的 BOM 一律是草稿
    *
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -121,20 +121,20 @@ public class Bom extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   Bom(
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
-    apply(productId, variantId, version, effectiveFrom, effectiveTo, remark);
+    apply(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
     this.status = BomStatusEnum.DRAFT.getCode();
   }
 
   /**
    * 修改 BOM 表头
    *
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -143,21 +143,21 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     checkDraft();
-    apply(productId, variantId, version, effectiveFrom, effectiveTo, remark);
+    apply(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
   }
 
   /**
    * 添加用料行
    *
    * @param sequence 行号
-   * @param productId 子件SPU
+   * @param materialId 子件SPU
    * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
@@ -171,7 +171,7 @@ public class Bom extends UpdateAggregateRoot {
    */
   public void addLine(
       Integer sequence,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
@@ -191,7 +191,7 @@ public class Bom extends UpdateAggregateRoot {
     bomLines.add(
         new BomLine(
             sequence,
-            productId,
+            materialId,
             variantId,
             quantity,
             lossRate,
@@ -208,7 +208,7 @@ public class Bom extends UpdateAggregateRoot {
    *
    * @param bomLineId BOM 行Id
    * @param sequence 行号
-   * @param productId 子件SPU
+   * @param materialId 子件SPU
    * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
@@ -223,7 +223,7 @@ public class Bom extends UpdateAggregateRoot {
   public void modifyLine(
       Long bomLineId,
       Integer sequence,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
@@ -246,7 +246,7 @@ public class Bom extends UpdateAggregateRoot {
     }
     target.modify(
         sequence,
-        productId,
+        materialId,
         variantId,
         quantity,
         lossRate,
@@ -414,7 +414,7 @@ public class Bom extends UpdateAggregateRoot {
    * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参，
    * 否则导入或改表头就能把已发布版本悄悄退回草稿。
    *
-   * @param productId 父件SPU
+   * @param materialId 父件SPU
    * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
@@ -423,13 +423,13 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException SPU 或 SKU 为空、版本为空、生效区间倒挂时抛出
    */
   private void apply(
-      Long productId,
+      Long materialId,
       Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("父件SPU不能为空");
     }
     if (variantId <= 0) {
@@ -443,7 +443,7 @@ public class Bom extends UpdateAggregateRoot {
       throw new DomainException("失效时间必须晚于生效时间");
     }
 
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.version = trimmedVersion;
     this.effectiveFrom = effectiveFrom;

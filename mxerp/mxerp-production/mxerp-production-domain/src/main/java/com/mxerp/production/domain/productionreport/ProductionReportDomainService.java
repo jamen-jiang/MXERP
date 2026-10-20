@@ -6,6 +6,7 @@ import com.mxerp.production.domain.workorder.WorkOrderRepository;
 import com.mxerp.shared.domain.exception.DomainException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -13,8 +14,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * 生产报工单领域服务
  *
- * <p>提交报工要同时动两个聚合：报工单自己置为已提交，工单工序累加良品/报废/工时。这是跨聚合的
- * 一致性动作，所以放在领域服务里编排，而不是让报工单去反向修改工单。
+ * <p>报工要同时动两个聚合：报工单落账，工单工序累加良品/报废/工时。这是跨聚合的一致性动作，所以放在
+ * 领域服务里编排，而不是让报工单去反向修改工单。
+ *
+ * <p>报工没有草稿：建单那一刻就累加进工单工序。现场扫完工单号落下三个数，校验与累计同时发生，错了当场
+ * 报错，而不是留到下班对账才发现。要改数就作废这一张、重新报一张，作废会把累计值减回去。
  *
  * <p>创建报工单只需要三个业务事实：哪道工序、出了多少良品、坏了多少。工单号、工序名称、工作中心
  * 这些快照由本服务从工单上抄下来，操作人沿用工序开工时记的那位，工时不填就按工序标准时间算。
@@ -51,7 +55,13 @@ public class ProductionReportDomainService {
   }
 
   /**
-   * 创建报工单（草稿）
+   * 创建报工单：建单即累加进工单工序
+   *
+   * <p>先让工单侧校验通过再建单——反过来的话，工单侧一抛异常就会留下一张「报了工但没汇总」的报工单。
+   *
+   * <p>标了「报工倒冲」的用料不在这里触发：它要生成一张领料单，那张单得由应用层保存，与库存动账同理。
+   * 应用层在这一步之后调 {@code BackflushIssueDomainService.generate}，触发传报工倒冲、产出量传良品加报废即可；
+   * 发料仓取用料行上快照的那个（来自 BOM 行的发料仓）。
    *
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
@@ -60,7 +70,7 @@ public class ProductionReportDomainService {
    * @param workTime 本次工时（分钟），传空则按工序标准时间算
    * @param remark 备注（可空）
    * @return 报工单聚合
-   * @throws DomainException 工单或工序行不存在、按批取时却没有标准批量时抛出
+   * @throws DomainException 工单或工序行不存在、工序未开工、报工数超过投入数、或按批取时却没有标准批量时抛出
    */
   public ProductionReport create(
       Long workOrderId,
@@ -72,6 +82,7 @@ public class ProductionReportDomainService {
     WorkOrder workOrder = requireWorkOrder(workOrderId);
     WorkOrderOperation operation = requireOperation(workOrder, workOrderOperationId);
     BigDecimal minutes = resolveWorkTime(operation, goodQuantity, scrapQuantity, workTime);
+    workOrder.reportOperation(operation.getId(), goodQuantity, scrapQuantity, minutes);
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return productionReportFactory.create(
         workOrder.getId(),
@@ -90,96 +101,22 @@ public class ProductionReportDomainService {
   }
 
   /**
-   * 修改报工单（仅草稿可改）
+   * 作废报工单：把良品、报废与工时从工单工序里减回去
    *
-   * <p>工序行可以换，但只在这张工单内换；要挪到别的工单就删掉重开一张。
+   * <p>与建单同样的顺序：先让工单侧校验通过再作废自己——反过来的话，工单侧一抛异常就会留下一张
+   * 「已作废但没减数」的报工单。
    *
-   * @param id 报工单Id
-   * @param workOrderOperationId 工单工序Id
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
-   * @param workTime 本次工时（分钟），传空则按工序标准时间算
-   * @param remark 备注（可空）
-   * @return 报工单聚合
-   * @throws DomainException 报工单或工序行不存在、按批取时却没有标准批量时抛出
-   */
-  public ProductionReport modify(
-      long id,
-      Long workOrderOperationId,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
-      @Nullable BigDecimal workTime,
-      @Nullable String remark) {
-    ProductionReport model = getExist(id);
-    WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
-    WorkOrderOperation operation = requireOperation(workOrder, workOrderOperationId);
-    BigDecimal minutes = resolveWorkTime(operation, goodQuantity, scrapQuantity, workTime);
-    model.modify(
-        workOrder.getId(),
-        workOrder.getNumber(),
-        operation.getId(),
-        operation.getOperationId(),
-        operation.getOperationName(),
-        operation.getWorkCenterId(),
-        operation.getWorkCenterName(),
-        operation.getOperatorId(),
-        minutes,
-        goodQuantity,
-        scrapQuantity,
-        remark);
-    return model;
-  }
-
-  /**
-   * 提交报工单：置为已提交，并累加到工单工序
-   *
-   * <p>先让工单侧校验通过再改自己的状态——反过来的话，工单侧一抛异常就会留下一张「已提交但没汇总」
-   * 的报工单。
-   *
-   * <p>标了「报工倒冲」的用料不在这里触发：它要生成一张领料单，那张单得由应用层保存，与库存动账同理。
-   * 应用层在这一步之后调 {@code BackflushIssueDomainService.generate}，触发传报工倒冲、产出量传良品加报废即可；
-   * 发料仓取用料行上快照的那个（来自 BOM 行的发料仓）。
+   * <p>作废只回到工单工序的汇总数：这张报工单触发过的报工倒冲不会跟着退，要退料由应用层另开一张退料单。
    *
    * @param id 报工单Id
-   * @return 报工单聚合
-   * @throws DomainException 报工单或工单不存在、工序未开工、报工数超过投入数时抛出
+   * @param moment 作废时间
+   * @return 报工单聚合（已作废）
+   * @throws DomainException 报工单或工单不存在、已作废、后续工序已开工、或工单侧校验不过时抛出
    */
-  public ProductionReport submit(long id) {
+  public ProductionReport voidReport(long id, LocalDateTime moment) {
     ProductionReport model = getExist(id);
-    if (model.isSubmitted()) {
-      throw new DomainException("报工单" + model.getNumber() + "已提交，不能重复提交");
-    }
-
-    WorkOrder workOrder = workOrderRepository.get(model.getWorkOrderId());
-    if (workOrder == null) {
-      throw new DomainException("工单" + model.getWorkOrderId() + "不存在!");
-    }
-    workOrder.reportOperation(
-        model.getWorkOrderOperationId(),
-        model.getGoodQuantity(),
-        model.getScrapQuantity(),
-        model.getWorkTime());
-
-    model.submit();
-    return model;
-  }
-
-  /**
-   * 撤回报工单：退回草稿，并把报工数从工单工序里减回去
-   *
-   * <p>与提交同样的顺序：先让工单侧校验通过再改自己的状态——反过来的话，工单侧一抛异常就会留下一张
-   * 「已撤回但没减数」的报工单。
-   *
-   * <p>撤回只回到工单工序的汇总数：这张报工单触发过的报工倒冲不会跟着退，要退料由应用层另开一张退料单。
-   *
-   * @param id 报工单Id
-   * @return 报工单聚合（已退回草稿）
-   * @throws DomainException 报工单或工单不存在、非已提交状态、后续工序已开工、或工单侧校验不过时抛出
-   */
-  public ProductionReport withdraw(long id) {
-    ProductionReport model = getExist(id);
-    if (!model.isSubmitted()) {
-      throw new DomainException("报工单" + model.getNumber() + "不是已提交状态，不能撤回");
+    if (model.isVoided()) {
+      throw new DomainException("报工单" + model.getNumber() + "已作废，不能重复作废");
     }
 
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
@@ -189,19 +126,19 @@ public class ProductionReportDomainService {
         model.getScrapQuantity(),
         model.getWorkTime());
 
-    model.withdraw();
+    model.voidReport(moment);
     return model;
   }
 
   /**
-   * 按工单查询已提交的报工单
+   * 按工单查询有效的报工单
    *
    * @param workOrderId 工单Id
-   * @return 已提交的报工单列表
+   * @return 未作废的报工单列表
    */
-  public List<ProductionReport> getSubmittedByWorkOrderId(Long workOrderId) {
+  public List<ProductionReport> getEffectiveByWorkOrderId(Long workOrderId) {
     return productionReportRepository.getListByWorkOrderId(workOrderId).stream()
-        .filter(ProductionReport::isSubmitted)
+        .filter(ProductionReport::isEffective)
         .toList();
   }
 
@@ -243,13 +180,13 @@ public class ProductionReportDomainService {
   /**
    * 定本次工时：现场填了就用现场的，没填就按工序标准时间算
    *
-   * <p>产出量取良品加报废——报废件同样吃掉了加工时间。准备工时只在该工序还没有任何已提交报工时补一次，
+   * <p>产出量取良品加报废——报废件同样吃掉了加工时间。准备工时只在该工序还没有任何报工时补一次，
    * 否则一道分三次报完的工序会把装夹调机算三遍。估算口径复用
    * {@code WorkOrderOperation#estimatedRunMinutes} 与 {@code estimatedSetupMinutes}，按批取时的工序
    * 不足一批也按整批的标准工时计。
    *
-   * <p>「第一次」是看工序上已累计的报工量判的，所以两张都还是草稿时会各计一次准备工时；要精确到
-   * 「开工即计准备工时」得给工序行加标志位，等成本那条线做细时再加。
+   * <p>「第一次」是看工序上已累计的报工量判的。因为建单即累加，连着报两张时第二张已经看得见第一张，
+   * 准备工时只会算一次。
    *
    * @param operation 工单工序行
    * @param goodQuantity 本次良品数量

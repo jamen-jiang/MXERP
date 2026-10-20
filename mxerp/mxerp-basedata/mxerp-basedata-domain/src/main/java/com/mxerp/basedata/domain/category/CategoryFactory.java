@@ -5,7 +5,7 @@ import com.mxerp.shared.domain.util.HierarchyUtils;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 产品分类工厂，负责创建分类 */
+/** 物料分类工厂，负责创建分类 */
 @NullMarked
 public class CategoryFactory {
 

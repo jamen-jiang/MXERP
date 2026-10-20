@@ -17,7 +17,7 @@ import org.jspecify.annotations.NullMarked;
 /**
  * 属性赋值行（某个对象上填的一个「属性 + 值」，通用表）
  *
- * <p>所有对象填的属性值都落在这一张表：归属由 {@code EntityType}（持有者的表名，如 {@code Product} /
+ * <p>所有对象填的属性值都落在这一张表：归属由 {@code EntityType}（持有者的表名，如 {@code Material} /
  * {@code Variant}）加 {@code EntityId} 两列一起确定，不再为每种持有者各建一张 {@code XxxAttribute}。
  * 这是 SAP {@code AUSP} 的做法（{@code OBJ_TYPE} + {@code OBJ_ID} + {@code ATTRIB} + {@code ATWRT}），
  * 好处是新对象要挂属性值不必再建表、不必再改聚合，取值规则只有一套。
@@ -46,7 +46,7 @@ import org.jspecify.annotations.NullMarked;
     })
 public class AttributeAssignment extends BaseDeleteEntity {
 
-  /** 持有者表名（由持有者自己传，如 {@code Product} / {@code Variant}） */
+  /** 持有者表名（由持有者自己传，如 {@code Material} / {@code Variant}） */
   @Nationalized
   @Column(name = "EntityType", nullable = false, length = 50)
   private String entityType;
@@ -72,7 +72,7 @@ public class AttributeAssignment extends BaseDeleteEntity {
   /**
    * 构造器
    *
-   * @param entityType 持有者表名（由持有者自己传，如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（由持有者自己传，如 {@code Material} / {@code Variant}）
    * @param attributeId 属性定义Id
    * @param code 属性代码
    * @param value 属性值

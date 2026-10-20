@@ -161,7 +161,7 @@ public class ProductionReturn extends OrderAggregateRoot {
    * 添加退料行（仅草稿可加）
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param productId 物料SPU（快照）
+   * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请退料数量
    * @param unitId 单位Id（快照）
@@ -172,7 +172,7 @@ public class ProductionReturn extends OrderAggregateRoot {
    */
   public void addLine(
       Long workOrderMaterialId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
@@ -186,7 +186,7 @@ public class ProductionReturn extends OrderAggregateRoot {
     productionReturnLines.add(
         new ProductionReturnLine(
             workOrderMaterialId,
-            productId,
+            materialId,
             variantId,
             appliedQuantity,
             unitId,

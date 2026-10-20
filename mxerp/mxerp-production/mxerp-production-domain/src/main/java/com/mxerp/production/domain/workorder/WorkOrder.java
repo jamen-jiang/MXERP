@@ -39,14 +39,12 @@ import org.jspecify.annotations.Nullable;
  * <p>生命周期：{@code DRAFT → RELEASED → IN_PROGRESS → COMPLETED → CLOSED}，任意阶段可 {@code CANCELLED}。
  * 下达（{@link #release}）是唯一一次「定型」动作：按 BOM 展开用料、按工艺路线快照工序，之后路线改版不影响本单。
  *
- * <p>{@code productId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
- * 到一起看，靠它分组。产品类型不在这里抄：它记在 {@code Variant} 主数据上，工单再存一份就成了两处说法，
+ * <p>{@code materialId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
+ * 到一起看，靠它分组。物料类型不在这里抄：它记在 {@code Variant} 主数据上，工单再存一份就成了两处说法，
  * 而且「半成品/成品」这种分法在报表上并不比按 SPU 分组更准。
  *
- * <p>交期与计划完工是两个日期，不能一列两用。{@code dueTime} 是答应客户的承诺，属于需求侧，排产永不修改；
- * {@code plannedEndTime} 是排产算出来的结果，可以反复重排。两者一比就是有没有赶不上交期（{@link
- * #isPlannedLate()}）：这个偏差必须留在单子上看得见，让计划员去谈加急或改期，而不是排产顺手把承诺改成
- * 自己做得到的那天。口径取自 SAP 的基本完成日期／计划完成日期、D365 的交货日期／计划生产结束。
+ * <p>{@code dueTime} 是答应客户的承诺，属于需求侧，生产侧只读不写：它记的是当初答应的是哪天，改了就再也没
+ * 人知道。口径取自 SAP 的基本完成日期／计划完成日期、D365 的交货日期。
  */
 @NullMarked
 @Getter
@@ -57,19 +55,16 @@ import org.jspecify.annotations.Nullable;
     name = "WorkOrder",
     indexes = {
       @Index(name = "IX_WorkOrder_Number", columnList = "Number"),
-      @Index(name = "IX_WorkOrder_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_WorkOrder_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_WorkOrder_VariantId", columnList = "VariantId"),
       @Index(name = "IX_WorkOrder_Status", columnList = "Status"),
       @Index(name = "IX_WorkOrder_SourceType_SourceId", columnList = "SourceType,SourceId")
     })
 public class WorkOrder extends OrderAggregateRoot {
 
-  /** 默认排产优先级：建单时都排在中间，谁着急谁把数字改小 */
-  private static final int DEFAULT_SCHEDULING_PRIORITY = 50;
-
   /** 产出SKU的SPU（同一系列多个度数的工单按它折叠） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 产出SKU */
   @Column(name = "VariantId", nullable = false)
@@ -104,7 +99,7 @@ public class WorkOrder extends OrderAggregateRoot {
   @Nullable
   private String sourceNumber;
 
-  /** 展开所用的BOM（可空，产品没有 BOM 时为空） */
+  /** 展开所用的BOM（可空，物料没有 BOM 时为空） */
   @Column(name = "BomId")
   @Nullable
   private Long bomId;
@@ -126,24 +121,10 @@ public class WorkOrder extends OrderAggregateRoot {
   @Nullable
   private String routingVersion;
 
-  /** 排产优先级（数值越小越先排；同一台设备上抢时间时按它定先后） */
-  @Column(name = "SchedulingPriority", nullable = false)
-  private Integer schedulingPriority;
-
-  /** 交期（可空，承诺的完工时间）：需求侧给的日期，排产只对照它、不修改它 */
+  /** 交期（可空，承诺的完工时间）：需求侧给的日期，生产侧只读不写 */
   @Column(name = "DueTime")
   @Nullable
   private LocalDateTime dueTime;
-
-  /** 计划开工时间（可空，排产写入） */
-  @Column(name = "PlannedStartTime")
-  @Nullable
-  private LocalDateTime plannedStartTime;
-
-  /** 计划完工时间（可空，排产写入；晚于交期就是赶不上） */
-  @Column(name = "PlannedEndTime")
-  @Nullable
-  private LocalDateTime plannedEndTime;
 
   /** 实际开工时间（可空） */
   @Column(name = "ActualStartTime")
@@ -191,7 +172,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 构造器
    *
-   * @param productId 产出SKU的SPU
+   * @param materialId 产出SKU的SPU
    * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
@@ -201,14 +182,12 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
    * @param dueTime 交期（可空，承诺的完工时间）
-   * @param plannedStartTime 计划开工时间（可空）
-   * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   WorkOrder(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long unitId,
@@ -218,14 +197,12 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable Long bomId,
       @Nullable Long routingId,
       @Nullable LocalDateTime dueTime,
-      @Nullable LocalDateTime plannedStartTime,
-      @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark,
       String number) {
     super(number);
     apply(
-        productId,
+        materialId,
         variantId,
         quantity,
         unitId,
@@ -235,12 +212,9 @@ public class WorkOrder extends OrderAggregateRoot {
         bomId,
         routingId,
         dueTime,
-        plannedStartTime,
-        plannedEndTime,
         warehouseId,
         remark);
     this.status = WorkOrderStatusEnum.DRAFT.getCode();
-    this.schedulingPriority = DEFAULT_SCHEDULING_PRIORITY;
   }
 
   /**
@@ -272,81 +246,24 @@ public class WorkOrder extends OrderAggregateRoot {
   }
 
   /**
-   * 把排产结果写回工序，并更新工单的计划起止时间
+   * 调整交期
    *
-   * <p>排产算法在 {@code WorkOrderSchedulingDomainService} 里，本方法只负责落定：工序顺序与计划时段一一对应，
-   * 工单的计划开工取首道、计划完工取末道。草稿也能排——排产只是算日期，不动库存也不动工单状态。
+   * <p>交期是答应客户的承诺，属于需求侧，生产侧永不修改。
    *
-   * <p>这里写的是计划起止，{@code dueTime} 那份承诺一律不写：排产赶不上交期时要把「赶不上」露出来，
-   * 而不是把交期改成自己做得到的那天，改了就再也没人知道当初答应的是哪天。
-   *
-   * @param plans 按工序顺序排列的计划时段，数量必须与工序数一致
-   * @throws DomainException 计划时段数量对不上、时段倒挂、或工序时段与工单时段对不上时抛出
+   * @param dueTime 交期（可空）
+   * @throws DomainException 工单已完工/已关闭/已取消时抛出
    */
-  public void applySchedule(List<OperationPlan> plans) {
-    List<WorkOrderOperation> operations = orderedOperations();
-    if (plans.size() != operations.size()) {
-      throw new DomainException(
-          "排产结果有" + plans.size() + "段，工单有" + operations.size() + "道工序，对不上");
-    }
-    for (int i = 0; i < operations.size(); i++) {
-      OperationPlan plan = plans.get(i);
-      if (plan.startTime().isAfter(plan.endTime())) {
-        throw new DomainException("工序" + operations.get(i).getOperationName() + "的计划时段倒挂");
-      }
-      operations.get(i).plan(plan.startTime(), plan.endTime());
-    }
-    this.plannedStartTime = plans.get(0).startTime();
-    this.plannedEndTime = plans.get(plans.size() - 1).endTime();
-  }
-
-  /**
-   * 一道工序的排产结果
-   *
-   * @param startTime 计划开工时间
-   * @param endTime 计划完工时间
-   */
-  public record OperationPlan(LocalDateTime startTime, LocalDateTime endTime) {}
-
-  /**
-   * 排产结果是否赶不上交期
-   *
-   * <p>只看两个已经落定的日期：计划完工晚于交期就是赶不上。没交期（{@code dueTime} 为空）不作判断，
-   * 没排产（{@code plannedEndTime} 为空）也一样——此时还没有结论可报。
-   *
-   * <p>排产不会因为它抛异常：计划员要的是「这单最早 11 月 2 日 能做完，比答应客户的 10 月 25 日 晚了」，
-   * 拿着这个数去谈加急或改期，而不是让算日期的一步把承诺抹平。
-   *
-   * @return true 表示排产出的完工时间晚于交期
-   */
-  public boolean isPlannedLate() {
-    return this.dueTime != null
-        && this.plannedEndTime != null
-        && this.plannedEndTime.isAfter(this.dueTime);
-  }
-
-  /**
-   * 调整排产优先级
-   *
-   * <p>数值越小越先排。只在还没开工时允许改——已经开工的单再调优先级没有意义，它已经占了设备。
-   *
-   * @param priority 排产优先级（0 到 100，越小越急）
-   * @throws DomainException 工单已完工/已关闭/已取消、或优先级超出范围时抛出
-   */
-  public void changeSchedulingPriority(int priority) {
+  public void changeDueTime(@Nullable LocalDateTime dueTime) {
     if (isCompleted() || isClosed() || isCancelled()) {
-      throw new DomainException("工单已结束，不能再调整排产优先级");
+      throw new DomainException("工单已结束，不能再调整交期");
     }
-    if (priority < 0 || priority > 100) {
-      throw new DomainException("排产优先级要在 0 到 100 之间");
-    }
-    this.schedulingPriority = priority;
+    this.dueTime = dueTime;
   }
 
   /**
    * 修改工单（仅草稿状态可改）
    *
-   * @param productId 产出SKU的SPU
+   * @param materialId 产出SKU的SPU
    * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
@@ -356,14 +273,12 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
    * @param dueTime 交期（可空，承诺的完工时间）
-   * @param plannedStartTime 计划开工时间（可空）
-   * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @throws DomainException 非草稿状态时抛出
    */
   public void modify(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long unitId,
@@ -373,15 +288,13 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable Long bomId,
       @Nullable Long routingId,
       @Nullable LocalDateTime dueTime,
-      @Nullable LocalDateTime plannedStartTime,
-      @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark) {
     if (!isDraft()) {
       throw new DomainException("工单已下达，不能再修改");
     }
     apply(
-        productId,
+        materialId,
         variantId,
         quantity,
         unitId,
@@ -391,8 +304,6 @@ public class WorkOrder extends OrderAggregateRoot {
         bomId,
         routingId,
         dueTime,
-        plannedStartTime,
-        plannedEndTime,
         warehouseId,
         remark);
   }
@@ -474,7 +385,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * 添加用料行（仅草稿状态可加）
    *
    * @param bomLineId 来源BOM行Id（可空）
-   * @param productId 物料SPU
+   * @param materialId 物料SPU
    * @param variantId 物料SKU
    * @param requiredQuantity 需求数量
    * @param unitQuantity 净单位用量（可空，含损耗；手工加料时为空）
@@ -488,7 +399,7 @@ public class WorkOrder extends OrderAggregateRoot {
    */
   public void addMaterial(
       @Nullable Long bomLineId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
@@ -504,7 +415,7 @@ public class WorkOrder extends OrderAggregateRoot {
     workOrderMaterials.add(
         new WorkOrderMaterial(
             bomLineId,
-            productId,
+            materialId,
             variantId,
             requiredQuantity,
             unitQuantity,
@@ -734,7 +645,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 领料：累加工单用料行的已领数量
    *
-   * <p>用料行是倒冲行时，已耗跟着一起加——出库即进了产品，两个数是一笔。
+   * <p>用料行是倒冲行时，已耗跟着一起加——出库即进了物料，两个数是一笔。
    *
    * @param workOrderMaterialId 工单用料Id
    * @param quantity 本次领用数量
@@ -805,7 +716,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次入库数量
    * @throws DomainException 数量非正、工单未下达或已关闭/已取消、或累计入库超过已完工数量时抛出
    */
-  public void receiveProduct(BigDecimal quantity) {
+  public void receiveOutput(BigDecimal quantity) {
     if (quantity.signum() <= 0) {
       throw new DomainException("入库数量必须大于0");
     }
@@ -833,7 +744,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 退回数量
    * @throws DomainException 数量非正、工单未下达或已关闭/已取消、或退回超过已入库数量时抛出
    */
-  public void unreceiveProduct(BigDecimal quantity) {
+  public void unreceiveOutput(BigDecimal quantity) {
     if (quantity.signum() <= 0) {
       throw new DomainException("退回数量必须大于0");
     }
@@ -1002,7 +913,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * @param productId 产出SKU的SPU
+   * @param materialId 产出SKU的SPU
    * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
@@ -1012,14 +923,12 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param bomId 指定BOM（可空）
    * @param routingId 指定工艺路线（可空）
    * @param dueTime 交期（可空，承诺的完工时间）
-   * @param plannedStartTime 计划开工时间（可空）
-   * @param plannedEndTime 计划完工时间（可空）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @throws DomainException SPU、SKU、数量、单位、来源类型非法，或计划时间倒挂时抛出
    */
   private void apply(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long unitId,
@@ -1029,11 +938,9 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable Long bomId,
       @Nullable Long routingId,
       @Nullable LocalDateTime dueTime,
-      @Nullable LocalDateTime plannedStartTime,
-      @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark) {
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("产出SPU不能为空");
     }
     if (variantId <= 0) {
@@ -1052,13 +959,8 @@ public class WorkOrder extends OrderAggregateRoot {
     if (EnumUtils.fromCode(WorkOrderSourceTypeEnum.class, trimmedSourceType) == null) {
       throw new DomainException("来源类型" + trimmedSourceType + "有误!");
     }
-    if (plannedStartTime != null
-        && plannedEndTime != null
-        && plannedStartTime.isAfter(plannedEndTime)) {
-      throw new DomainException("计划开工时间不能晚于计划完工时间");
-    }
 
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.quantity = quantity;
     this.unitId = unitId;
@@ -1068,8 +970,6 @@ public class WorkOrder extends OrderAggregateRoot {
     this.bomId = bomId;
     this.routingId = routingId;
     this.dueTime = dueTime;
-    this.plannedStartTime = plannedStartTime;
-    this.plannedEndTime = plannedEndTime;
     this.warehouseId = warehouseId;
     this.remark = remark;
   }

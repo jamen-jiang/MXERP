@@ -17,9 +17,6 @@ public enum SerialNumberTypeEnum implements BaseEnum {
   /** 工单（生产订单） */
   WORK_ORDER("WorkOrder", "工单"),
 
-  /** 生产批次（合批运行，一炉/一缸/一车一张） */
-  PRODUCTION_RUN("ProductionRun", "生产批次"),
-
   /** 生产报工单 */
   PRODUCTION_REPORT("ProductionReport", "生产报工单"),
 

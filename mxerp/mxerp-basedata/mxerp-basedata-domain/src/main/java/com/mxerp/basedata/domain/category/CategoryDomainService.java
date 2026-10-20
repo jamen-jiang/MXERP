@@ -9,9 +9,9 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 产品分类领域服务，负责层级编排
+ * 物料分类领域服务，负责层级编排
  *
- * <p>是否被产品、规格属性引用而不允许删除，不在这里判断——本项目的领域服务只编排自己聚合内的规则，
+ * <p>是否被物料、规格属性引用而不允许删除，不在这里判断——本项目的领域服务只编排自己聚合内的规则，
  * 跨聚合的引用校验由应用层在删除前完成。
  */
 @NullMarked

@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * <p>数量一律为正：普通单是入或出多少，红字单是「要冲掉多少」。红字单里那个负号由单子自己落，外头填进来的永远
  * 是正数——省得谁把正负号填反了还看不出错在哪。
  *
- * @param productId 物料SPU
+ * @param materialId 物料SPU
  * @param variantId 物料SKU
  * @param quantity 数量（正数）
  * @param warehouseId 仓库Id
@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public record StockRecordLineData(
-    Long productId,
+    Long materialId,
     Long variantId,
     BigDecimal quantity,
     Long warehouseId,

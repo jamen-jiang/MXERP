@@ -132,16 +132,6 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   @Column(name = "Status", nullable = false, length = 50)
   private String status;
 
-  /** 计划开工时间（可空，排产后写入） */
-  @Column(name = "PlannedStartTime")
-  @Nullable
-  private LocalDateTime plannedStartTime;
-
-  /** 计划完工时间（可空，排产后写入） */
-  @Column(name = "PlannedEndTime")
-  @Nullable
-  private LocalDateTime plannedEndTime;
-
   /** 实际开工时间（可空，外协工序为发出时间） */
   @Column(name = "ActualStartTime")
   @Nullable
@@ -247,22 +237,9 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   }
 
   /**
-   * 排产结果写回：记下这道工序占用的计划时段
-   *
-   * <p>只由 {@code WorkOrder.schedule} 调用，不对外暴露。排产可以反复跑，所以这里不做状态校验。
-   *
-   * @param startTime 计划开工时间
-   * @param endTime 计划完工时间
-   */
-  void plan(LocalDateTime startTime, LocalDateTime endTime) {
-    this.plannedStartTime = startTime;
-    this.plannedEndTime = endTime;
-  }
-
-  /**
    * 本道工序占用的总时长（分钟）
    *
-   * <p>准备 + 加工，不含排队——排队是「等上道做完」的时间，排产时用工序顺序体现，重复算会把工期撑大。
+   * <p>准备 + 加工，不含排队——排队是「等上道做完」的时间，用工序顺序体现，重复算会把工期撑大。
    *
    * @param quantity 计划数量
    * @return 总时长（分钟）

@@ -1,5 +1,6 @@
 package com.mxerp.production.domain.workcenter;
 
+import com.mxerp.production.domain.workcenterresourcecategory.WorkCenterResourceCategoryRepository;
 import com.mxerp.shared.domain.exception.DomainException;
 import java.math.BigDecimal;
 import org.jspecify.annotations.NullMarked;
@@ -15,16 +16,23 @@ public class WorkCenterDomainService {
   /** 工作中心仓储 */
   private final WorkCenterRepository workCenterRepository;
 
+  /** 工作中心资源类别仓储 */
+  private final WorkCenterResourceCategoryRepository workCenterResourceCategoryRepository;
+
   /**
    * 构造器注入
    *
    * @param workCenterFactory 工作中心工厂
    * @param workCenterRepository 工作中心仓储
+   * @param workCenterResourceCategoryRepository 工作中心资源类别仓储
    */
   public WorkCenterDomainService(
-      WorkCenterFactory workCenterFactory, WorkCenterRepository workCenterRepository) {
+      WorkCenterFactory workCenterFactory,
+      WorkCenterRepository workCenterRepository,
+      WorkCenterResourceCategoryRepository workCenterResourceCategoryRepository) {
     this.workCenterFactory = workCenterFactory;
     this.workCenterRepository = workCenterRepository;
+    this.workCenterResourceCategoryRepository = workCenterResourceCategoryRepository;
   }
 
   /**
@@ -32,7 +40,6 @@ public class WorkCenterDomainService {
    *
    * @param code 代码
    * @param name 名称
-   * @param type 类型
    * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
@@ -41,7 +48,6 @@ public class WorkCenterDomainService {
   public WorkCenter importGenerate(
       String code,
       String name,
-      String type,
       BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
@@ -50,9 +56,9 @@ public class WorkCenterDomainService {
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = workCenterFactory.create(code, name, type, capacityMinutesPerDay, disabled, remark);
+      model = workCenterFactory.create(code, name, capacityMinutesPerDay, disabled, remark);
     } else {
-      modify(model, code, name, type, capacityMinutesPerDay, disabled, remark);
+      modify(model, code, name, capacityMinutesPerDay, disabled, remark);
     }
 
     return model;
@@ -64,7 +70,6 @@ public class WorkCenterDomainService {
    * @param id 工作中心Id
    * @param code 代码
    * @param name 名称
-   * @param type 类型
    * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
@@ -74,15 +79,11 @@ public class WorkCenterDomainService {
       long id,
       String code,
       String name,
-      String type,
       BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
-    WorkCenter model = workCenterRepository.get(id);
-    if (model == null) {
-      throw new DomainException("工作中心" + id + "不存在!");
-    }
-    modify(model, code, name, type, capacityMinutesPerDay, disabled, remark);
+    WorkCenter model = getExist(id);
+    modify(model, code, name, capacityMinutesPerDay, disabled, remark);
     return model;
   }
 
@@ -92,7 +93,6 @@ public class WorkCenterDomainService {
    * @param model 工作中心
    * @param code 代码
    * @param name 名称
-   * @param type 类型
    * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
@@ -101,7 +101,6 @@ public class WorkCenterDomainService {
       WorkCenter model,
       String code,
       String name,
-      String type,
       BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
@@ -109,6 +108,110 @@ public class WorkCenterDomainService {
     if (workCenterRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("工作中心代码" + code + "已存在!");
     }
-    model.modify(code, name, type, capacityMinutesPerDay, disabled, remark);
+    model.modify(code, name, capacityMinutesPerDay, disabled, remark);
+  }
+
+  /**
+   * 添加资源
+   *
+   * @param workCenterId 工作中心Id
+   * @param code 代码
+   * @param name 名称
+   * @param workCenterResourceCategoryId 工作中心资源类别Id
+   * @param quantity 数量
+   * @param efficiency 效率（百分比）
+   * @param disabled 是否停用
+   * @param remark 备注（可空）
+   * @throws DomainException 工作中心或资源类别不存在、资源代码重复时抛出
+   */
+  public void addResource(
+      long workCenterId,
+      String code,
+      String name,
+      long workCenterResourceCategoryId,
+      int quantity,
+      BigDecimal efficiency,
+      boolean disabled,
+      @Nullable String remark) {
+    WorkCenter model = getExist(workCenterId);
+    validateCategory(workCenterResourceCategoryId);
+    model.addResource(
+        code, name, workCenterResourceCategoryId, quantity, efficiency, disabled, remark);
+  }
+
+  /**
+   * 修改资源
+   *
+   * @param workCenterId 工作中心Id
+   * @param resourceId 资源Id
+   * @param code 代码
+   * @param name 名称
+   * @param workCenterResourceCategoryId 工作中心资源类别Id
+   * @param quantity 数量
+   * @param efficiency 效率（百分比）
+   * @param disabled 是否停用
+   * @param remark 备注（可空）
+   * @throws DomainException 工作中心、资源或资源类别不存在、资源代码重复时抛出
+   */
+  public void modifyResource(
+      long workCenterId,
+      long resourceId,
+      String code,
+      String name,
+      long workCenterResourceCategoryId,
+      int quantity,
+      BigDecimal efficiency,
+      boolean disabled,
+      @Nullable String remark) {
+    WorkCenter model = getExist(workCenterId);
+    validateCategory(workCenterResourceCategoryId);
+    model.modifyResource(
+        resourceId,
+        code,
+        name,
+        workCenterResourceCategoryId,
+        quantity,
+        efficiency,
+        disabled,
+        remark);
+  }
+
+  /**
+   * 删除资源（逻辑删除）
+   *
+   * @param workCenterId 工作中心Id
+   * @param resourceId 资源Id
+   * @throws DomainException 工作中心不存在时抛出
+   */
+  public void deleteResource(long workCenterId, long resourceId) {
+    WorkCenter model = getExist(workCenterId);
+    model.deleteResource(resourceId);
+  }
+
+  /**
+   * 取工作中心，不存在直接报错
+   *
+   * @param id 工作中心Id
+   * @return 工作中心
+   * @throws DomainException 工作中心不存在时抛出
+   */
+  private WorkCenter getExist(long id) {
+    WorkCenter model = workCenterRepository.get(id);
+    if (model == null) {
+      throw new DomainException("工作中心" + id + "不存在!");
+    }
+    return model;
+  }
+
+  /**
+   * 校验资源类别存在
+   *
+   * @param workCenterResourceCategoryId 工作中心资源类别Id
+   * @throws DomainException 工作中心资源类别不存在时抛出
+   */
+  private void validateCategory(long workCenterResourceCategoryId) {
+    if (workCenterResourceCategoryRepository.get(workCenterResourceCategoryId) == null) {
+      throw new DomainException("工作中心资源类别" + workCenterResourceCategoryId + "不存在!");
+    }
   }
 }

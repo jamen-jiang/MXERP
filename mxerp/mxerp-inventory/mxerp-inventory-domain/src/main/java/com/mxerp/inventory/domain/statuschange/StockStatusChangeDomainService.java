@@ -79,7 +79,7 @@ public class StockStatusChangeDomainService {
     for (StockStatusChangeLineData data : lines) {
       validateLocationUsage(data.warehouseId(), data.locationId(), warehouses);
       model.addLine(
-          data.productId(),
+          data.materialId(),
           data.variantId(),
           data.warehouseId(),
           data.locationId(),
@@ -105,7 +105,7 @@ public class StockStatusChangeDomainService {
     for (StockStatusChangeLine line : model.getStockStatusChangeLines()) {
       moved.addAll(
           stockDomainService.move(
-              line.getProductId(),
+              line.getMaterialId(),
               line.getVariantId(),
               line.getWarehouseId(),
               line.getLocationId(),

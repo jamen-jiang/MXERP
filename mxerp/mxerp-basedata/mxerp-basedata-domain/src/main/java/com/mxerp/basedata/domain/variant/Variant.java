@@ -1,6 +1,6 @@
 package com.mxerp.basedata.domain.variant;
 
-import com.mxerp.basedata.domain.productattribute.AssignedProductAttributeData;
+import com.mxerp.basedata.domain.specificationattribute.AssignedSpecificationAttributeData;
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.util.HashUtils;
 import com.mxerp.shared.domain.util.ValueTextUtils;
@@ -31,8 +31,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Variant（一条规格型号，业务口中就是 SKU）
  *
- * <p>这里只放「这个规格是什么」：OPC、规格属性值、单位。采购价、币种、起订量不在这里，见
- * {@code com.mxerp.basedata.domain.supplierprice.SupplierPrice}——同一个规格可以被多个供应商报价，
+ * <p>这里只放「这个规格是什么」：OPC、规格属性值。采购价、币种、起订量不在这里，见
+ * {@code com.mxerp.basedata.domain.purchaseprice.PurchasePrice}——同一个规格可以被多个供应商报价，
  * 钉在规格上只能留下最新一个值。
  *
  * <p>值分两处存，是因为它们的作用根本不同：{@link VariantAttributeValue} 是这一行的身份
@@ -40,7 +40,7 @@ import org.jspecify.annotations.Nullable;
  * 唯一性由这些行算出 {@code AttributeSignature} 来保证；描述性取值另存通用赋值表
  * {@code AttributeAssignment}（{@code EntityType = 'Variant'}，定义在 {@code Attribute}，相当于 SAP 的
  * {@code CABN} 与 {@code AUSP}），改它不影响身份。
- * Odoo 也是这个分法：变体组合由 {@code product.template.attribute.line} 展开成 {@code product.product}
+ * Odoo 也是这个分法：变体组合由 {@code material.template.attribute.line} 展开成 {@code material.material}
  * 的一行，其余描述字段不进入组合唯一性（{@code product_product_combination_unique}）。
  *
  * <p>那张赋值表已挪到平台层 {@code com.mxerp.system.domain.attribute}，本模块不依赖 system-domain，
@@ -54,16 +54,16 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Variant",
     indexes = {
-      @Index(name = "IX_Variant_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_Variant_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_Variant_Opc", columnList = "Opc")
       // 注意：AttributeSignature 的过滤唯一索引带 WHERE IsDeleted=0，用 Flyway 创建
-      // 注意：ProductId + Opc 的过滤唯一索引带 WHERE IsDeleted=0 AND Opc IS NOT NULL AND Opc<>''，用 Flyway 创建
+      // 注意：MaterialId + Opc 的过滤唯一索引带 WHERE IsDeleted=0 AND Opc IS NOT NULL AND Opc<>''，用 Flyway 创建
     })
 public class Variant extends UpdateAggregateRoot {
 
-  /** 所属产品Id */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  /** 所属物料Id */
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 规格属性标识码 */
   @Nationalized
@@ -75,16 +75,6 @@ public class Variant extends UpdateAggregateRoot {
   @Column(name = "Opc", length = 100)
   @Nullable
   private String opc;
-
-  /** 单位Id（可空） */
-  @Column(name = "UnitId")
-  @Nullable
-  private Long unitId;
-
-  /** 税率Id（可空） */
-  @Column(name = "TaxRateId")
-  @Nullable
-  private Long taxRateId;
 
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
@@ -101,7 +91,7 @@ public class Variant extends UpdateAggregateRoot {
       orphanRemoval = true)
   @JoinColumn(name = "VariantId")
   @SQLRestriction("IsDeleted = 0")
-  private List<VariantAttributeValue> productAttributes = new ArrayList<>();
+  private List<VariantAttributeValue> specificationAttributes = new ArrayList<>();
 
   // 属性值挂载先停用：属性那套（Attribute / AttributeAssignment）已挪到平台层
   // com.mxerp.system.domain.attribute，basedata-domain 不依赖 system-domain，所以这里整段注释保留；
@@ -109,8 +99,8 @@ public class Variant extends UpdateAggregateRoot {
   // /**
   //  * 属性值（一行一个值，不参与唯一性判断，只读）
   //  *
-  //  * <p>与产品的属性值共用一张通用表 {@code AttributeAssignment}，靠 {@code EntityType = 'Variant'} +
-  //  * {@code EntityId} 认归属；这一条规格由哪组值构成是 {@code productAttributes} 的事，这里只是补充描述。
+  //  * <p>与物料的属性值共用一张通用表 {@code AttributeAssignment}，靠 {@code EntityType = 'Variant'} +
+  //  * {@code EntityId} 认归属；这一条规格由哪组值构成是 {@code specificationAttributes} 的事，这里只是补充描述。
   //  */
   // @OneToMany(
   //     fetch = FetchType.EAGER,
@@ -125,8 +115,8 @@ public class Variant extends UpdateAggregateRoot {
    *
    * @return 不可变列表
    */
-  public List<VariantAttributeValue> getProductAttributes() {
-    return Collections.unmodifiableList(productAttributes);
+  public List<VariantAttributeValue> getSpecificationAttributes() {
+    return Collections.unmodifiableList(specificationAttributes);
   }
 
   /**
@@ -136,7 +126,7 @@ public class Variant extends UpdateAggregateRoot {
    *
    * @return 按代码排序的规格属性值
    */
-  public TreeMap<String, Object> productAttributeValues() {
+  public TreeMap<String, Object> specificationAttributeValues() {
     TreeMap<String, Object> result = new TreeMap<>();
     for (Map.Entry<String, List<String>> entry : groupValues().entrySet()) {
       List<String> values = entry.getValue();
@@ -199,31 +189,27 @@ public class Variant extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param productId ProductId
+   * @param materialId MaterialId
    * @param opc OPC（可空）
-   * @param unitId 单位Id（可空）
-   * @param taxRateId 税率Id（可空）
-   * @param productAttributeRows 规格属性值行数据——这一条规格由哪组值构成（可空）
+   * @param specificationAttributeRows 规格属性值行数据——这一条规格由哪组值构成（可空）
    */
   Variant(
-      Long productId,
+      Long materialId,
       @Nullable String opc,
-      @Nullable Long unitId,
-      @Nullable Long taxRateId,
-      @Nullable List<AssignedProductAttributeData> productAttributeRows) {
-    // 不可变字段：ProductId 与规格属性值行（决定唯一性签名）创建后不允许修改
-    this.productId = productId;
-    if (productAttributeRows != null) {
-      for (AssignedProductAttributeData data : productAttributeRows) {
-        this.productAttributes.add(
-            new VariantAttributeValue(data.productAttributeId(), data.code(), data.value()));
+      @Nullable List<AssignedSpecificationAttributeData> specificationAttributeRows) {
+    // 不可变字段：MaterialId 与规格属性值行（决定唯一性签名）创建后不允许修改
+    this.materialId = materialId;
+    if (specificationAttributeRows != null) {
+      for (AssignedSpecificationAttributeData data : specificationAttributeRows) {
+        this.specificationAttributes.add(
+            new VariantAttributeValue(data.specificationAttributeId(), data.code(), data.value()));
       }
     }
 
     // 可变字段交给 apply 统一处理
-    apply(opc, unitId, taxRateId);
+    apply(opc);
 
-    // 签名依赖 productId + 规格属性值行，必须在两者赋值完成后计算
+    // 签名依赖 materialId + 规格属性值行，必须在两者赋值完成后计算
     this.attributeSignature = calculateSignature();
   }
 
@@ -231,11 +217,9 @@ public class Variant extends UpdateAggregateRoot {
    * 修改
    *
    * @param opc OPC（可空）
-   * @param unitId 单位Id（可空）
-   * @param taxRateId 税率Id（可空）
    */
-  void modify(@Nullable String opc, @Nullable Long unitId, @Nullable Long taxRateId) {
-    apply(opc, unitId, taxRateId);
+  void modify(@Nullable String opc) {
+    apply(opc);
   }
 
   /** 启用 */
@@ -263,19 +247,20 @@ public class Variant extends UpdateAggregateRoot {
    * <p>参与拼接的是「规格属性代码=规格属性值」而不是只有值，否则 {@code {SIZE:25}} 与 {@code {COLOR:25}}
    * 会算出同一个签名。
    *
-   * @param productId ProductId
-   * @param productAttributeRows 规格属性值行数据（可空）
+   * @param materialId MaterialId
+   * @param specificationAttributeRows 规格属性值行数据（可空）
    * @return MD5 特征值
    */
   public static String calculateSignature(
-      Long productId, @Nullable List<AssignedProductAttributeData> productAttributeRows) {
+      Long materialId,
+      @Nullable List<AssignedSpecificationAttributeData> specificationAttributeRows) {
     Map<String, List<String>> grouped = new TreeMap<>();
-    if (productAttributeRows != null) {
-      for (AssignedProductAttributeData data : productAttributeRows) {
+    if (specificationAttributeRows != null) {
+      for (AssignedSpecificationAttributeData data : specificationAttributeRows) {
         grouped.computeIfAbsent(data.code(), code -> new ArrayList<>()).add(data.value());
       }
     }
-    return joinSignature(productId, grouped);
+    return joinSignature(materialId, grouped);
   }
 
   /**
@@ -284,7 +269,7 @@ public class Variant extends UpdateAggregateRoot {
    * @return MD5 特征值
    */
   private String calculateSignature() {
-    return joinSignature(productId, groupValues());
+    return joinSignature(materialId, groupValues());
   }
 
   /**
@@ -294,7 +279,7 @@ public class Variant extends UpdateAggregateRoot {
    */
   private Map<String, List<String>> groupValues() {
     Map<String, List<String>> grouped = new TreeMap<>();
-    for (VariantAttributeValue row : productAttributes) {
+    for (VariantAttributeValue row : specificationAttributes) {
       if (Boolean.TRUE.equals(row.getIsDeleted())) {
         continue;
       }
@@ -308,12 +293,12 @@ public class Variant extends UpdateAggregateRoot {
    *
    * <p>同一代码的多个值先规范再排序，否则同一个组合换个录入顺序就成了另一条规格。
    *
-   * @param productId ProductId
+   * @param materialId MaterialId
    * @param grouped 代码 → 值列表（已按代码排序）
    * @return MD5 特征值
    */
-  private static String joinSignature(Long productId, Map<String, List<String>> grouped) {
-    StringBuilder builder = new StringBuilder(String.valueOf(productId));
+  private static String joinSignature(Long materialId, Map<String, List<String>> grouped) {
+    StringBuilder builder = new StringBuilder(String.valueOf(materialId));
     String joined =
         grouped.entrySet().stream()
             .map(entry -> entry.getKey() + "=" + valuesText(entry.getValue()))
@@ -343,16 +328,12 @@ public class Variant extends UpdateAggregateRoot {
   /**
    * 统一的可变字段赋值入口（构造器与修改共用）
    *
-   * <p>{@code productId}、规格属性值行属于不可变字段（决定唯一性签名），由调用方单独赋值；其余字段全部在此
+   * <p>{@code materialId}、规格属性值行属于不可变字段（决定唯一性签名），由调用方单独赋值；其余字段全部在此
    * 收敛，避免构造器与 {@link #modify} 两处各写一遍导致漏改。
    *
    * @param opc OPC（可空）
-   * @param unitId 单位Id（可空）
-   * @param taxRateId 税率Id（可空）
    */
-  private void apply(@Nullable String opc, @Nullable Long unitId, @Nullable Long taxRateId) {
+  private void apply(@Nullable String opc) {
     this.opc = StringUtils.trimToNull(opc);
-    this.unitId = unitId;
-    this.taxRateId = taxRateId;
   }
 }

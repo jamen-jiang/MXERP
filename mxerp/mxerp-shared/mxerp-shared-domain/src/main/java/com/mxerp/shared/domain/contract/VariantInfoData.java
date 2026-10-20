@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 @Getter
 public class VariantInfoData {
 
-  /** 产品VariantId */
+  /** 物料VariantId */
   private final Long variantId;
 
   /** 仓库Id */
@@ -25,7 +25,7 @@ public class VariantInfoData {
   /**
    * 构造器（qty 可空，null 时视为 0）
    *
-   * @param variantId 产品VariantId
+   * @param variantId 物料VariantId
    * @param warehouseId 仓库Id
    * @param qty 数量（可空）
    */

@@ -47,9 +47,9 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
   @Column(name = "StockStatusChangeId", nullable = false)
   private Long stockStatusChangeId;
 
-  /** 产品Id（快照，新建目标状态那行库存时要用） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  /** 物料Id（快照，新建目标状态那行库存时要用） */
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 规格型号Id */
   @Column(name = "VariantId", nullable = false)
@@ -87,7 +87,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
   /**
    * 构造器
    *
-   * @param productId 产品Id（快照）
+   * @param materialId 物料Id（快照）
    * @param variantId 规格型号Id
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
@@ -98,7 +98,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
    * @throws DomainException 定位维度非法、状态不在枚举内、转出与转入相同、或数量不为正数时抛出
    */
   StockStatusChangeLine(
-      Long productId,
+      Long materialId,
       Long variantId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -106,8 +106,8 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
       String toStockStatus,
       BigDecimal quantity,
       @Nullable String remark) {
-    if (productId <= 0) {
-      throw new DomainException("产品不能为空");
+    if (materialId <= 0) {
+      throw new DomainException("物料不能为空");
     }
     if (variantId <= 0) {
       throw new DomainException("规格型号不能为空");
@@ -133,7 +133,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
       throw new DomainException("挪动数量必须大于零，往回挪请开一张反向的转换单");
     }
 
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;

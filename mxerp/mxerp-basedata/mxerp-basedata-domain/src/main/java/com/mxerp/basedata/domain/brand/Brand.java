@@ -15,7 +15,7 @@ import org.hibernate.annotations.Nationalized;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 产品品牌 */
+/** 物料品牌 */
 @NullMarked
 @Getter
 @Setter(AccessLevel.PROTECTED)

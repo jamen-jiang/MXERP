@@ -74,7 +74,7 @@ public class ProductionReturnDomainService {
     for (ProductionReturnLineData data : lines) {
       model.addLine(
           data.workOrderMaterialId(),
-          data.productId(),
+          data.materialId(),
           data.variantId(),
           data.appliedQuantity(),
           data.unitId(),
@@ -119,7 +119,7 @@ public class ProductionReturnDomainService {
     ProductionReturn model = getExist(id);
     model.addLine(
         data.workOrderMaterialId(),
-        data.productId(),
+        data.materialId(),
         data.variantId(),
         data.appliedQuantity(),
         data.unitId(),

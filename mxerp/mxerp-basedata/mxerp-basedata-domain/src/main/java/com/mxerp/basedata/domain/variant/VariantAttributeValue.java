@@ -18,7 +18,7 @@ import org.jspecify.annotations.NullMarked;
  * 规格属性值行（这一条 SKU 由哪个规格属性的哪个取值构成，一行一个值）
  *
  * <p>按持有者命名、用 {@code VariantId} 直接外键，而不是挤进通用赋值表：规格属性值只有规格会填
- * （产品的描述性取值走属性那套），没有第二种持有者，通用表换不来任何东西，只会多出一个
+ * （物料的描述性取值走属性那套），没有第二种持有者，通用表换不来任何东西，只会多出一个
  * 「靠 {@code EntityType} + {@code EntityId} 猜归属」的步骤。SAP 的 {@code AUSP} 之所以通用，
  * 是因为同一套分类要挂物料、单据、设备好几种对象，这里没这个需求。
  *
@@ -38,7 +38,7 @@ import org.jspecify.annotations.NullMarked;
     indexes = {
       @Index(name = "IX_VariantAttributeValue_VariantId", columnList = "VariantId"),
       @Index(name = "IX_VariantAttributeValue_Code", columnList = "Code")
-      // 注意：VariantId + ProductAttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，
+      // 注意：VariantId + SpecificationAttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，
       // JPA 不支持，用 Flyway 创建
     })
 public class VariantAttributeValue extends BaseDeleteEntity {
@@ -48,8 +48,8 @@ public class VariantAttributeValue extends BaseDeleteEntity {
   private Long variantId;
 
   /** 规格属性定义Id */
-  @Column(name = "ProductAttributeId", nullable = false)
-  private Long productAttributeId;
+  @Column(name = "SpecificationAttributeId", nullable = false)
+  private Long specificationAttributeId;
 
   /** 规格属性代码（冗余自定义） */
   @Nationalized
@@ -64,12 +64,12 @@ public class VariantAttributeValue extends BaseDeleteEntity {
   /**
    * 构造器
    *
-   * @param productAttributeId 规格属性定义Id
+   * @param specificationAttributeId 规格属性定义Id
    * @param code 规格属性代码
    * @param value 规格属性值
    * @throws DomainException 代码为空 / 值为空时抛出
    */
-  public VariantAttributeValue(Long productAttributeId, String code, String value) {
+  public VariantAttributeValue(Long specificationAttributeId, String code, String value) {
     String trimmedCode = StringUtils.trimToNull(code);
     if (trimmedCode == null) {
       throw new DomainException("规格属性代码不能为空");
@@ -78,7 +78,7 @@ public class VariantAttributeValue extends BaseDeleteEntity {
     if (trimmedValue == null) {
       throw new DomainException("规格属性值不能为空");
     }
-    this.productAttributeId = productAttributeId;
+    this.specificationAttributeId = specificationAttributeId;
     this.code = trimmedCode;
     this.value = trimmedValue;
   }

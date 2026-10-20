@@ -4,7 +4,7 @@ import com.mxerp.shared.domain.exception.DomainException;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 产品品牌工厂，负责创建品牌 */
+/** 物料品牌工厂，负责创建品牌 */
 @NullMarked
 public class BrandFactory {
 

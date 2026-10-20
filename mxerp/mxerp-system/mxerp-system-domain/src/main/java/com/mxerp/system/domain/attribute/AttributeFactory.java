@@ -23,7 +23,7 @@ public class AttributeFactory {
   /**
    * 创建属性
    *
-   * @param entityType 持有者表名（由持有者自己传，如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（由持有者自己传，如 {@code Material} / {@code Variant}）
    * @param code 属性代码
    * @param label 属性标签
    * @param inputType 输入类型

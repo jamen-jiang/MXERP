@@ -17,13 +17,13 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 产品分类（树）
+ * 物料分类（树）
  *
- * <p>用来替代硬编码的产品类型枚举。对过外部系统：SAP 的物料组 {@code MARA-MATKL}、Odoo 的
- * {@code product.category}、ERPNext 的 Item Group、金蝶的物料分组、用友的存货分类，无一例外是
+ * <p>用来替代硬编码的物料类型枚举。对过外部系统：SAP 的物料组 {@code MARA-MATKL}、Odoo 的
+ * {@code material.category}、ERPNext 的 Item Group、金蝶的物料分组、用友的存货分类，无一例外是
  * 「用户自己维护的树」而不是写死在代码里的枚举——因为产品线一变，枚举就得改代码、发版本。
  *
- * <p>分类只回答「这个产品归到哪一类」，进而决定它挂哪一组规格属性；「这个产品怎么来」（自制/外购）
+ * <p>分类只回答「这个物料归到哪一类」，进而决定它挂哪一组规格属性；「这个物料怎么来」（自制/外购）
  * 是另一个维度，见 {@code ProcurementTypeEnum}。SAP 把 {@code MATKL} 与 {@code MARC-BESKZ}
  * 分成两个字段正是这个原因，两者可以任意组合，不要混在一个字段里。
  */

@@ -76,7 +76,7 @@ public class ProductionIssueDomainService {
     for (ProductionIssueLineData data : lines) {
       model.addLine(
           data.workOrderMaterialId(),
-          data.productId(),
+          data.materialId(),
           data.variantId(),
           data.appliedQuantity(),
           data.unitId(),
@@ -121,7 +121,7 @@ public class ProductionIssueDomainService {
     ProductionIssue model = getExist(id);
     model.addLine(
         data.workOrderMaterialId(),
-        data.productId(),
+        data.materialId(),
         data.variantId(),
         data.appliedQuantity(),
         data.unitId(),

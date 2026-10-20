@@ -26,7 +26,6 @@ public class WorkCenterFactory {
    *
    * @param code 代码
    * @param name 名称
-   * @param type 类型
    * @param capacityMinutesPerDay 日可用工时（分钟）
    * @param disabled 是否停用
    * @param remark 备注（可空）
@@ -36,7 +35,6 @@ public class WorkCenterFactory {
   public WorkCenter create(
       String code,
       String name,
-      String type,
       BigDecimal capacityMinutesPerDay,
       boolean disabled,
       @Nullable String remark) {
@@ -44,6 +42,6 @@ public class WorkCenterFactory {
     if (workCenterRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("工作中心代码" + code + "已存在!");
     }
-    return new WorkCenter(code, name, type, capacityMinutesPerDay, disabled, remark);
+    return new WorkCenter(code, name, capacityMinutesPerDay, disabled, remark);
   }
 }

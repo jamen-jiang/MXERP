@@ -27,12 +27,16 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 工艺路线（独立主数据，不绑定产品）
+ * 工艺路线（挂在物料系列上）
+ *
+ * <p>路线按 SPU 维护，不按 SKU：同一系列下几百个度数走的是同一套工序，挂到变体等于给每个度数复制一份。
+ * 一个系列可以有多条路线（标准、试制、返工），其中一条标为主路线；工单下达时没指定路线，就取该物料在
+ * 该时点生效的主路线。个别度数要走别的路线，在工单上直接指定即可。
  *
  * <p><b>版本与生效链。</b>同一代码可以并存多个版本，用生效日期接力：草稿可随便改，发布后冻结（要改就
  * {@code revise} 升版），作废只退出可选池。已发布版本必须带生效时间，且同一代码的生效区间不许重叠，
- * 发布新版时生效更早的那一版自动收口到新版起点。工单下达按「时点」取版本，历史工单的工序与工时才不会漂。
- * 口径与 Dynamics 365 的 Routing version 一致。
+ * 发布新版时生效更早的那一版自动收口到新版起点。主路线跨代码也守同一条时间线：新主路线发布时，
+ * 旧主路线在交接点收口。工单下达按「时点」取版本，历史工单的工序与工时才不会漂。
  *
  * <p>费率不在这里：工序行只引用费率卡（{@code RoutingOperation.rateId}）。电价、人工、外协谈价随时在变，
  * 调价由费率卡按生效日期换版，不需要动工艺，路线也就不会被价格变更拖着升版。
@@ -45,12 +49,21 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Routing",
     indexes = {
+      @Index(name = "IX_Routing_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_Routing_Code", columnList = "Code"),
       @Index(name = "IX_Routing_Name", columnList = "Name"),
       @Index(name = "IX_Routing_Status", columnList = "Status")
       // 注意：Code + Version 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Routing extends UpdateAggregateRoot {
+
+  /** 物料系列Id（SPU）：同系列的度数共用路线 */
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
+
+  /** 是否主路线：同一物料任一时刻至多一条主路线生效，下达没指定路线时取它 */
+  @Column(name = "IsPrimary", nullable = false)
+  private Boolean isPrimary;
 
   /** 路线代码 */
   @Nationalized
@@ -109,44 +122,52 @@ public class Routing extends UpdateAggregateRoot {
   /**
    * 构造器：新建的工艺路线一律是草稿
    *
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
    */
   Routing(
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
-    apply(code, name, version, effectiveFrom, effectiveTo, remark);
+    apply(materialId, code, name, version, isPrimary, effectiveFrom, effectiveTo, remark);
     this.status = RoutingStatusEnum.DRAFT.getCode();
   }
 
   /**
    * 修改工艺路线
    *
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
    * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     checkDraft();
-    apply(code, name, version, effectiveFrom, effectiveTo, remark);
+    apply(materialId, code, name, version, isPrimary, effectiveFrom, effectiveTo, remark);
   }
 
   /**
@@ -404,23 +425,30 @@ public class Routing extends UpdateAggregateRoot {
    * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参，
    * 否则导入或改表头就能把已发布版本悄悄退回草稿。
    *
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
    */
   private void apply(
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
     String trimmedVersion = StringUtils.trimToNull(version);
+    if (materialId <= 0) {
+      throw new DomainException("工艺路线必须挂在物料系列下");
+    }
     if (trimmedCode == null) {
       throw new DomainException("工艺路线代码不能为空");
     }
@@ -434,9 +462,11 @@ public class Routing extends UpdateAggregateRoot {
       throw new DomainException("失效时间必须晚于生效时间");
     }
 
+    this.materialId = materialId;
     this.code = trimmedCode;
     this.name = trimmedName;
     this.version = trimmedVersion;
+    this.isPrimary = isPrimary;
     this.effectiveFrom = effectiveFrom;
     this.effectiveTo = effectiveTo;
     this.remark = remark;

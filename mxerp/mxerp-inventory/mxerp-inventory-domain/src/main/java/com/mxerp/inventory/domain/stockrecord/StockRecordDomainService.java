@@ -79,7 +79,7 @@ public class StockRecordDomainService {
     for (StockRecordLineData data : lines) {
       validateLocationUsage(data.warehouseId(), data.locationId(), warehouses);
       model.addLine(
-          data.productId(),
+          data.materialId(),
           data.variantId(),
           data.quantity(),
           data.warehouseId(),
@@ -163,7 +163,7 @@ public class StockRecordDomainService {
             "物料" + data.variantId() + "在原单上只剩" + remained + "能冲，填了" + data.quantity());
       }
       model.addLine(
-          data.productId(),
+          data.materialId(),
           data.variantId(),
           data.quantity().negate(),
           data.warehouseId(),

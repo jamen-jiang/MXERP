@@ -4,7 +4,7 @@ import com.mxerp.shared.domain.repository.Repository;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 产品品牌仓储接口 */
+/** 物料品牌仓储接口 */
 @NullMarked
 public interface BrandRepository extends Repository<Brand> {
 

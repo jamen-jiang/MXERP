@@ -34,16 +34,17 @@ import org.jspecify.annotations.Nullable;
 /**
  * 属性（属性的定义，不是某个对象上填的值）
  *
- * <p>与 {@code com.mxerp.basedata.domain.productattribute.ProductAttribute} 同形（代码、名称、数据类型、
- * 输入类型、候选值、校验规则），但用途不同：规格属性是「拿来做规格维度、参与 SKU 生成」的那一组定义，挂在
- * 分类下；属性是「挂在某类对象上的描述性取值」，挂在持有者类型上（{@code EntityType} 存表名，如
- * {@code Product} / {@code Variant}），不参与规格身份。理由：一个「重量」属性对成品和辅料写法一样，按分类配
+ * <p>与 {@code com.mxerp.basedata.domain.specificationattribute.SpecificationAttribute} 同形
+ * （代码、名称、数据类型、输入类型、候选值、校验规则），但用途不同：规格属性是「拿来做规格维度、
+ * 参与 SKU 生成」的那一组定义，挂在分类下；属性是「挂在某类对象上的描述性取值」，挂在持有者类型上
+ * （{@code EntityType} 存表名，如
+ * {@code Material} / {@code Variant}），不参与规格身份。理由：一个「重量」属性对成品和辅料写法一样，按分类配
  * 就得每个分类重复配一遍；而哪些对象能挂属性是结构问题，跟物料归哪类无关。填到对象上的值另存通用赋值表
  * {@link AttributeAssignment}（同样是 {@code EntityType} + {@code EntityId}），相当于 SAP 把
  * {@code CABN}（定义）与 {@code AUSP}（赋值，带 {@code OBJ_TYPE} + {@code OBJ_ID}）分在两张表。
  *
  * <p>候选值（{@link AttributeValue}）一旦维护了就变成硬约束：填的值必须是其中之一，否则同一个
- * 「颜色」在十个产品上能写出十种写法；没有候选值时只按 {@code DataType} 校验。
+ * 「颜色」在十个物料上能写出十种写法；没有候选值时只按 {@code DataType} 校验。
  */
 @NullMarked
 @Getter
@@ -61,7 +62,7 @@ import org.jspecify.annotations.Nullable;
     })
 public class Attribute extends UpdateAggregateRoot {
 
-  /** 持有者表名（由持有者自己传，如 {@code Product} / {@code Variant}，与 {@link AttributeAssignment} 同源） */
+  /** 持有者表名（由持有者自己传，如 {@code Material} / {@code Variant}，与 {@link AttributeAssignment} 同源） */
   @Nationalized
   @Column(name = "EntityType", nullable = false, length = 50)
   private String entityType;
@@ -150,7 +151,7 @@ public class Attribute extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param entityType 持有者表名（由持有者自己传，如 {@code Product} / {@code Variant}）
+   * @param entityType 持有者表名（由持有者自己传，如 {@code Material} / {@code Variant}）
    * @param code 属性代码
    * @param label 属性标签
    * @param inputType 输入类型

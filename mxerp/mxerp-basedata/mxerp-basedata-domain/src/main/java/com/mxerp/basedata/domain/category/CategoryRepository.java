@@ -5,7 +5,7 @@ import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 产品分类仓储接口 */
+/** 物料分类仓储接口 */
 @NullMarked
 public interface CategoryRepository extends Repository<Category> {
 

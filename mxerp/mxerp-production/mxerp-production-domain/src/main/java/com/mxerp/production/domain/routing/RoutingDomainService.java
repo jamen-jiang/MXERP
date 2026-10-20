@@ -37,18 +37,22 @@ public class RoutingDomainService {
    *
    * <p>导入只维护草稿版本：状态由发布/作废推进，不接受表里填的状态，否则一份表就能把冻结的版本改开。
    *
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
    * @return 工艺路线聚合
    */
   public Routing importGenerate(
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
@@ -57,9 +61,20 @@ public class RoutingDomainService {
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = routingFactory.create(code, name, version, effectiveFrom, effectiveTo, remark);
+      model =
+          routingFactory.create(
+              materialId, code, name, version, isPrimary, effectiveFrom, effectiveTo, remark);
     } else {
-      modify(model, code, name, version, effectiveFrom, effectiveTo, remark);
+      modify(
+          model,
+          materialId,
+          code,
+          name,
+          version,
+          isPrimary,
+          effectiveFrom,
+          effectiveTo,
+          remark);
     }
 
     return model;
@@ -69,9 +84,11 @@ public class RoutingDomainService {
    * 修改工艺路线
    *
    * @param id 工艺路线Id
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
@@ -80,14 +97,25 @@ public class RoutingDomainService {
    */
   public Routing modify(
       long id,
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     Routing model = getExist(id);
-    modify(model, code, name, version, effectiveFrom, effectiveTo, remark);
+    modify(
+        model,
+        materialId,
+        code,
+        name,
+        version,
+        isPrimary,
+        effectiveFrom,
+        effectiveTo,
+        remark);
     return model;
   }
 
@@ -95,9 +123,11 @@ public class RoutingDomainService {
    * 修改工艺路线
    *
    * @param model 工艺路线
+   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
+   * @param isPrimary 是否主路线
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
@@ -105,9 +135,11 @@ public class RoutingDomainService {
    */
   public void modify(
       Routing model,
+      Long materialId,
       String code,
       String name,
       String version,
+      boolean isPrimary,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
@@ -115,7 +147,8 @@ public class RoutingDomainService {
     if (routingRepository.isExistByCodeAndVersionExcludeId(code, version, model.getId())) {
       throw new DomainException("工艺路线" + code + "的版本" + version + "已存在!");
     }
-    model.modify(code, name, version, effectiveFrom, effectiveTo, remark);
+    model.modify(
+        materialId, code, name, version, isPrimary, effectiveFrom, effectiveTo, remark);
   }
 
   // ==================== 版本与生效链 ====================
@@ -126,9 +159,12 @@ public class RoutingDomainService {
    * <p>同一代码任一时刻至多一个生效版本，所以下达时才谈得上「按这个时点取那一版」。发布前先跟其它已发布
    * 版本比区间：落在本版生效点上还活着的那一版收口给本版让位，其余版本与本版区间交叠的直接拒绝。
    *
+   * <p>同一物料的其它主路线也参与同一条时间线：新主路线发布时，旧主路线在交接点收口，保证任一时刻
+   * 至多一条主路线生效。
+   *
    * @param id 工艺路线Id
    * @return 工艺路线聚合
-   * @throws DomainException 工艺路线不存在、没有生效时间、或生效区间与同代码的已发布版本重叠时抛出
+   * @throws DomainException 工艺路线不存在、没有生效时间、或生效区间与同代码版本、同物料主路线重叠时抛出
    */
   public Routing publish(long id) {
     Routing model = getExist(id);
@@ -138,9 +174,14 @@ public class RoutingDomainService {
     }
 
     List<Routing> released =
-        routingRepository.getListByCode(model.getCode()).stream()
+        routingRepository.getListByMaterialId(model.getMaterialId()).stream()
             .filter(r -> !Objects.equals(r.getId(), model.getId()))
             .filter(Routing::isReleased)
+            .filter(
+                r ->
+                    r.getCode().equals(model.getCode())
+                        || (Boolean.TRUE.equals(model.getIsPrimary())
+                            && Boolean.TRUE.equals(r.getIsPrimary())))
             .toList();
 
     // 1. 先全量校验：生效更早且覆盖本版起点的那一版由本版接棒，其余版本区间不许与本版交叠
@@ -155,9 +196,13 @@ public class RoutingDomainService {
       }
       if (other.overlaps(effectiveFrom, model.getEffectiveTo())) {
         throw new DomainException(
-            "工艺路线版本"
+            "工艺路线"
+                + model.getCode()
+                + "版本"
                 + model.getVersion()
-                + "的生效区间与版本"
+                + "的生效区间与"
+                + other.getCode()
+                + "版本"
                 + other.getVersion()
                 + "重叠!");
       }
@@ -212,9 +257,11 @@ public class RoutingDomainService {
 
     Routing model =
         routingFactory.create(
+            source.getMaterialId(),
             source.getCode(),
             source.getName(),
             version,
+            Boolean.TRUE.equals(source.getIsPrimary()),
             effectiveFrom,
             effectiveTo,
             remark);

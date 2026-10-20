@@ -156,7 +156,7 @@ public class StockStatusChange extends OrderAggregateRoot {
   /**
    * 添加转换单行（仅草稿可加）
    *
-   * @param productId 产品Id（快照）
+   * @param materialId 物料Id（快照）
    * @param variantId 规格型号Id
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
@@ -167,7 +167,7 @@ public class StockStatusChange extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态，或同一格上同一对状态已在单内时抛出
    */
   public void addLine(
-      Long productId,
+      Long materialId,
       Long variantId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -181,7 +181,7 @@ public class StockStatusChange extends OrderAggregateRoot {
     }
     stockStatusChangeLines.add(
         new StockStatusChangeLine(
-            productId,
+            materialId,
             variantId,
             warehouseId,
             locationId,

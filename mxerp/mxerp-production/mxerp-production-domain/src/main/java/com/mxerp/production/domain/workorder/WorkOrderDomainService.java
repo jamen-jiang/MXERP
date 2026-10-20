@@ -6,8 +6,8 @@ import com.mxerp.production.domain.bom.BomRepository;
 import com.mxerp.production.domain.bom.IssueTriggerEnum;
 import com.mxerp.production.domain.operation.Operation;
 import com.mxerp.production.domain.operation.OperationRepository;
-import com.mxerp.production.domain.rate.OperationRate;
-import com.mxerp.production.domain.rate.OperationRateRepository;
+import com.mxerp.production.domain.operationrate.OperationRate;
+import com.mxerp.production.domain.operationrate.OperationRateRepository;
 import com.mxerp.production.domain.routing.Routing;
 import com.mxerp.production.domain.routing.RoutingOperation;
 import com.mxerp.production.domain.routing.RoutingRepository;
@@ -88,7 +88,7 @@ public class WorkOrderDomainService {
   /**
    * 创建工单（草稿）
    *
-   * @param productId 产出SPU
+   * @param materialId 产出SPU
    * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
@@ -97,15 +97,13 @@ public class WorkOrderDomainService {
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
-   * @param dueTime 交期（可空，承诺的完工时间，排产只对照不修改）
-   * @param plannedStartTime 计划开工时间（可空）
-   * @param plannedEndTime 计划完工时间（可空）
+   * @param dueTime 交期（可空，承诺的完工时间，生产侧只读不写）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @return 工单聚合
    */
   public WorkOrder create(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long unitId,
@@ -115,13 +113,11 @@ public class WorkOrderDomainService {
       @Nullable Long bomId,
       @Nullable Long routingId,
       @Nullable LocalDateTime dueTime,
-      @Nullable LocalDateTime plannedStartTime,
-      @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark) {
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return workOrderFactory.create(
-        productId,
+        materialId,
         variantId,
         quantity,
         unitId,
@@ -131,8 +127,6 @@ public class WorkOrderDomainService {
         bomId,
         routingId,
         dueTime,
-        plannedStartTime,
-        plannedEndTime,
         warehouseId,
         remark,
         "");
@@ -142,7 +136,7 @@ public class WorkOrderDomainService {
    * 修改工单（仅草稿可改）
    *
    * @param id 工单Id
-   * @param productId 产出SPU
+   * @param materialId 产出SPU
    * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
@@ -151,9 +145,7 @@ public class WorkOrderDomainService {
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
-   * @param dueTime 交期（可空，承诺的完工时间，排产只对照不修改）
-   * @param plannedStartTime 计划开工时间（可空）
-   * @param plannedEndTime 计划完工时间（可空）
+   * @param dueTime 交期（可空，承诺的完工时间，生产侧只读不写）
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @return 工单聚合
@@ -161,7 +153,7 @@ public class WorkOrderDomainService {
    */
   public WorkOrder modify(
       long id,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long unitId,
@@ -171,13 +163,11 @@ public class WorkOrderDomainService {
       @Nullable Long bomId,
       @Nullable Long routingId,
       @Nullable LocalDateTime dueTime,
-      @Nullable LocalDateTime plannedStartTime,
-      @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark) {
     WorkOrder model = getExist(id);
     model.modify(
-        productId,
+        materialId,
         variantId,
         quantity,
         unitId,
@@ -187,8 +177,6 @@ public class WorkOrderDomainService {
         bomId,
         routingId,
         dueTime,
-        plannedStartTime,
-        plannedEndTime,
         warehouseId,
         remark);
     return model;
@@ -198,27 +186,34 @@ public class WorkOrderDomainService {
    * 下达工单：按 BOM 展开用料、按工艺路线快照工序
    *
    * <p>BOM 与路线都遵循「工单上指定优先，没指定才取生效版本」，且都按下达时点取版本：补一张上个月的单，
-   * 拿到的是上个月那一版配方与工艺，不是今天最新版。路线不绑产品，所以工单没指定路线时，必须由调用方在
-   * 本次下达里传入，否则无法确定用哪条。
+   * 拿到的是上个月那一版配方与工艺，不是今天最新版。路线挂在物料系列上，工单没指定路线时，取该物料在
+   * 下达时点生效的主路线。
    *
    * @param id 工单Id
-   * @param routingId 本次下达使用的工艺路线（可空，为空时取工单上已指定的路线）
+   * @param routingId 本次下达使用的工艺路线（可空，为空时取工单上指定的，再为空取物料的主路线）
    * @param releaseTime 下达时点：这一时刻落在生效区间的那一版 BOM、路线与费率卡才被快照
    * @return 工单聚合
-   * @throws DomainException 工单不存在、未指定路线、路线在该时点不生效、引用的工序、工作中心或费率卡
-   *     不可用时抛出
+   * @throws DomainException 工单不存在、物料没有生效的主路线、路线在该时点不生效、引用的工序、工作中心或
+   *     费率卡不可用时抛出
    */
   public WorkOrder release(long id, @Nullable Long routingId, LocalDateTime releaseTime) {
     WorkOrder model = getExist(id);
 
-    // 1. 定路线：本次传入优先，其次用工单上指定的
+    // 1. 定路线：本次传入优先，其次用工单上指定的，最后取物料在该时点生效的主路线
     Long resolvedRoutingId = routingId == null ? model.getRoutingId() : routingId;
+    Routing routing;
     if (resolvedRoutingId == null) {
-      throw new DomainException("工单未指定工艺路线，不能下达");
-    }
-    Routing routing = routingRepository.get(resolvedRoutingId);
-    if (routing == null) {
-      throw new DomainException("工艺路线" + resolvedRoutingId + "不存在!");
+      routing =
+          routingRepository.getEffectivePrimaryByMaterialIdAt(model.getMaterialId(), releaseTime);
+      if (routing == null) {
+        throw new DomainException(
+            "物料" + model.getMaterialId() + "在该时点没有生效的主工艺路线，不能下达");
+      }
+    } else {
+      routing = routingRepository.get(resolvedRoutingId);
+      if (routing == null) {
+        throw new DomainException("工艺路线" + resolvedRoutingId + "不存在!");
+      }
     }
     if (!routing.isEffectiveAt(releaseTime)) {
       throw new DomainException(
@@ -268,7 +263,7 @@ public class WorkOrderDomainService {
     for (MaterialRequirement requirement : requirements) {
       model.addMaterial(
           requirement.bomLineId(),
-          requirement.productId(),
+          requirement.materialId(),
           requirement.variantId(),
           requirement.requiredQuantity(),
           requirement.unitQuantity(),
@@ -414,13 +409,13 @@ public class WorkOrderDomainService {
    * 出库时「该键没有库存行」就是答案。这里不做提前判定，是因为「自制」并不等于「不能从仓里领」：备库的半成品
    * 本来就该能领；反过来外购件仓里没货照样领不到，类型标签也提醒不了什么。
    *
-   * <p>产品没有 BOM 时返回空列表——纯加工类工单不消耗物料，允许下达。
+   * <p>物料没有 BOM 时返回空列表——纯加工类工单不消耗物料，允许下达。
    *
    * <p>倒冲设置、净单位用量与发料仓都在这里一次算好、快照到用料行：之后报工或入库开倒冲单只做工单上的乘法，
    * 不再回头读 BOM，BOM 之后改版才不会把在制工单的领料量和发料仓改掉。
    *
    * @param model 工单聚合
-   * @param bom 展开所用的 BOM（可空，为空表示产品没有 BOM）
+   * @param bom 展开所用的 BOM（可空，为空表示物料没有 BOM）
    * @return 可装配的用料需求列表
    */
   private List<MaterialRequirement> resolveMaterials(WorkOrder model, @Nullable Bom bom) {
@@ -434,7 +429,7 @@ public class WorkOrderDomainService {
       result.add(
           new MaterialRequirement(
               line.getId(),
-              line.getProductId(),
+              line.getMaterialId(),
               line.getVariantId(),
               line.requiredQuantity(model.getQuantity()),
               // 净单位用量只在倒冲行上快照：这一列的约定就是「有值才能按产出乘回去领料」
@@ -480,7 +475,7 @@ public class WorkOrderDomainService {
   /** 待装配的用料需求，字段与 {@link WorkOrder#addMaterial} 一一对应 */
   private record MaterialRequirement(
       @Nullable Long bomLineId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,

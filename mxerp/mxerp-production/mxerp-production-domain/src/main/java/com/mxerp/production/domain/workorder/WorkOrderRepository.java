@@ -38,20 +38,6 @@ public interface WorkOrderRepository extends Repository<WorkOrder> {
   List<WorkOrder> getListByVariantId(Long variantId);
 
   /**
-   * 取某段时间内已排产的工序占用
-   *
-   * <p>排产要绕开别的工单已经占住的设备时段，所以把这段时间里所有带计划时间的工序读出来。排除正在排的
-   * 那张工单，否则会把自己上一次的排产结果当成别人的占用。
-   *
-   * @param from 起始时间（含）
-   * @param to 结束时间（含）
-   * @param excludeWorkOrderId 要排除的工单Id（可空，批量排产时传 null）
-   * @return 占用时段列表
-   */
-  List<WorkCenterReservation> getReservations(
-      LocalDateTime from, LocalDateTime to, @Nullable Long excludeWorkOrderId);
-
-  /**
    * 判断单号是否存在
    *
    * @param number 工单号

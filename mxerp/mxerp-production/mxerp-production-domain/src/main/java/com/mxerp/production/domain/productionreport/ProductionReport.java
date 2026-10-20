@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,10 +25,12 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>现场只该填三样：工序、良品数、报废数。工单号、工序名称、工作中心这些快照由领域服务 从工单上抄，工时不填就按工序的标准时间算——让人抄一遍就等于给自己留一个对不上的机会。
  *
- * <p>生命周期只有 {@code DRAFT ⇄ SUBMITTED}，来回都算正常操作。提交后不可改，要改就**撤回**：把这笔报工从
- * 工单工序的累计里减回去、单据退回草稿，改完再提交。这样工单工序上的累计值永远等于「当前已提交的那几张报工
- * 单之和」，不会因为补录或修改而对不上。报工不动库存，所以用不着库存单据那套「另开一张红字单、原单永不翻
- * 状态」的做法——那是给真动过货的单据留痕迹用的。
+ * <p>建单即提交：这张单没有草稿。现场扫完工单号落下三个数，当场就累加进工单工序的汇总，校验也在那一刻发生
+ * ——错了当场报错，而不是留到下班对账才发现。要改数只有一条路：作废这一张，重新报一张；作废会把当初累加
+ * 进去的良品、报废与工时从工序上减回来，单据本身留着当痕迹。
+ *
+ * <p>所以这里没有状态机，只有一列「作废时间」：为空表示这笔报工还算数，有值表示已经冲回去了。报工不动库存，
+ * 因此不必像库存单据那样另开一张红字单——作废与红冲是同一件事，这张单自己就能承载。
  */
 @NullMarked
 @Getter
@@ -41,7 +44,7 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_ProductionReport_WorkOrderId", columnList = "WorkOrderId"),
       @Index(name = "IX_ProductionReport_Operation", columnList = "WorkOrderOperationId"),
       @Index(name = "IX_ProductionReport_Operator", columnList = "OperatorId"),
-      @Index(name = "IX_ProductionReport_Status", columnList = "Status")
+      @Index(name = "IX_ProductionReport_VoidedTime", columnList = "VoidedTime")
     })
 public class ProductionReport extends OrderAggregateRoot {
 
@@ -93,10 +96,10 @@ public class ProductionReport extends OrderAggregateRoot {
   @Column(name = "ScrapQuantity", nullable = false, precision = 18, scale = 2)
   private BigDecimal scrapQuantity;
 
-  /** 状态：草稿、已提交 */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
+  /** 作废时间（为空表示这笔报工还算数） */
+  @Column(name = "VoidedTime")
+  @Nullable
+  private LocalDateTime voidedTime;
 
   /** 备注（可空） */
   @Nationalized
@@ -149,7 +152,6 @@ public class ProductionReport extends OrderAggregateRoot {
         goodQuantity,
         scrapQuantity,
         remark);
-    this.status = ProductionReportStatusEnum.DRAFT.getCode();
   }
 
   /**
@@ -163,98 +165,39 @@ public class ProductionReport extends OrderAggregateRoot {
   }
 
   /**
-   * 修改报工单（仅草稿可改）
+   * 作废：把这一笔报工冲回去
    *
-   * @param workOrderId 工单Id
-   * @param workOrderNumber 工单号（快照）
-   * @param workOrderOperationId 工单工序Id
-   * @param operationId 工序Id（快照）
-   * @param operationName 工序名称（快照）
-   * @param workCenterId 工作中心Id（快照）
-   * @param workCenterName 工作中心名称（快照）
-   * @param operatorId 操作人Id（可空）
-   * @param workTime 本次工时（分钟）
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
-   * @param remark 备注（可空）
-   * @throws DomainException 已提交时抛出（要改先撤回）
+   * <p>只负责自己这一半；把良品、报废与工时从工单工序汇总里减回去由 {@code ProductionReportDomainService}
+   * 编排，两下必须成对，否则累计值与单上之数就对不上。
+   *
+   * <p>作废不是删除：这张单留着，说明「当时有人在这里报过、后来冲掉了」。要再报就另开一张。
+   *
+   * @param moment 作废时间
+   * @throws DomainException 已作废时抛出
    */
-  public void modify(
-      Long workOrderId,
-      String workOrderNumber,
-      Long workOrderOperationId,
-      Long operationId,
-      String operationName,
-      Long workCenterId,
-      String workCenterName,
-      @Nullable Long operatorId,
-      BigDecimal workTime,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
-      @Nullable String remark) {
-    if (!isDraft()) {
-      throw new DomainException("报工单不是草稿，不能再修改");
+  void voidReport(LocalDateTime moment) {
+    if (isVoided()) {
+      throw new DomainException("报工单" + getNumber() + "已作废，不能再作废");
     }
-    apply(
-        workOrderId,
-        workOrderNumber,
-        workOrderOperationId,
-        operationId,
-        operationName,
-        workCenterId,
-        workCenterName,
-        operatorId,
-        workTime,
-        goodQuantity,
-        scrapQuantity,
-        remark);
+    this.voidedTime = moment;
   }
 
   /**
-   * 提交：状态置为已提交
+   * 是否已作废
    *
-   * <p>只负责自己这一半；把它累加进工单工序汇总由 {@code ProductionReportDomainService} 编排。
-   *
-   * @throws DomainException 已提交时抛出
+   * @return true 表示已作废
    */
-  void submit() {
-    if (isSubmitted()) {
-      throw new DomainException("报工单已提交，不能重复提交");
-    }
-    this.status = ProductionReportStatusEnum.SUBMITTED.getCode();
+  public boolean isVoided() {
+    return this.voidedTime != null;
   }
 
   /**
-   * 撤回：状态退回草稿
+   * 是否还算数（未作废）
    *
-   * <p>只负责自己这一半；把报工数从工单工序汇总里减回去由 {@code ProductionReportDomainService} 编排，
-   * 两下必须成对，否则累计值与单上之数就对不上。
-   *
-   * @throws DomainException 非已提交状态时抛出
+   * @return true 表示这笔报工有效
    */
-  void withdraw() {
-    if (!isSubmitted()) {
-      throw new DomainException("只有已提交的报工单才能撤回");
-    }
-    this.status = ProductionReportStatusEnum.DRAFT.getCode();
-  }
-
-  /**
-   * 是否草稿
-   *
-   * @return true 表示草稿
-   */
-  public boolean isDraft() {
-    return ProductionReportStatusEnum.DRAFT.getCode().equals(this.status);
-  }
-
-  /**
-   * 是否已提交
-   *
-   * @return true 表示已提交
-   */
-  public boolean isSubmitted() {
-    return ProductionReportStatusEnum.SUBMITTED.getCode().equals(this.status);
+  public boolean isEffective() {
+    return this.voidedTime == null;
   }
 
   // ==================== 私有：校验与赋值 ====================

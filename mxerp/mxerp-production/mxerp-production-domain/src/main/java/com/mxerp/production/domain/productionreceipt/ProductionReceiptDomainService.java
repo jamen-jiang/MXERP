@@ -75,7 +75,7 @@ public class ProductionReceiptDomainService {
     return productionReceiptFactory.create(
         workOrder.getId(),
         workOrder.getNumber(),
-        workOrder.getProductId(),
+        workOrder.getMaterialId(),
         workOrder.getVariantId(),
         workOrder.getUnitId(),
         resolveWarehouse(workOrder, warehouseId),
@@ -112,7 +112,7 @@ public class ProductionReceiptDomainService {
     model.modify(
         workOrder.getId(),
         workOrder.getNumber(),
-        workOrder.getProductId(),
+        workOrder.getMaterialId(),
         workOrder.getVariantId(),
         workOrder.getUnitId(),
         resolveWarehouse(workOrder, warehouseId),
@@ -146,7 +146,7 @@ public class ProductionReceiptDomainService {
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
     model.approve(receivedQuantity);
     model.post(time);
-    workOrder.receiveProduct(model.getReceivedQuantity());
+    workOrder.receiveOutput(model.getReceivedQuantity());
     return model;
   }
 
@@ -176,7 +176,7 @@ public class ProductionReceiptDomainService {
           "冲回数量" + quantity + "不能大于本单实收数量" + model.getReceivedQuantity());
     }
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
-    workOrder.unreceiveProduct(quantity);
+    workOrder.unreceiveOutput(quantity);
     return model;
   }
 

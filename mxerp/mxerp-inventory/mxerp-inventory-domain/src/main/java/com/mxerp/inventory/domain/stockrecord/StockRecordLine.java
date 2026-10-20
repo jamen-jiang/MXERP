@@ -44,8 +44,8 @@ public class StockRecordLine extends BaseDeleteEntity {
   private Long stockRecordId;
 
   /** 物料SPU（快照，仅作汇总与展示） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 物料SKU */
   @Column(name = "VariantId", nullable = false)
@@ -78,7 +78,7 @@ public class StockRecordLine extends BaseDeleteEntity {
   /**
    * 构造器
    *
-   * @param productId 物料SPU（快照）
+   * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU
    * @param quantity 数量（红字行为负）
    * @param warehouseId 仓库Id
@@ -88,14 +88,14 @@ public class StockRecordLine extends BaseDeleteEntity {
    * @throws DomainException SPU、SKU、仓库、库位非法，库存状态为空，或数量为零时抛出
    */
   StockRecordLine(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       @Nullable String remark) {
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("物料SPU不能为空");
     }
     if (variantId <= 0) {
@@ -114,7 +114,7 @@ public class StockRecordLine extends BaseDeleteEntity {
     if (trimmedStatus == null) {
       throw new DomainException("库存状态不能为空");
     }
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.quantity = quantity;
     this.warehouseId = warehouseId;

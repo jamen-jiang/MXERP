@@ -173,7 +173,7 @@ public class StockRecord extends OrderAggregateRoot {
    * 得走红冲，不能自己填个负数；反过来红字单也不许填正数，它的量永远是往回冲的。开红字单的人只填「要冲掉多少」，
    * 那个负号由领域服务落。
    *
-   * @param productId 物料SPU（快照）
+   * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU
    * @param quantity 数量（普通单为正，红字单为负）
    * @param warehouseId 仓库Id
@@ -183,7 +183,7 @@ public class StockRecord extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态、正负号与本单性质不符、或同一位置同一状态已在单内时抛出
    */
   public void addLine(
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal quantity,
       Long warehouseId,
@@ -202,7 +202,7 @@ public class StockRecord extends OrderAggregateRoot {
     }
     stockRecordLines.add(
         new StockRecordLine(
-            productId, variantId, quantity, warehouseId, locationId, stockStatus, remark));
+            materialId, variantId, quantity, warehouseId, locationId, stockStatus, remark));
   }
 
   /**

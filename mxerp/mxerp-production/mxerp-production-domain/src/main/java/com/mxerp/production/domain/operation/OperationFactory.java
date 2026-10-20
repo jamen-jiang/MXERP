@@ -1,7 +1,6 @@
 package com.mxerp.production.domain.operation;
 
 import com.mxerp.shared.domain.exception.DomainException;
-import java.math.BigDecimal;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -26,8 +25,7 @@ public class OperationFactory {
    *
    * @param code 工序代码
    * @param name 工序名称
-   * @param defaultWorkCenterId 默认工作中心（可空）
-   * @param batchSize 标准批量（可空）
+   * @param workCenterId 工作中心
    * @param isCorrective 是否返修工序
    * @param qualityInspectionRequired 是否需要质检
    * @param description 工序说明（可空）
@@ -38,8 +36,7 @@ public class OperationFactory {
   public Operation create(
       String code,
       String name,
-      @Nullable Long defaultWorkCenterId,
-      @Nullable BigDecimal batchSize,
+      Long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -49,13 +46,6 @@ public class OperationFactory {
       throw new DomainException("工序代码" + code + "已存在!");
     }
     return new Operation(
-        code,
-        name,
-        defaultWorkCenterId,
-        batchSize,
-        isCorrective,
-        qualityInspectionRequired,
-        description,
-        disabled);
+        code, name, workCenterId, isCorrective, qualityInspectionRequired, description, disabled);
   }
 }

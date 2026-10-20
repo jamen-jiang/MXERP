@@ -12,7 +12,7 @@ public class UniqueVariantInfoData {
   /** 唯一标识 */
   private final Long id;
 
-  /** 产品VariantId */
+  /** 物料VariantId */
   private final Long variantId;
 
   /** 仓库Id */
@@ -25,7 +25,7 @@ public class UniqueVariantInfoData {
    * 构造器（qty 可空，null 时视为 0）
    *
    * @param id 唯一标识
-   * @param variantId 产品VariantId
+   * @param variantId 物料VariantId
    * @param warehouseId 仓库Id
    * @param qty 数量（可空）
    */

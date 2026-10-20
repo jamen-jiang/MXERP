@@ -51,8 +51,8 @@ public class ProductionReturnLine extends BaseDeleteEntity {
   private Long workOrderMaterialId;
 
   /** 物料SPU（快照） */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 物料SKU（快照） */
   @Column(name = "VariantId", nullable = false)
@@ -89,7 +89,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
    * 构造器
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param productId 物料SPU（快照）
+   * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请退料数量
    * @param unitId 单位Id（快照）
@@ -100,7 +100,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
    */
   ProductionReturnLine(
       Long workOrderMaterialId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
@@ -110,7 +110,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
     if (workOrderMaterialId <= 0) {
       throw new DomainException("工单用料行不能为空");
     }
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("物料SPU不能为空");
     }
     if (variantId <= 0) {
@@ -129,7 +129,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
       throw new DomainException("库位" + locationId + "有误!");
     }
     this.workOrderMaterialId = workOrderMaterialId;
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.appliedQuantity = appliedQuantity;
     this.approvedQuantity = BigDecimal.ZERO;

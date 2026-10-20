@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * 库存状态转换单行数据
  *
- * @param productId 产品Id（快照）
+ * @param materialId 物料Id（快照）
  * @param variantId 规格型号Id
  * @param warehouseId 仓库Id
  * @param locationId 库位Id（可空）
@@ -18,7 +18,7 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public record StockStatusChangeLineData(
-    Long productId,
+    Long materialId,
     Long variantId,
     Long warehouseId,
     @Nullable Long locationId,

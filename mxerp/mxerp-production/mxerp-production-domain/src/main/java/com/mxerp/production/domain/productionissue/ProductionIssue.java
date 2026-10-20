@@ -160,7 +160,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * 添加领料行（仅草稿可加）
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param productId 物料SPU（快照）
+   * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请数量
    * @param unitId 单位Id（快照）
@@ -171,7 +171,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    */
   public void addLine(
       Long workOrderMaterialId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
@@ -185,7 +185,7 @@ public class ProductionIssue extends OrderAggregateRoot {
     productionIssueLines.add(
         new ProductionIssueLine(
             workOrderMaterialId,
-            productId,
+            materialId,
             variantId,
             appliedQuantity,
             unitId,

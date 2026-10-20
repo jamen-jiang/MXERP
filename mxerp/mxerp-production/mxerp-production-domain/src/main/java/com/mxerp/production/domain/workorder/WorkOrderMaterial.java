@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
  * 工单用料
  *
  * <p>工单下达时由 BOM 展开生成：需求量按 BOM 行的发料方式算出来（按件乘工单数量、按批取整批量），
- * SPU、发料方式、发料触发与关键件标识一并快照，之后 BOM 改版不影响本单。产品类型不在这里抄：它记在 {@code Variant}
+ * SPU、发料方式、发料触发与关键件标识一并快照，之后 BOM 改版不影响本单。物料类型不在这里抄：它记在 {@code Variant}
  * 主数据上，要按类别看料就按 SPU 分组。
  *
  * <p>倒冲（{@code issueTrigger} 是报工或入库）用的量不回去读 BOM：下达时把「含损耗的净单位用量」快照在
@@ -33,7 +33,7 @@ import org.jspecify.annotations.Nullable;
  * <p>四个数量记录料的完整流转：要多少（required）、领多少（issued）、退多少（returned）、
  * 用多少（consumed）。差异即超领、退料或盘亏。
  *
- * <p>倒冲行的已领与已耗是同一笔数：它的领用量本来就是拿产出乘出来的，料出库即进了产品，没在机台上等着，
+ * <p>倒冲行的已领与已耗是同一笔数：它的领用量本来就是拿产出乘出来的，料出库即进了物料，没在机台上等着，
  * 所以发料那一下两个数一起加，这一行的「已领未耗」恒为零。这类料要收回来走红冲，不走退料——退一件根本没
  * 在线边停过的东西没有意义。手工领料的行才有「领了没用完」这口气，它的已耗由实耗那一笔填。
  */
@@ -46,7 +46,7 @@ import org.jspecify.annotations.Nullable;
     name = "WorkOrderMaterial",
     indexes = {
       @Index(name = "IX_WorkOrderMaterial_WorkOrderId", columnList = "WorkOrderId"),
-      @Index(name = "IX_WorkOrderMaterial_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_WorkOrderMaterial_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_WorkOrderMaterial_VariantId", columnList = "VariantId")
     })
 public class WorkOrderMaterial extends BaseDeleteEntity {
@@ -61,8 +61,8 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
   private Long bomLineId;
 
   /** 物料SPU */
-  @Column(name = "ProductId", nullable = false)
-  private Long productId;
+  @Column(name = "MaterialId", nullable = false)
+  private Long materialId;
 
   /** 物料SKU */
   @Column(name = "VariantId", nullable = false)
@@ -122,7 +122,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    * 构造器
    *
    * @param bomLineId 来源BOM行Id（可空，手工加料时为空）
-   * @param productId 物料SPU
+   * @param materialId 物料SPU
    * @param variantId 物料SKU
    * @param requiredQuantity 需求数量
    * @param unitQuantity 净单位用量（可空，手工加料时为空）
@@ -136,7 +136,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    */
   WorkOrderMaterial(
       @Nullable Long bomLineId,
-      Long productId,
+      Long materialId,
       Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
@@ -146,7 +146,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
       boolean isKeyPart,
       @Nullable Long warehouseId,
       @Nullable String remark) {
-    if (productId <= 0) {
+    if (materialId <= 0) {
       throw new DomainException("物料SPU不能为空");
     }
     if (variantId <= 0) {
@@ -171,7 +171,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     }
     String trimmedIssueTrigger = resolveIssueTrigger(mode, issueTrigger, unitQuantity);
     this.bomLineId = bomLineId;
-    this.productId = productId;
+    this.materialId = materialId;
     this.variantId = variantId;
     this.requiredQuantity = requiredQuantity;
     this.unitQuantity = unitQuantity;
@@ -231,7 +231,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    * <p>上限按净领料算（已领减已退再加本次不超过需求）：退回去的料等于把额度让出来，返工补领时不该被自己
    * 先前退的那一笔挡住。超领要放行就得回去把需求量调大，而不是在这里放宽校验。
    *
-   * <p>倒冲行在这里顺带把已耗也加上——出库即进了产品，两个数本来就是一笔（见类注释）。
+   * <p>倒冲行在这里顺带把已耗也加上——出库即进了物料，两个数本来就是一笔（见类注释）。
    *
    * @param quantity 本次领用数量
    * @throws DomainException 数量非正、或净领料累计超过需求数量时抛出
