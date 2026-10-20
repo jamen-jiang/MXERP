@@ -40,8 +40,9 @@ import org.jspecify.annotations.Nullable;
  * 直接删掉即可，所以没有作废状态。已发料的单子不在这张单上翻状态——货真出过仓库，冲它是在库存那边照原库存
  * 单据开一张红字单，本单停在已发料当历史记录，「被冲过没有」去库存那边查指着它的红字单。
  *
- * <p>退料是另一张单（{@code ProductionReturn}）：生产领料单只管料往工单出，一张单一个方向。库存那一半（可用量占用、
- * 出库）不在这里做：本模块不依赖库存模块，两个聚合之间的动账由应用层编排，生产领料单只保证单据自身与工单用料对得上。
+ * <p>退料是另一张单（{@code ProductionReturn}）：生产领料单只管料往工单出，一张单一个方向。库存那一半（出库动账）
+ * 不在这里做：本模块不依赖库存模块，两个聚合之间的动账由应用层编排，生产领料单只保证单据自身与工单用料对得上。
+ * 名也不用另存一份——本单的行就是占用（批准量还没发出去的那部分），库存那边的预留量只是它的合计。
  * 已发料的单子开错了，应用层照它开一张红字单把货倒回来——料一旦真出过仓，单据状态改不回去库存；草稿还没动货，
  * 删掉重开即可。
  */
@@ -159,8 +160,8 @@ public class ProductionIssue extends OrderAggregateRoot {
    * 添加领料行（仅草稿可加）
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param spuId 物料SPU（快照）
-   * @param skuId 物料SKU（快照）
+   * @param productId 物料SPU（快照）
+   * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 发料仓库Id
@@ -170,8 +171,8 @@ public class ProductionIssue extends OrderAggregateRoot {
    */
   public void addLine(
       Long workOrderMaterialId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
       Long warehouseId,
@@ -184,8 +185,8 @@ public class ProductionIssue extends OrderAggregateRoot {
     productionIssueLines.add(
         new ProductionIssueLine(
             workOrderMaterialId,
-            spuId,
-            skuId,
+            productId,
+            variantId,
             appliedQuantity,
             unitId,
             warehouseId,

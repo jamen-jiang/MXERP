@@ -39,17 +39,17 @@ public enum AllocationBasisEnum implements BaseEnum {
   /** 编码 */
   private final String code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
   /**
    * 构造器
    *
    * @param code 编码
-   * @param name 名称
+   * @param label 标签
    */
-  AllocationBasisEnum(String code, String name) {
+  AllocationBasisEnum(String code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 }

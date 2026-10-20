@@ -76,7 +76,7 @@ public class ApiDataResponse<T> {
   public String getMessage() {
     if (message == null || message.isBlank()) {
       ApiStatusEnum statusEnum = ApiStatusEnum.fromCode(status);
-      return statusEnum == null ? "" : statusEnum.getName();
+      return statusEnum == null ? "" : statusEnum.getLabel();
     }
     return message;
   }

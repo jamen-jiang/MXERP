@@ -26,8 +26,8 @@ public class ProductionReceiptFactory {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU（快照）
-   * @param skuId 产出SKU（快照）
+   * @param productId 产出SPU（快照）
+   * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
@@ -40,8 +40,8 @@ public class ProductionReceiptFactory {
   public ProductionReceipt create(
       Long workOrderId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       Long unitId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -55,8 +55,8 @@ public class ProductionReceiptFactory {
     return new ProductionReceipt(
         workOrderId,
         workOrderNumber,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         unitId,
         warehouseId,
         locationId,

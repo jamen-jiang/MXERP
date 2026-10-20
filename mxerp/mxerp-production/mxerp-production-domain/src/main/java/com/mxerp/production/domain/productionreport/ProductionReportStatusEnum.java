@@ -12,26 +12,23 @@ public enum ProductionReportStatusEnum implements BaseEnum {
   /** 草稿：可改可删，尚未计入工单汇总 */
   DRAFT("Draft", "草稿"),
 
-  /** 已提交：已累加进工单工序汇总，不可再改 */
-  SUBMITTED("Submitted", "已提交"),
-
-  /** 已红冲：已从工单工序汇总里减回去，原单据保留作为痕迹；报工单提交即生效，没有别的撤销去处 */
-  REVERSED("Reversed", "已红冲");
+  /** 已提交：已累加进工单工序汇总，不可再改；要改就撤回成草稿 */
+  SUBMITTED("Submitted", "已提交");
 
   /** 编码 */
   private final String code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
   /**
    * 构造器
    *
    * @param code 编码
-   * @param name 名称
+   * @param label 标签
    */
-  ProductionReportStatusEnum(String code, String name) {
+  ProductionReportStatusEnum(String code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 }

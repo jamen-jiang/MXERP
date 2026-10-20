@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  * 仓库与库位把货加回去。
  *
  * <p>撤销只有一条路：草稿删掉重开，一分货没动。已退料的不在退料单上翻状态——货真回过仓库，冲它是在库存那边
- * 照原库存单据开一张红字单；红字单过账后由应用层调本服务的 {@code reverse}，把工单用料的已退数量按冲掉的量减回去。
+ * 照原库存记录开一张红字单；红字单过账后由应用层调本服务的 {@code reverse}，把工单用料的已退数量按冲掉的量减回去。
  */
 @NullMarked
 public class ProductionReturnDomainService {
@@ -74,8 +74,8 @@ public class ProductionReturnDomainService {
     for (ProductionReturnLineData data : lines) {
       model.addLine(
           data.workOrderMaterialId(),
-          data.spuId(),
-          data.skuId(),
+          data.productId(),
+          data.variantId(),
           data.appliedQuantity(),
           data.unitId(),
           data.warehouseId(),
@@ -119,8 +119,8 @@ public class ProductionReturnDomainService {
     ProductionReturn model = getExist(id);
     model.addLine(
         data.workOrderMaterialId(),
-        data.spuId(),
-        data.skuId(),
+        data.productId(),
+        data.variantId(),
         data.appliedQuantity(),
         data.unitId(),
         data.warehouseId(),
@@ -204,7 +204,7 @@ public class ProductionReturnDomainService {
       if (quantity.compareTo(line.getApprovedQuantity()) > 0) {
         throw new DomainException(
             "物料"
-                + line.getSkuId()
+                + line.getVariantId()
                 + "冲回数量"
                 + quantity
                 + "不能大于本单核定数量"

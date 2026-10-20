@@ -30,12 +30,12 @@ import org.jspecify.annotations.Nullable;
  * 物料清单（BOM）
  *
  * <p>父件与子件都是 SKU，所以 BOM 本质是 SKU 对 SKU 的自关联：成品、毛坯、靶材、包装袋都挂在同一张
- * Sku 表上，谁有 BOM 谁就能被展开。多层 BOM 不需要额外字段——毛坯 SKU 自己再有一份 BOM 就是三层。
+ * Variant 表上，谁有 BOM 谁就能被展开。多层 BOM 不需要额外字段——毛坯 SKU 自己再有一份 BOM 就是三层。
  *
- * <p>唯一键是 {@code skuId + version}，不用 {@code code}：BOM 是产品的附属数据，没有独立编码。
+ * <p>唯一键是 {@code variantId + version}，不用 {@code code}：BOM 是产品的附属数据，没有独立编码。
  *
- * <p>{@code spuId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。产品类型
- * 不在这里存：它记在 {@code Sku} 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
+ * <p>{@code productId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。产品类型
+ * 不在这里存：它记在 {@code Variant} 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
  *
  * <p><b>版本与生效链。</b>同一父件可以并存多个版本，用生效日期接力：状态只有三条路——草稿可随便改，
  * 发布后冻结（要改就 {@code revise} 升版，把行复制到新草稿），作废只退出可选池。已发布版本必须带生效时间，
@@ -51,20 +51,20 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Bom",
     indexes = {
-      @Index(name = "IX_Bom_SpuId", columnList = "SpuId"),
-      @Index(name = "IX_Bom_SkuId", columnList = "SkuId"),
+      @Index(name = "IX_Bom_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_Bom_VariantId", columnList = "VariantId"),
       @Index(name = "IX_Bom_Status", columnList = "Status")
-      // 注意：SkuId + Version 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
+      // 注意：VariantId + Version 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Bom extends UpdateAggregateRoot {
 
   /** 父件SPU（按系列查 BOM 用） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 父件SKU */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 版本号：与父件SKU 共同构成唯一键，升版就是换一个号 */
   @Nationalized
@@ -113,29 +113,29 @@ public class Bom extends UpdateAggregateRoot {
   /**
    * 构造器：新建的 BOM 一律是草稿
    *
-   * @param spuId 父件SPU
-   * @param skuId 父件SKU
+   * @param productId 父件SPU
+   * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
    * @param remark 备注（可空）
    */
   Bom(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
-    apply(spuId, skuId, version, effectiveFrom, effectiveTo, remark);
+    apply(productId, variantId, version, effectiveFrom, effectiveTo, remark);
     this.status = BomStatusEnum.DRAFT.getCode();
   }
 
   /**
    * 修改 BOM 表头
    *
-   * @param spuId 父件SPU
-   * @param skuId 父件SKU
+   * @param productId 父件SPU
+   * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
@@ -143,22 +143,22 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     checkDraft();
-    apply(spuId, skuId, version, effectiveFrom, effectiveTo, remark);
+    apply(productId, variantId, version, effectiveFrom, effectiveTo, remark);
   }
 
   /**
    * 添加用料行
    *
    * @param sequence 行号
-   * @param spuId 子件SPU
-   * @param skuId 子件SKU
+   * @param productId 子件SPU
+   * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
@@ -171,8 +171,8 @@ public class Bom extends UpdateAggregateRoot {
    */
   public void addLine(
       Integer sequence,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
       Long unitId,
@@ -185,14 +185,14 @@ public class Bom extends UpdateAggregateRoot {
     if (isExistSequence(sequence, null)) {
       throw new DomainException("BOM 行号" + sequence + "已存在!");
     }
-    if (isExistComponent(skuId, null)) {
+    if (isExistComponent(variantId, null)) {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
     bomLines.add(
         new BomLine(
             sequence,
-            spuId,
-            skuId,
+            productId,
+            variantId,
             quantity,
             lossRate,
             unitId,
@@ -208,8 +208,8 @@ public class Bom extends UpdateAggregateRoot {
    *
    * @param bomLineId BOM 行Id
    * @param sequence 行号
-   * @param spuId 子件SPU
-   * @param skuId 子件SKU
+   * @param productId 子件SPU
+   * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
@@ -223,8 +223,8 @@ public class Bom extends UpdateAggregateRoot {
   public void modifyLine(
       Long bomLineId,
       Integer sequence,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
       Long unitId,
@@ -241,13 +241,13 @@ public class Bom extends UpdateAggregateRoot {
     if (isExistSequence(sequence, bomLineId)) {
       throw new DomainException("BOM 行号" + sequence + "已存在!");
     }
-    if (isExistComponent(skuId, bomLineId)) {
+    if (isExistComponent(variantId, bomLineId)) {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
     target.modify(
         sequence,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         lossRate,
         unitId,
@@ -414,8 +414,8 @@ public class Bom extends UpdateAggregateRoot {
    * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参，
    * 否则导入或改表头就能把已发布版本悄悄退回草稿。
    *
-   * @param spuId 父件SPU
-   * @param skuId 父件SKU
+   * @param productId 父件SPU
+   * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
@@ -423,16 +423,16 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException SPU 或 SKU 为空、版本为空、生效区间倒挂时抛出
    */
   private void apply(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("父件SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("父件不能为空");
     }
     String trimmedVersion = StringUtils.trimToNull(version);
@@ -443,8 +443,8 @@ public class Bom extends UpdateAggregateRoot {
       throw new DomainException("失效时间必须晚于生效时间");
     }
 
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.version = trimmedVersion;
     this.effectiveFrom = effectiveFrom;
     this.effectiveTo = effectiveTo;
@@ -472,14 +472,14 @@ public class Bom extends UpdateAggregateRoot {
    *
    * <p>同一子件在同一张 BOM 里只能出现一次，否则展开成工单用料会出现两条同 SKU 的记录，领料时无法区分。
    *
-   * @param skuId 待校验的子件SKU
+   * @param variantId 待校验的子件SKU
    * @param excludeId 需要排除的 BOM 行Id（新增时传 {@code null}）
    * @return true：已存在
    */
-  private boolean isExistComponent(Long skuId, @Nullable Long excludeId) {
+  private boolean isExistComponent(Long variantId, @Nullable Long excludeId) {
     return bomLines.stream()
         .filter(i -> !i.getIsDeleted())
         .filter(i -> !Objects.equals(i.getId(), excludeId))
-        .anyMatch(i -> Objects.equals(i.getSkuId(), skuId));
+        .anyMatch(i -> Objects.equals(i.getVariantId(), variantId));
   }
 }

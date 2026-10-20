@@ -86,14 +86,14 @@ public class BackflushIssueDomainService {
             workOrder.getId(),
             workOrder.getNumber(),
             null,
-            trigger.getName() + "，产出" + outputQuantity,
+            trigger.getLabel() + "，产出" + outputQuantity,
             "");
     for (BackflushLine line : lines) {
       WorkOrderMaterial material = line.material();
       model.addLine(
           material.getId(),
-          material.getSpuId(),
-          material.getSkuId(),
+          material.getProductId(),
+          material.getVariantId(),
           line.quantity(),
           material.getUnitId(),
           resolveWarehouse(workOrder, material),
@@ -146,7 +146,7 @@ public class BackflushIssueDomainService {
           "工单"
               + workOrder.getNumber()
               + "的用料"
-              + material.getSkuId()
+              + material.getVariantId()
               + "没有发料仓库，不能倒冲，请在 BOM 行上补发料仓");
     }
     return warehouseId;

@@ -32,10 +32,10 @@ public interface WorkOrderRepository extends Repository<WorkOrder> {
   /**
    * 按产出SKU查询工单
    *
-   * @param skuId 产出SKU
+   * @param variantId 产出SKU
    * @return 工单列表
    */
-  List<WorkOrder> getListBySkuId(Long skuId);
+  List<WorkOrder> getListByVariantId(Long variantId);
 
   /**
    * 取某段时间内已排产的工序占用

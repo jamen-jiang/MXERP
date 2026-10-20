@@ -8,8 +8,8 @@ import org.jspecify.annotations.Nullable;
  * 生产领料单行数据
  *
  * @param workOrderMaterialId 工单用料行Id
- * @param spuId 物料SPU
- * @param skuId 物料SKU
+ * @param productId 物料SPU
+ * @param variantId 物料SKU
  * @param appliedQuantity 申请数量
  * @param unitId 单位Id
  * @param warehouseId 发料仓库Id
@@ -19,8 +19,8 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public record ProductionIssueLineData(
     Long workOrderMaterialId,
-    Long spuId,
-    Long skuId,
+    Long productId,
+    Long variantId,
     BigDecimal appliedQuantity,
     Long unitId,
     Long warehouseId,

@@ -39,8 +39,8 @@ import org.jspecify.annotations.Nullable;
  * <p>生命周期：{@code DRAFT → RELEASED → IN_PROGRESS → COMPLETED → CLOSED}，任意阶段可 {@code CANCELLED}。
  * 下达（{@link #release}）是唯一一次「定型」动作：按 BOM 展开用料、按工艺路线快照工序，之后路线改版不影响本单。
  *
- * <p>{@code spuId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
- * 到一起看，靠它分组。产品类型不在这里抄：它记在 {@code Sku} 主数据上，工单再存一份就成了两处说法，
+ * <p>{@code productId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
+ * 到一起看，靠它分组。产品类型不在这里抄：它记在 {@code Variant} 主数据上，工单再存一份就成了两处说法，
  * 而且「半成品/成品」这种分法在报表上并不比按 SPU 分组更准。
  *
  * <p>交期与计划完工是两个日期，不能一列两用。{@code dueTime} 是答应客户的承诺，属于需求侧，排产永不修改；
@@ -57,8 +57,8 @@ import org.jspecify.annotations.Nullable;
     name = "WorkOrder",
     indexes = {
       @Index(name = "IX_WorkOrder_Number", columnList = "Number"),
-      @Index(name = "IX_WorkOrder_SpuId", columnList = "SpuId"),
-      @Index(name = "IX_WorkOrder_SkuId", columnList = "SkuId"),
+      @Index(name = "IX_WorkOrder_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_WorkOrder_VariantId", columnList = "VariantId"),
       @Index(name = "IX_WorkOrder_Status", columnList = "Status"),
       @Index(name = "IX_WorkOrder_SourceType_SourceId", columnList = "SourceType,SourceId")
     })
@@ -68,12 +68,12 @@ public class WorkOrder extends OrderAggregateRoot {
   private static final int DEFAULT_SCHEDULING_PRIORITY = 50;
 
   /** 产出SKU的SPU（同一系列多个度数的工单按它折叠） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 产出SKU */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 计划数量 */
   @Column(name = "Quantity", nullable = false, precision = 18, scale = 2)
@@ -191,8 +191,8 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 构造器
    *
-   * @param spuId 产出SKU的SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SKU的SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -208,8 +208,8 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   WorkOrder(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -225,8 +225,8 @@ public class WorkOrder extends OrderAggregateRoot {
       String number) {
     super(number);
     apply(
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         unitId,
         sourceType,
@@ -346,8 +346,8 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 修改工单（仅草稿状态可改）
    *
-   * @param spuId 产出SKU的SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SKU的SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -363,8 +363,8 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态时抛出
    */
   public void modify(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -381,8 +381,8 @@ public class WorkOrder extends OrderAggregateRoot {
       throw new DomainException("工单已下达，不能再修改");
     }
     apply(
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         unitId,
         sourceType,
@@ -474,8 +474,8 @@ public class WorkOrder extends OrderAggregateRoot {
    * 添加用料行（仅草稿状态可加）
    *
    * @param bomLineId 来源BOM行Id（可空）
-   * @param spuId 物料SPU
-   * @param skuId 物料SKU
+   * @param productId 物料SPU
+   * @param variantId 物料SKU
    * @param requiredQuantity 需求数量
    * @param unitQuantity 净单位用量（可空，含损耗；手工加料时为空）
    * @param unitId 单位Id
@@ -488,8 +488,8 @@ public class WorkOrder extends OrderAggregateRoot {
    */
   public void addMaterial(
       @Nullable Long bomLineId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
       Long unitId,
@@ -504,8 +504,8 @@ public class WorkOrder extends OrderAggregateRoot {
     workOrderMaterials.add(
         new WorkOrderMaterial(
             bomLineId,
-            spuId,
-            skuId,
+            productId,
+            variantId,
             requiredQuantity,
             unitQuantity,
             unitId,
@@ -662,15 +662,15 @@ public class WorkOrder extends OrderAggregateRoot {
   }
 
   /**
-   * 红冲报工：把良品、报废与工时从工序行减回去
+   * 撤回报工：把良品、报废与工时从工序行减回去
    *
    * <p>只能倒序冲：后面已经报过工的工序，吃的就是本工序报出来的数，本工序一冲它们的产出就没了依据，所以要
    * 先把后面那道的报工单冲干净。
    *
-   * <p>已完工的工单允许冲——工序全部收尾会把工单自动推到已完工，红冲正好是它的逆操作；冲完只要有一道工序
+   * <p>已完工的工单允许撤——工序全部收尾会把工单自动推到已完工，撤回正好是它的逆操作；撤完只要有一道工序
    * 回到未结束状态，工单就退回生产中。成品入库不会跟着退，所以冲完若完工数低于已入库数，要求先退入库。
    *
-   * <p>标了「报工倒冲」的用料不会因为这次红冲自动退料：那张已照批的领料单是另一笔业务，料要还回去就另开一张
+   * <p>标了「报工倒冲」的用料不会因为这次撤回自动退料：那张已照批的领料单是另一笔业务，料要还回去就另开一张
    * 退料单，两边各自校验、各自留单据痕迹。
    *
    * @param workOrderOperationId 工单工序Id
@@ -684,19 +684,19 @@ public class WorkOrder extends OrderAggregateRoot {
       BigDecimal goodQuantity,
       BigDecimal scrapQuantity,
       BigDecimal workTime) {
-    ensureRevocable("红冲报工");
+    ensureRevocable("撤回报工");
     WorkOrderOperation operation = requireOperation(workOrderOperationId);
     WorkOrderOperation later = firstLaterProductionReported(operation);
     if (later != null) {
       throw new DomainException(
-          "后续工序" + later.getOperationName() + "已经报过工，请先红冲它的报工");
+          "后续工序" + later.getOperationName() + "已经报过工，请先撤回它的报工");
     }
     operation.unreport(goodQuantity, scrapQuantity, workTime);
     retractReleaseAfter(operation);
     BigDecimal completed = getCompletedQuantity();
     if (this.receivedQuantity.compareTo(completed) > 0) {
       throw new DomainException(
-          "红冲后完工数量" + completed + "不足已入库数量" + this.receivedQuantity + "，请先退回成品入库");
+          "撤回后完工数量" + completed + "不足已入库数量" + this.receivedQuantity + "，请先退回成品入库");
     }
     reopenIfNotAllFinished();
   }
@@ -826,7 +826,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 退回成品入库：把已入库数量减回去
    *
-   * <p>这是入库单作废或红冲在工单侧的那一半，也是「红冲后完工数量不足已入库数量」那条拦截的出路：先把入库
+   * <p>这是入库单作废或红冲在工单侧的那一半，也是「撤回后完工数量不足已入库数量」那条拦截的出路：先把入库
    * 退回，报工才冲得动。已完工的工单照样能退——工单完工看的是工序收没收尾，退库只是还有货没进仓，不会把工单
    * 拽回生产中。
    *
@@ -849,7 +849,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * 已完工数量
    *
    * <p>不落库：做出来多少本来就是末道已完工工序的良品数，工序行上就有，工单再存一份就得维护两处一致。
-   * 末道被红冲、一道都没完工时归零。
+   * 末道被撤回、一道都没完工时归零。
    *
    * @return 末道已完工工序的累计良品数
    */
@@ -1002,8 +1002,8 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * @param spuId 产出SKU的SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SKU的SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -1019,8 +1019,8 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException SPU、SKU、数量、单位、来源类型非法，或计划时间倒挂时抛出
    */
   private void apply(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -1033,10 +1033,10 @@ public class WorkOrder extends OrderAggregateRoot {
       @Nullable LocalDateTime plannedEndTime,
       @Nullable Long warehouseId,
       @Nullable String remark) {
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("产出SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("产出SKU不能为空");
     }
     if (quantity.signum() <= 0) {
@@ -1058,8 +1058,8 @@ public class WorkOrder extends OrderAggregateRoot {
       throw new DomainException("计划开工时间不能晚于计划完工时间");
     }
 
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.quantity = quantity;
     this.unitId = unitId;
     this.sourceType = trimmedSourceType;
@@ -1091,7 +1091,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 校验工单还允许把已经发生的业务撤回去
    *
-   * <p>领料、退料、报工的作废与红冲都走这一道：单据那边走哪条路不影响工单侧，都是把当初加上去的数减回去。
+   * <p>领料、退料、报工的作废与撤回都走这一道：单据那边走哪条路不影响工单侧，都是把当初加上去的数减回去。
    *
    * <p>这套判断比 {@code ensureExecutable} 宽：末道工序报满会把工单自动推到已完工，而撤销正是它的逆操作，
    * 已完工不能成为撤不回来的理由。未下达与已关闭/已取消才是真闸门——单据都已经落定，再改数就没人对得上账了。
@@ -1159,7 +1159,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 取本工序之后第一道已经报过工的工序
    *
-   * <p>倒序拦的是「后面那道工序已经用掉你报出来的数」，判据取累计报工数而不是工序状态：红冲会把已完工的
+   * <p>倒序拦的是「后面那道工序已经用掉你报出来的数」，判据取累计报工数而不是工序状态：撤回会把已完工的
    * 工序退回加工中，若按状态拦，链子冲到第二道就再也冲不动——后面那道明明一张报工单都不剩，却被自己的
    * 「加工中」挡住。跳过与否也一样不拦。
    *
@@ -1178,7 +1178,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 收回本工序之后被放行的工序
    *
-   * <p>红冲令本工序重新变成在制，它后面那道「等着开工」的工序就失去了放行依据，收回成未开始。
+   * <p>撤回令本工序重新变成在制，它后面那道「等着开工」的工序就失去了放行依据，收回成未开始。
    *
    * @param operation 本工序
    */
@@ -1221,9 +1221,9 @@ public class WorkOrder extends OrderAggregateRoot {
   }
 
   /**
-   * 红冲报工后重判状态：工序不再全部结束的已完工工单退回生产中
+   * 撤回报工后重判状态：工序不再全部结束的已完工工单退回生产中
    *
-   * <p>与 {@code refreshCompletionStatus} 对称——完工由工序收尾触发，红冲把某道工序退回了加工中，完工就
+   * <p>与 {@code refreshCompletionStatus} 对称——完工由工序收尾触发，撤回把某道工序退回了加工中，完工就
    * 不成立了，完工时间一并清空。
    */
   private void reopenIfNotAllFinished() {

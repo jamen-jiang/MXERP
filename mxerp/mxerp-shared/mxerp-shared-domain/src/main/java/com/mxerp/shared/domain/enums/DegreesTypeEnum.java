@@ -17,11 +17,11 @@ public enum DegreesTypeEnum implements BaseEnum {
   /** 编码 */
   private final String code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
-  DegreesTypeEnum(String code, String name) {
+  DegreesTypeEnum(String code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 }

@@ -20,11 +20,11 @@ public enum DateTypeEnum implements BaseEnum {
   /** 编码 */
   private final String code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
-  DateTypeEnum(String code, String name) {
+  DateTypeEnum(String code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 }

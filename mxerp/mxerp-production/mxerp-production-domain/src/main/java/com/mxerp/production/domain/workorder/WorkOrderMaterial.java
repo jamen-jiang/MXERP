@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
  * 工单用料
  *
  * <p>工单下达时由 BOM 展开生成：需求量按 BOM 行的发料方式算出来（按件乘工单数量、按批取整批量），
- * SPU、发料方式、发料触发与关键件标识一并快照，之后 BOM 改版不影响本单。产品类型不在这里抄：它记在 {@code Sku}
+ * SPU、发料方式、发料触发与关键件标识一并快照，之后 BOM 改版不影响本单。产品类型不在这里抄：它记在 {@code Variant}
  * 主数据上，要按类别看料就按 SPU 分组。
  *
  * <p>倒冲（{@code issueTrigger} 是报工或入库）用的量不回去读 BOM：下达时把「含损耗的净单位用量」快照在
@@ -46,8 +46,8 @@ import org.jspecify.annotations.Nullable;
     name = "WorkOrderMaterial",
     indexes = {
       @Index(name = "IX_WorkOrderMaterial_WorkOrderId", columnList = "WorkOrderId"),
-      @Index(name = "IX_WorkOrderMaterial_SpuId", columnList = "SpuId"),
-      @Index(name = "IX_WorkOrderMaterial_SkuId", columnList = "SkuId")
+      @Index(name = "IX_WorkOrderMaterial_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_WorkOrderMaterial_VariantId", columnList = "VariantId")
     })
 public class WorkOrderMaterial extends BaseDeleteEntity {
 
@@ -61,12 +61,12 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
   private Long bomLineId;
 
   /** 物料SPU */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 物料SKU */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 需求数量 */
   @Column(name = "RequiredQuantity", nullable = false, precision = 18, scale = 2)
@@ -122,8 +122,8 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    * 构造器
    *
    * @param bomLineId 来源BOM行Id（可空，手工加料时为空）
-   * @param spuId 物料SPU
-   * @param skuId 物料SKU
+   * @param productId 物料SPU
+   * @param variantId 物料SKU
    * @param requiredQuantity 需求数量
    * @param unitQuantity 净单位用量（可空，手工加料时为空）
    * @param unitId 单位Id
@@ -136,8 +136,8 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    */
   WorkOrderMaterial(
       @Nullable Long bomLineId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
       Long unitId,
@@ -146,10 +146,10 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
       boolean isKeyPart,
       @Nullable Long warehouseId,
       @Nullable String remark) {
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("物料SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("物料不能为空");
     }
     if (requiredQuantity.signum() < 0) {
@@ -171,8 +171,8 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     }
     String trimmedIssueTrigger = resolveIssueTrigger(mode, issueTrigger, unitQuantity);
     this.bomLineId = bomLineId;
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.requiredQuantity = requiredQuantity;
     this.unitQuantity = unitQuantity;
     this.issuedQuantity = BigDecimal.ZERO;
@@ -220,7 +220,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
       throw new DomainException("产出数量不能为负数");
     }
     if (this.unitQuantity == null) {
-      throw new DomainException("物料" + this.skuId + "没有净单位用量，不能倒冲");
+      throw new DomainException("物料" + this.variantId + "没有净单位用量，不能倒冲");
     }
     return this.unitQuantity.multiply(outputQuantity).setScale(2, RoundingMode.HALF_UP);
   }
@@ -244,7 +244,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     if (netIssued.compareTo(this.requiredQuantity) > 0) {
       throw new DomainException(
           "物料"
-              + this.skuId
+              + this.variantId
               + "超领：需求"
               + this.requiredQuantity
               + "，净领料将达"
@@ -271,7 +271,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     }
     if (isBackflush()) {
       throw new DomainException(
-          "物料" + this.skuId + "是倒冲行，出库即算耗用，要收回去请红冲领料单");
+          "物料" + this.variantId + "是倒冲行，出库即算耗用，要收回去请红冲领料单");
     }
     if (quantity.compareTo(remaining()) > 0) {
       throw new DomainException("退料数量超过已领未耗数量");
@@ -298,14 +298,14 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     if (isBackflush()) {
       if (quantity.compareTo(this.consumedQuantity) > 0) {
         throw new DomainException(
-            "物料" + this.skuId + "撤回数量超过已耗数量" + this.consumedQuantity);
+            "物料" + this.variantId + "撤回数量超过已耗数量" + this.consumedQuantity);
       }
       this.issuedQuantity = this.issuedQuantity.subtract(quantity);
       this.consumedQuantity = this.consumedQuantity.subtract(quantity);
       return;
     }
     if (quantity.compareTo(remaining()) > 0) {
-      throw new DomainException("物料" + this.skuId + "撤回数量超过已领未耗数量" + remaining());
+      throw new DomainException("物料" + this.variantId + "撤回数量超过已领未耗数量" + remaining());
     }
     this.issuedQuantity = this.issuedQuantity.subtract(quantity);
   }
@@ -325,13 +325,13 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     }
     BigDecimal left = this.returnedQuantity.subtract(quantity);
     if (left.signum() < 0) {
-      throw new DomainException("物料" + this.skuId + "撤回数量超过已退数量" + this.returnedQuantity);
+      throw new DomainException("物料" + this.variantId + "撤回数量超过已退数量" + this.returnedQuantity);
     }
     BigDecimal netIssued = this.issuedQuantity.subtract(left);
     if (netIssued.compareTo(this.requiredQuantity) > 0) {
       throw new DomainException(
           "物料"
-              + this.skuId
+              + this.variantId
               + "超领：需求"
               + this.requiredQuantity
               + "，撤回退料后净领料将达"
@@ -355,7 +355,7 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
     }
     if (isBackflush()) {
       throw new DomainException(
-          "物料" + this.skuId + "是倒冲行，耗用已随领料记过，不能再手工填");
+          "物料" + this.variantId + "是倒冲行，耗用已随领料记过，不能再手工填");
     }
     BigDecimal next = this.consumedQuantity.add(quantity);
     if (next.compareTo(this.issuedQuantity.subtract(this.returnedQuantity)) > 0) {

@@ -24,8 +24,8 @@ import org.jspecify.annotations.Nullable;
  * <p>一行只描述「生产 1 个父件需要多少子件」。真正的需求量在工单下达时按父件数量与损耗率算出来，
  * 存到 {@code WorkOrderMaterial}，不在这里保存任何订单相关数据。
  *
- * <p>{@code spuId} 是子件所属的 SPU，由调用方随子件一起提交，只当「按系列查哪些 BOM 用到了它」的分组列用。
- * 产品类型不在这里存：它记在 {@code Sku} 主数据上；「子件是不是自制件」也不靠类型标签判定，而是看这个子件
+ * <p>{@code productId} 是子件所属的 SPU，由调用方随子件一起提交，只当「按系列查哪些 BOM 用到了它」的分组列用。
+ * 产品类型不在这里存：它记在 {@code Variant} 主数据上；「子件是不是自制件」也不靠类型标签判定，而是看这个子件
  * 自己在生产侧有没有 BOM，那是本上下文里能直接问出的事实。
  *
  * <p>倒冲（{@code issueTrigger}）是「不用人开领料单，产出多少就自动领多少」：这一列同时说清要不要自动、
@@ -45,9 +45,9 @@ import org.jspecify.annotations.Nullable;
     name = "BomLine",
     indexes = {
       @Index(name = "IX_BomLine_BomId", columnList = "BomId"),
-      @Index(name = "IX_BomLine_SpuId", columnList = "SpuId"),
-      @Index(name = "IX_BomLine_SkuId", columnList = "SkuId")
-      // 注意：BomId + SkuId 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
+      @Index(name = "IX_BomLine_ProductId", columnList = "ProductId"),
+      @Index(name = "IX_BomLine_VariantId", columnList = "VariantId")
+      // 注意：BomId + VariantId 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class BomLine extends BaseDeleteEntity {
 
@@ -60,12 +60,12 @@ public class BomLine extends BaseDeleteEntity {
   private Integer sequence;
 
   /** 子件SPU（按系列查哪些 BOM 用到了它） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 子件SKU */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 单位用量（生产 1 个父件消耗的子件数量） */
   @Column(name = "Quantity", nullable = false, precision = 18, scale = 2)
@@ -108,8 +108,8 @@ public class BomLine extends BaseDeleteEntity {
    * 构造器
    *
    * @param sequence 行号
-   * @param spuId 子件SPU
-   * @param skuId 子件SKU
+   * @param productId 子件SPU
+   * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
@@ -121,8 +121,8 @@ public class BomLine extends BaseDeleteEntity {
    */
   BomLine(
       Integer sequence,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
       Long unitId,
@@ -133,8 +133,8 @@ public class BomLine extends BaseDeleteEntity {
       @Nullable String remark) {
     apply(
         sequence,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         lossRate,
         unitId,
@@ -149,8 +149,8 @@ public class BomLine extends BaseDeleteEntity {
    * 修改 BOM 行
    *
    * @param sequence 行号
-   * @param spuId 子件SPU
-   * @param skuId 子件SKU
+   * @param productId 子件SPU
+   * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
@@ -162,8 +162,8 @@ public class BomLine extends BaseDeleteEntity {
    */
   void modify(
       Integer sequence,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
       Long unitId,
@@ -174,8 +174,8 @@ public class BomLine extends BaseDeleteEntity {
       @Nullable String remark) {
     apply(
         sequence,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         lossRate,
         unitId,
@@ -244,8 +244,8 @@ public class BomLine extends BaseDeleteEntity {
    * 统一的校验与赋值入口（构造器与修改共用）
    *
    * @param sequence 行号
-   * @param spuId 子件SPU
-   * @param skuId 子件SKU
+   * @param productId 子件SPU
+   * @param variantId 子件SKU
    * @param quantity 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
@@ -258,8 +258,8 @@ public class BomLine extends BaseDeleteEntity {
    */
   private void apply(
       Integer sequence,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
       Long unitId,
@@ -271,10 +271,10 @@ public class BomLine extends BaseDeleteEntity {
     if (sequence <= 0) {
       throw new DomainException("BOM 行号必须大于0");
     }
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("子件SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("子件不能为空");
     }
     if (quantity.signum() <= 0) {
@@ -295,8 +295,8 @@ public class BomLine extends BaseDeleteEntity {
     IssueTriggerEnum trigger = resolveIssueTrigger(mode, issueTrigger);
 
     this.sequence = sequence;
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.quantity = quantity;
     this.lossRate = lossRate;
     this.unitId = unitId;

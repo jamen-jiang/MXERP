@@ -24,9 +24,10 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>现场只该填三样：工序、良品数、报废数。工单号、工序名称、工作中心这些快照由领域服务 从工单上抄，工时不填就按工序的标准时间算——让人抄一遍就等于给自己留一个对不上的机会。
  *
- * <p>生命周期是 {@code DRAFT → SUBMITTED → REVERSED}。提交后不可改，要改就红冲重开一张——这样工单
- * 工序上的累计值永远等于「已提交且未红冲的报工单之和」，不会因为补录或修改而对不上。红冲的单据不删，
- * 车间要查是谁报了少、谁冲的，得留着这张原单。
+ * <p>生命周期只有 {@code DRAFT ⇄ SUBMITTED}，来回都算正常操作。提交后不可改，要改就**撤回**：把这笔报工从
+ * 工单工序的累计里减回去、单据退回草稿，改完再提交。这样工单工序上的累计值永远等于「当前已提交的那几张报工
+ * 单之和」，不会因为补录或修改而对不上。报工不动库存，所以用不着库存单据那套「另开一张红字单、原单永不翻
+ * 状态」的做法——那是给真动过货的单据留痕迹用的。
  */
 @NullMarked
 @Getter
@@ -92,7 +93,7 @@ public class ProductionReport extends OrderAggregateRoot {
   @Column(name = "ScrapQuantity", nullable = false, precision = 18, scale = 2)
   private BigDecimal scrapQuantity;
 
-  /** 状态：草稿、已提交、已红冲 */
+  /** 状态：草稿、已提交 */
   @Nationalized
   @Column(name = "Status", nullable = false, length = 50)
   private String status;
@@ -176,7 +177,7 @@ public class ProductionReport extends OrderAggregateRoot {
    * @param goodQuantity 本次良品数量
    * @param scrapQuantity 本次报废数量
    * @param remark 备注（可空）
-   * @throws DomainException 已提交或已红冲时抛出
+   * @throws DomainException 已提交时抛出（要改先撤回）
    */
   public void modify(
       Long workOrderId,
@@ -224,19 +225,18 @@ public class ProductionReport extends OrderAggregateRoot {
   }
 
   /**
-   * 红冲：状态置为已红冲
+   * 撤回：状态退回草稿
    *
-   * <p>只负责自己这一半；把报工数从工单工序汇总里减回去由 {@code ProductionReportDomainService} 编排。
-   *
-   * <p>报工单只有这一条撤销路：提交那一下就已经计入工单工序，没有「报了还没生效」的中间态，所以没有作废之说。
+   * <p>只负责自己这一半；把报工数从工单工序汇总里减回去由 {@code ProductionReportDomainService} 编排，
+   * 两下必须成对，否则累计值与单上之数就对不上。
    *
    * @throws DomainException 非已提交状态时抛出
    */
-  void reverse() {
+  void withdraw() {
     if (!isSubmitted()) {
-      throw new DomainException("只有已提交的报工单才能红冲");
+      throw new DomainException("只有已提交的报工单才能撤回");
     }
-    this.status = ProductionReportStatusEnum.REVERSED.getCode();
+    this.status = ProductionReportStatusEnum.DRAFT.getCode();
   }
 
   /**
@@ -255,15 +255,6 @@ public class ProductionReport extends OrderAggregateRoot {
    */
   public boolean isSubmitted() {
     return ProductionReportStatusEnum.SUBMITTED.getCode().equals(this.status);
-  }
-
-  /**
-   * 是否已红冲
-   *
-   * @return true 表示已红冲
-   */
-  public boolean isReversed() {
-    return ProductionReportStatusEnum.REVERSED.getCode().equals(this.status);
   }
 
   // ==================== 私有：校验与赋值 ====================

@@ -18,11 +18,12 @@ import org.jspecify.annotations.Nullable;
  * <p>发料要同时动两个聚合：生产领料单自己把核定数量落定，工单用料行按核定数量累加已领。这是跨聚合的一致性动作，
  * 所以放在领域服务里编排，而不是让生产领料单去反向修改工单。
  *
- * <p>库存那一半不在这里：本模块不依赖库存模块，可用量占用与出库由应用层调 {@code StockDomainService} 完成，
- * 按行上的仓库与库位定位库存行。
+ * <p>库存那一半不在这里：本模块不依赖库存模块，三个时点由应用层在同一个事务里连着调库存服务——**批准**时
+ * {@code reserve}（可用量减掉这笔），**发料过账**时先 {@code unreserve} 再 {@code outbound}（先退自己的占用，
+ * 免得出库时被自己的预留挡住），**改小批准量或作废**时按差额 {@code unreserve}。定位一律按行上的仓库与库位。
  *
  * <p>撤销只有一条路：草稿删掉重开，一分货没动。已发料的不在生产领料单上翻状态——料真出过仓，冲它是在库存那边
- * 照原库存单据开一张红字单；红字单过账后由应用层调本服务的 {@code reverse}，把工单用料的已领数量按冲掉的量退回去。
+ * 照原库存记录开一张红字单；红字单过账后由应用层调本服务的 {@code reverse}，把工单用料的已领数量按冲掉的量退回去。
  */
 @NullMarked
 public class ProductionIssueDomainService {
@@ -75,8 +76,8 @@ public class ProductionIssueDomainService {
     for (ProductionIssueLineData data : lines) {
       model.addLine(
           data.workOrderMaterialId(),
-          data.spuId(),
-          data.skuId(),
+          data.productId(),
+          data.variantId(),
           data.appliedQuantity(),
           data.unitId(),
           data.warehouseId(),
@@ -120,8 +121,8 @@ public class ProductionIssueDomainService {
     ProductionIssue model = getExist(id);
     model.addLine(
         data.workOrderMaterialId(),
-        data.spuId(),
-        data.skuId(),
+        data.productId(),
+        data.variantId(),
         data.appliedQuantity(),
         data.unitId(),
         data.warehouseId(),
@@ -176,7 +177,7 @@ public class ProductionIssueDomainService {
    * <p>只走已发料的单子。红字单开在库存那边，本方法只补工单这一半：把已领数量按冲掉的量减回去。单据不翻状态——
    * 它确实发过料，货是库存那边倒回来的，翻状态等于抹掉这段事实；「被冲过没有」去库存那边查指着它的红字单。
    *
-   * <p>可以分次冲，每次只传这次冲掉的几行几量。累计上限由库存那边管（同一原库存单据累计冲量不超过原量），这里
+   * <p>可以分次冲，每次只传这次冲掉的几行几量。累计上限由库存那边管（同一原库存记录累计冲量不超过原量），这里
    * 只管单次不超本行核定数，以及工单用料行自己的上限（手工行不超已领未耗，倒冲行不超已耗并同时把已耗减回去）。
    *
    * @param id 生产领料单Id
@@ -206,7 +207,7 @@ public class ProductionIssueDomainService {
       if (quantity.compareTo(line.getApprovedQuantity()) > 0) {
         throw new DomainException(
             "物料"
-                + line.getSkuId()
+                + line.getVariantId()
                 + "冲回数量"
                 + quantity
                 + "不能大于本单核定数量"

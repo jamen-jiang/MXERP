@@ -286,7 +286,7 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   /**
    * 收回放行（可开工 → 未开始）
    *
-   * <p>上游报工被红冲时，工单把靠这道放行的工序收回，现场就不该再看见一个开不了工的入口。
+   * <p>上游报工被撤回时，工单把靠这道放行的工序收回，现场就不该再看见一个开不了工的入口。
    */
   void hold() {
     if (!isReady()) {
@@ -365,9 +365,9 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   }
 
   /**
-   * 红冲报工：把良品、报废与实际工时从累计值里减回去
+   * 撤回报工：把良品、报废与实际工时从累计值里减回去
    *
-   * <p>已完工的工序被红冲时退回加工中并清掉完工时间——报工数没了，这道工序就不能再算做完；后续工序
+   * <p>已完工的工序被撤回时退回加工中并清掉完工时间——报工数没了，这道工序就不能再算做完；后续工序
    * 由工单统一收回放行。
    *
    * @param goodQuantity 冲回的良品数量
@@ -377,7 +377,7 @@ public class WorkOrderOperation extends BaseDeleteEntity {
    */
   void unreport(BigDecimal goodQuantity, BigDecimal scrapQuantity, BigDecimal workTime) {
     if (!isInProgress() && !isCompleted()) {
-      throw new DomainException("工序" + this.operationName + "未开工，不能红冲报工");
+      throw new DomainException("工序" + this.operationName + "未开工，不能撤回报工");
     }
     if (goodQuantity.signum() < 0 || scrapQuantity.signum() < 0 || workTime.signum() < 0) {
       throw new DomainException("冲回数量与工时不能为负数");
@@ -442,7 +442,7 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   /**
    * 是否已经报过工（累计良品加报废不为零）
    *
-   * <p>红冲前面的报工要看后面这道工序有没有用掉料，状态说了不算——它可能刚被红冲退回加工中。
+   * <p>撤回前面的报工要看后面这道工序有没有用掉料，状态说了不算——它可能刚被撤回退回加工中。
    *
    * @return true 表示累计报工数不为零
    */

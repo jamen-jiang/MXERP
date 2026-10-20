@@ -24,8 +24,8 @@ public class BomFactory {
   /**
    * 创建 BOM（草稿）
    *
-   * @param spuId 父件SPU
-   * @param skuId 父件SKU
+   * @param productId 父件SPU
+   * @param variantId 父件SKU
    * @param version 版本号
    * @param effectiveFrom 生效时间（可空）
    * @param effectiveTo 失效时间（可空）
@@ -34,16 +34,16 @@ public class BomFactory {
    * @throws DomainException 父件SKU + 版本已存在时抛出
    */
   public Bom create(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     // 校验父件SKU + 版本唯一
-    if (bomRepository.isExistBySkuIdAndVersionExcludeId(skuId, version)) {
+    if (bomRepository.isExistByVariantIdAndVersionExcludeId(variantId, version)) {
       throw new DomainException("该父件的 BOM 版本" + version + "已存在!");
     }
-    return new Bom(spuId, skuId, version, effectiveFrom, effectiveTo, remark);
+    return new Bom(productId, variantId, version, effectiveFrom, effectiveTo, remark);
   }
 }

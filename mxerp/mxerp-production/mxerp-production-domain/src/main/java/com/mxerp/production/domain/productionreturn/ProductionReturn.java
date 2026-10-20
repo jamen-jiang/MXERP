@@ -41,7 +41,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>生命周期与生产领料单同一套，只有两态：{@code DRAFT → POSTED}。退料那一下同时是审核：核定数量计入工单用料的
  * 已退数量、货回到仓库，三件事在同一个动作里完成。草稿不动库存也不动工单用料，直接删掉即可，所以没有作废状态。
- * 已退料的不在这张单上翻状态——货真回过仓库，冲它是在库存那边照原库存单据开一张红字单，本单停在已退料当历史
+ * 已退料的不在这张单上翻状态——货真回过仓库，冲它是在库存那边照原库存记录开一张红字单，本单停在已退料当历史
  * 记录。
  *
  * <p>库存那一半（回仓入库）不在这里做：本模块不依赖库存模块，应用层在退料这一步调 {@code StockDomainService}
@@ -161,8 +161,8 @@ public class ProductionReturn extends OrderAggregateRoot {
    * 添加退料行（仅草稿可加）
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param spuId 物料SPU（快照）
-   * @param skuId 物料SKU（快照）
+   * @param productId 物料SPU（快照）
+   * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请退料数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 退料仓库Id
@@ -172,8 +172,8 @@ public class ProductionReturn extends OrderAggregateRoot {
    */
   public void addLine(
       Long workOrderMaterialId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
       Long warehouseId,
@@ -186,8 +186,8 @@ public class ProductionReturn extends OrderAggregateRoot {
     productionReturnLines.add(
         new ProductionReturnLine(
             workOrderMaterialId,
-            spuId,
-            skuId,
+            productId,
+            variantId,
             appliedQuantity,
             unitId,
             warehouseId,

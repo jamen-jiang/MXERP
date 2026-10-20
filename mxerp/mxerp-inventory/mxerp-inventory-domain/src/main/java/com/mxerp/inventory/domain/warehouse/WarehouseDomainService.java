@@ -36,20 +36,29 @@ public class WarehouseDomainService {
    *
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 仓库聚合
    */
   public Warehouse importGenerate(
-      String code, String name, boolean disabled, @Nullable String remark) {
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
     // 按代码查仓库
     Warehouse model = warehouseRepository.getByCode(code);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = warehouseFactory.create(code, name, disabled, remark);
+      model =
+          warehouseFactory.create(
+              code, name, locationManaged, allowNegativeStock, disabled, remark);
     } else {
-      modify(model, code, name, disabled, remark);
+      modify(model, code, name, locationManaged, allowNegativeStock, disabled, remark);
     }
 
     return model;
@@ -61,18 +70,26 @@ public class WarehouseDomainService {
    * @param id 仓库Id
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 仓库聚合
    * @throws DomainException 仓库不存在时抛出
    */
   public Warehouse modify(
-      long id, String code, String name, boolean disabled, @Nullable String remark) {
+      long id,
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
     Warehouse model = warehouseRepository.get(id);
     if (model == null) {
       throw new DomainException("仓库" + id + "不存在!");
     }
-    modify(model, code, name, disabled, remark);
+    modify(model, code, name, locationManaged, allowNegativeStock, disabled, remark);
     return model;
   }
 
@@ -82,17 +99,25 @@ public class WarehouseDomainService {
    * @param model 仓库聚合
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
-   * @throws DomainException 仓库代码与其它仓库冲突时抛出
+   * @throws DomainException 仓库代码与其它仓库冲突、或取消库位管理但仓里还有库位时抛出
    */
   public void modify(
-      Warehouse model, String code, String name, boolean disabled, @Nullable String remark) {
+      Warehouse model,
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
     // 校验仓库代码唯一
     if (warehouseRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("仓库代码" + code + "已存在!");
     }
-    model.modify(code, name, disabled, remark);
+    model.modify(code, name, locationManaged, allowNegativeStock, disabled, remark);
   }
 
   /**
@@ -100,6 +125,8 @@ public class WarehouseDomainService {
    *
    * <p>用代码而不是 Id 做匹配，是因为库位主要来自 Excel 导入，表里没有本系统 Id。代价是改代码等于
    * 删旧增新，旧库位会被逻辑删除，历史上落在它上面的数量不迁移。
+   *
+   * <p>先删后加，所以「关掉库位管理同时清空库位」一次同步就能做完；开关只在关掉的那一刻查有没有库位。
    *
    * @param warehouse 仓库聚合
    * @param locations 目标库位列表（可空，null 视为清空）

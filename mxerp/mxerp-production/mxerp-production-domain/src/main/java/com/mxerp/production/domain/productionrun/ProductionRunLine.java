@@ -40,7 +40,7 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_RunLine_RunId", columnList = "RunId"),
       @Index(name = "IX_RunLine_WorkOrderId", columnList = "WorkOrderId"),
       @Index(name = "IX_RunLine_WorkOrderOperationId", columnList = "WorkOrderOperationId"),
-      @Index(name = "IX_RunLine_SkuId", columnList = "SkuId")
+      @Index(name = "IX_RunLine_VariantId", columnList = "VariantId")
       // 注意：WorkOrderOperationId 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class ProductionRunLine extends BaseDeleteEntity {
@@ -63,12 +63,12 @@ public class ProductionRunLine extends BaseDeleteEntity {
   private String workOrderNumber;
 
   /** 产出SPU（快照，按系列分组看这炉做了哪些单） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 产出SKU（快照） */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /**
    * 占用量
@@ -110,8 +110,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param occupyQuantity 占用量
    * @param allocationWeight 分摊权重（传 {@code null} 表示取占用量）
    * @param remark 备注（可空）
@@ -120,8 +120,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
       Long workOrderId,
       Long workOrderOperationId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal occupyQuantity,
       @Nullable BigDecimal allocationWeight,
       @Nullable String remark) {
@@ -129,8 +129,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
         workOrderId,
         workOrderOperationId,
         workOrderNumber,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         occupyQuantity,
         allocationWeight,
         remark);
@@ -149,8 +149,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
         this.workOrderId,
         this.workOrderOperationId,
         this.workOrderNumber,
-        this.spuId,
-        this.skuId,
+        this.productId,
+        this.variantId,
         occupyQuantity,
         allocationWeight,
         remark);
@@ -181,8 +181,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
    * @param workOrderNumber 工单号
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param occupyQuantity 占用量
    * @param allocationWeight 分摊权重（可空，取占用量）
    * @param remark 备注（可空）
@@ -192,8 +192,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
       Long workOrderId,
       Long workOrderOperationId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal occupyQuantity,
       @Nullable BigDecimal allocationWeight,
       @Nullable String remark) {
@@ -206,7 +206,7 @@ public class ProductionRunLine extends BaseDeleteEntity {
     if (workOrderNumber == null || workOrderNumber.isBlank()) {
       throw new DomainException("工单号不能为空");
     }
-    if (spuId <= 0 || skuId <= 0) {
+    if (productId <= 0 || variantId <= 0) {
       throw new DomainException("产出SKU不能为空");
     }
     if (occupyQuantity.signum() <= 0) {
@@ -220,8 +220,8 @@ public class ProductionRunLine extends BaseDeleteEntity {
     this.workOrderId = workOrderId;
     this.workOrderOperationId = workOrderOperationId;
     this.workOrderNumber = workOrderNumber;
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.occupyQuantity = occupyQuantity;
     this.allocationWeight = weight.setScale(4, RoundingMode.HALF_UP);
     this.remark = remark;

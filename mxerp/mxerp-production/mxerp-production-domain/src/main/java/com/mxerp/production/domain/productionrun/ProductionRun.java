@@ -213,8 +213,8 @@ public class ProductionRun extends OrderAggregateRoot {
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param occupyQuantity 占用量（按表头占用单位计）
    * @param allocationWeight 分摊权重（可空，取占用量）
    * @param remark 备注（可空）
@@ -224,8 +224,8 @@ public class ProductionRun extends OrderAggregateRoot {
       Long workOrderId,
       Long workOrderOperationId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal occupyQuantity,
       @Nullable BigDecimal allocationWeight,
       @Nullable String remark) {
@@ -240,8 +240,8 @@ public class ProductionRun extends OrderAggregateRoot {
             workOrderId,
             workOrderOperationId,
             workOrderNumber,
-            spuId,
-            skuId,
+            productId,
+            variantId,
             occupyQuantity,
             allocationWeight,
             remark));

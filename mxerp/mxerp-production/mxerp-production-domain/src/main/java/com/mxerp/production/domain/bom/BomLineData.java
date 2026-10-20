@@ -8,8 +8,8 @@ import org.jspecify.annotations.Nullable;
  * BOM 行数据
  *
  * @param sequence 行号
- * @param spuId 子件SPU
- * @param skuId 子件SKU
+ * @param productId 子件SPU
+ * @param variantId 子件SKU
  * @param quantity 单位用量（生产 1 个父件消耗的子件数量）
  * @param lossRate 损耗率（百分比，传 0 表示无损耗）
  * @param unitId 单位Id
@@ -22,8 +22,8 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public record BomLineData(
     Integer sequence,
-    Long spuId,
-    Long skuId,
+    Long productId,
+    Long variantId,
     BigDecimal quantity,
     BigDecimal lossRate,
     Long unitId,

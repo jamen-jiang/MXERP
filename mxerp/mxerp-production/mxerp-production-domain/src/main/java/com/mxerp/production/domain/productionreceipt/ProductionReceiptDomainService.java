@@ -75,8 +75,8 @@ public class ProductionReceiptDomainService {
     return productionReceiptFactory.create(
         workOrder.getId(),
         workOrder.getNumber(),
-        workOrder.getSpuId(),
-        workOrder.getSkuId(),
+        workOrder.getProductId(),
+        workOrder.getVariantId(),
         workOrder.getUnitId(),
         resolveWarehouse(workOrder, warehouseId),
         locationId,
@@ -112,8 +112,8 @@ public class ProductionReceiptDomainService {
     model.modify(
         workOrder.getId(),
         workOrder.getNumber(),
-        workOrder.getSpuId(),
-        workOrder.getSkuId(),
+        workOrder.getProductId(),
+        workOrder.getVariantId(),
         workOrder.getUnitId(),
         resolveWarehouse(workOrder, warehouseId),
         locationId,

@@ -25,8 +25,8 @@ public class WorkOrderFactory {
   /**
    * 创建工单
    *
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -44,8 +44,8 @@ public class WorkOrderFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public WorkOrder create(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -64,8 +64,8 @@ public class WorkOrderFactory {
       throw new DomainException("工单号" + number + "已存在!");
     }
     return new WorkOrder(
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         unitId,
         sourceType,

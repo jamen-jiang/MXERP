@@ -32,23 +32,26 @@ public enum SerialNumberTypeEnum implements BaseEnum {
   /** 生产入库单 */
   PRODUCTION_RECEIPT("ProductionReceipt", "生产入库单"),
 
-  /** 库存单据（一次库存动账，红字单也用这一段号） */
-  STOCK_VOUCHER("StockVoucher", "库存单据");
+  /** 库存记录（一次库存动账，红字单也用这一段号） */
+  STOCK_RECORD("StockRecord", "库存记录"),
+
+  /** 库存状态转换单（待检放行、报废、冻结、解冻共用这一段号） */
+  STOCK_STATUS_CHANGE("StockStatusChange", "库存状态转换单");
 
   /** 编码 */
   private final String code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
   /**
    * 构造器
    *
    * @param code 编码
-   * @param name 名称
+   * @param label 标签
    */
-  SerialNumberTypeEnum(String code, String name) {
+  SerialNumberTypeEnum(String code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 }

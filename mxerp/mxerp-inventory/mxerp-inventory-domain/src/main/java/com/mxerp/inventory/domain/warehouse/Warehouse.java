@@ -27,15 +27,31 @@ import org.jspecify.annotations.Nullable;
 /**
  * 仓库
  *
- * <p>仓库是库存记账的边界：一笔数量落在哪个仓，决定它在报表上算什么。仓库本身不带类型标签——需要「原料仓、
- * 车间仓、成品仓、废品仓」这类区分时，就各建一个仓库，由引用它的那张单据来表达用途（领料单行上的发料仓、
+ * <p>仓库是库存记账的边界：一笔数量落在哪个仓，决定它在报表上算哪一笔。仓库本身不带类型标签——需要「原料仓、
+ * 车间仓、成品仓」这类区分时，就各建一个仓库，由引用它的那张单据来表达用途（领料单行上的发料仓、
  * 完工入库单上的收货仓都是这么用的；工单头上的 {@code WarehouseId} 只是入库单没填仓库时的默认收货仓）。
  * 这是 D365 的口径：仓库是库存维度之一，「usually a geographic location or a particular function」，功能靠建仓
  * 而不是靠打标签。
  *
+ * <p>「这批数量能不能动用」不在仓库上表达，那是库存状态那一维的事（见 {@code StockStatusEnum}）：同一个仓里
+ * 可以有可用、待检、冻结、废品四行。拿「待检仓」「废品仓」去顶这一维，仓的数量就会随状态翻倍，报表里的可用量
+ * 还得维护一份仓库白名单。
+ *
  * <p>库位挂在仓库下面，是仓内的物理坐标。这一层是可选粒度：入仓未分拣时数量只记到仓库，需要精确到
- * 货架再填库位。库位同样不带用途标签，理由和仓库一样：一个标签两层挂，就会出现「废品仓里的报废库位」这种
+ * 货架再填库位。库位同样不带用途标签，理由和仓库一样：一个标签两层挂，就会出现「待检库位上的可用数量」这种
  * 两处说同一件事、还可能对不上的情况。
+ *
+ * <p>要不要用库位由仓库上的 {@code LocationManaged}（启用库位管理）决定，这是金蝶云星空/星辰的做法：
+ * 开关在仓库资料上，勾了才允许建仓位、单据行上仓位变成必录；不勾就只记到仓库，行上也不许填仓位。
+ * 开关放在仓上而不是放在单据或库存行上，是因为「这个仓有没有货架可管」是仓自己的事，同一个仓在不同
+ * 单据里不该有不同答案。星空还有一条运维约束：仓库一旦被业务单据引用就不能再启用/取消仓位管理，官方给的
+ * 办法是新建一个仓、开调拨单把库存移过去、再禁用旧仓——那条要查引用，属于应用层的活；本聚合只守住
+ * 「仓里还有库位就不许关掉开关」这条不变式，免得关掉开关后留下一批没人认领的库位。
+ *
+ * <p>{@code AllowNegativeStock}（允许负库存）同样按金蝶的口径挂在仓库上：出库时数量不够，允许负库存的仓
+ * 照样把账记下去（库存变负数，等入库补回），不允许的仓当场抛错。这个开关只能按仓定，不能全局定——
+ * 原料仓、线边仓常常是「先领后补」，成品仓和客供料仓一负就是事故。BC、NetSuite 也都是按仓（或按物料×仓）
+ * 给这个许可，没有一个ERP让你全局放开。
  */
 @NullMarked
 @Getter
@@ -61,6 +77,14 @@ public class Warehouse extends UpdateAggregateRoot {
   @Nationalized
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
+
+  /** 是否启用库位管理 */
+  @Column(name = "LocationManaged", nullable = false)
+  private Boolean locationManaged;
+
+  /** 是否允许负库存出库 */
+  @Column(name = "AllowNegativeStock", nullable = false)
+  private Boolean allowNegativeStock;
 
   /** 是否停用 */
   @Column(name = "Disabled", nullable = false)
@@ -95,11 +119,19 @@ public class Warehouse extends UpdateAggregateRoot {
    *
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
-  Warehouse(String code, String name, boolean disabled, @Nullable String remark) {
-    apply(code, name, disabled, remark);
+  Warehouse(
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
+    apply(code, name, locationManaged, allowNegativeStock, disabled, remark);
   }
 
   /**
@@ -107,11 +139,36 @@ public class Warehouse extends UpdateAggregateRoot {
    *
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
-  void modify(String code, String name, boolean disabled, @Nullable String remark) {
-    apply(code, name, disabled, remark);
+  void modify(
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
+    apply(code, name, locationManaged, allowNegativeStock, disabled, remark);
+  }
+
+  /**
+   * 校验一次数量变动上的库位填法：启用库位管理的仓必须有库位，没启用的不许填
+   *
+   * <p>开关在仓库上，答案就只能在仓库上问：单据行、库存行自己去猜「这个仓该不该有库位」会猜出两种口径。
+   *
+   * @param locationId 库位Id（可空）
+   * @throws DomainException 启用库位管理却没给库位、或未启用却填了库位时抛出
+   */
+  public void validateLocationUsage(@Nullable Long locationId) {
+    if (Boolean.TRUE.equals(locationManaged) && locationId == null) {
+      throw new DomainException("仓库" + code + "已启用库位管理，库位不能为空!");
+    }
+    if (!Boolean.TRUE.equals(locationManaged) && locationId != null) {
+      throw new DomainException("仓库" + code + "未启用库位管理，不能填库位" + locationId + "!");
+    }
   }
 
   /**
@@ -121,9 +178,12 @@ public class Warehouse extends UpdateAggregateRoot {
    * @param name 库位名称
    * @param disabled 是否停用
    * @param remark 备注（可空）
-   * @throws DomainException 库位代码在本仓已存在时抛出
+   * @throws DomainException 本仓未启用库位管理、或库位代码在本仓已存在时抛出
    */
   public void addLocation(String code, String name, boolean disabled, @Nullable String remark) {
+    if (!Boolean.TRUE.equals(locationManaged)) {
+      throw new DomainException("仓库" + this.code + "未启用库位管理，不能建库位!");
+    }
     if (isExistCode(code, null)) {
       throw new DomainException("库位代码" + code + "已存在!");
     }
@@ -177,11 +237,19 @@ public class Warehouse extends UpdateAggregateRoot {
    *
    * @param code 代码
    * @param name 名称
+   * @param locationManaged 是否启用库位管理
+   * @param allowNegativeStock 是否允许负库存出库
    * @param disabled 是否停用
    * @param remark 备注（可空）
-   * @throws DomainException 代码或名称为空时抛出
+   * @throws DomainException 代码或名称为空、或取消库位管理但仓里还有库位时抛出
    */
-  private void apply(String code, String name, boolean disabled, @Nullable String remark) {
+  private void apply(
+      String code,
+      String name,
+      boolean locationManaged,
+      boolean allowNegativeStock,
+      boolean disabled,
+      @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedCode == null) {
@@ -190,11 +258,26 @@ public class Warehouse extends UpdateAggregateRoot {
     if (trimmedName == null) {
       throw new DomainException("仓库名称不能为空");
     }
+    // 关掉开关要先把库位收干净，否则留下一批没人认领的库位，单据上也填不了它们
+    if (!locationManaged && hasActiveLocation()) {
+      throw new DomainException("仓库" + trimmedCode + "还有库位，不能取消库位管理，请先删除库位!");
+    }
 
     this.code = trimmedCode;
     this.name = trimmedName;
+    this.locationManaged = locationManaged;
+    this.allowNegativeStock = allowNegativeStock;
     this.disabled = disabled;
     this.remark = remark;
+  }
+
+  /**
+   * 仓里是否还有未删除的库位
+   *
+   * @return true：有
+   */
+  private boolean hasActiveLocation() {
+    return locations.stream().anyMatch(l -> !l.getIsDeleted());
   }
 
   /**

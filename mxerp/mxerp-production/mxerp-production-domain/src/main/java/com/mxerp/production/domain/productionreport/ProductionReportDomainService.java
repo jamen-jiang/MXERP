@@ -165,24 +165,21 @@ public class ProductionReportDomainService {
   }
 
   /**
-   * 红冲报工单：置为已红冲，并把报工数从工单工序里减回去
+   * 撤回报工单：退回草稿，并把报工数从工单工序里减回去
    *
    * <p>与提交同样的顺序：先让工单侧校验通过再改自己的状态——反过来的话，工单侧一抛异常就会留下一张
-   * 「已红冲但没减数」的报工单。
+   * 「已撤回但没减数」的报工单。
    *
-   * <p>报工单只有这一条撤销路：提交那一下就已经计入工单工序，没有「报了还没生效」的中间态，所以没有作废之说，
-   * 也不像领料单、入库单那样另有一张红字单要开——数全在工单工序的汇总列上，减回去就完了。
-   *
-   * <p>红冲只回到工单工序的汇总数：这张报工单触发过的报工倒冲不会跟着退，要退料由应用层做红字领料。
+   * <p>撤回只回到工单工序的汇总数：这张报工单触发过的报工倒冲不会跟着退，要退料由应用层另开一张退料单。
    *
    * @param id 报工单Id
-   * @return 报工单聚合
+   * @return 报工单聚合（已退回草稿）
    * @throws DomainException 报工单或工单不存在、非已提交状态、后续工序已开工、或工单侧校验不过时抛出
    */
-  public ProductionReport reverse(long id) {
+  public ProductionReport withdraw(long id) {
     ProductionReport model = getExist(id);
     if (!model.isSubmitted()) {
-      throw new DomainException("报工单" + model.getNumber() + "不是已提交状态，不能红冲");
+      throw new DomainException("报工单" + model.getNumber() + "不是已提交状态，不能撤回");
     }
 
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
@@ -192,7 +189,7 @@ public class ProductionReportDomainService {
         model.getScrapQuantity(),
         model.getWorkTime());
 
-    model.reverse();
+    model.withdraw();
     return model;
   }
 

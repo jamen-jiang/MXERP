@@ -34,18 +34,18 @@ public enum ApiStatusEnum {
   /** 状态码 */
   private final int code;
 
-  /** 名称 */
-  private final String name;
+  /** 标签 */
+  private final String label;
 
   /**
    * 构造器
    *
    * @param code 状态码
-   * @param name 名称
+   * @param label 标签
    */
-  ApiStatusEnum(int code, String name) {
+  ApiStatusEnum(int code, String label) {
     this.code = code;
-    this.name = name;
+    this.label = label;
   }
 
   /**

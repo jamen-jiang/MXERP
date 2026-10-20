@@ -88,8 +88,8 @@ public class WorkOrderDomainService {
   /**
    * 创建工单（草稿）
    *
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -105,8 +105,8 @@ public class WorkOrderDomainService {
    * @return 工单聚合
    */
   public WorkOrder create(
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -121,8 +121,8 @@ public class WorkOrderDomainService {
       @Nullable String remark) {
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return workOrderFactory.create(
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         unitId,
         sourceType,
@@ -142,8 +142,8 @@ public class WorkOrderDomainService {
    * 修改工单（仅草稿可改）
    *
    * @param id 工单Id
-   * @param spuId 产出SPU
-   * @param skuId 产出SKU
+   * @param productId 产出SPU
+   * @param variantId 产出SKU
    * @param quantity 计划数量
    * @param unitId 单位Id
    * @param sourceType 来源类型编码
@@ -161,8 +161,8 @@ public class WorkOrderDomainService {
    */
   public WorkOrder modify(
       long id,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal quantity,
       Long unitId,
       String sourceType,
@@ -177,8 +177,8 @@ public class WorkOrderDomainService {
       @Nullable String remark) {
     WorkOrder model = getExist(id);
     model.modify(
-        spuId,
-        skuId,
+        productId,
+        variantId,
         quantity,
         unitId,
         sourceType,
@@ -229,7 +229,7 @@ public class WorkOrderDomainService {
     Long resolvedBomId = model.getBomId();
     Bom bom =
         resolvedBomId == null
-            ? bomRepository.getEffectiveBySkuIdAt(model.getSkuId(), releaseTime)
+            ? bomRepository.getEffectiveByVariantIdAt(model.getVariantId(), releaseTime)
             : bomRepository.get(resolvedBomId);
     if (resolvedBomId != null && bom == null) {
       throw new DomainException("BOM" + resolvedBomId + "不存在!");
@@ -268,8 +268,8 @@ public class WorkOrderDomainService {
     for (MaterialRequirement requirement : requirements) {
       model.addMaterial(
           requirement.bomLineId(),
-          requirement.spuId(),
-          requirement.skuId(),
+          requirement.productId(),
+          requirement.variantId(),
           requirement.requiredQuantity(),
           requirement.unitQuantity(),
           requirement.unitId(),
@@ -411,7 +411,7 @@ public class WorkOrderDomainService {
    * 展开 BOM，得到可直接装配成工单用料的行
    *
    * <p>当前只做单层展开：每一行子件都按「能从仓库领」处理，不判断它是不是自制件。真领不到的时候由库存那边拦——
-   * 出库时「该键没有库存记录」就是答案。这里不做提前判定，是因为「自制」并不等于「不能从仓里领」：备库的半成品
+   * 出库时「该键没有库存行」就是答案。这里不做提前判定，是因为「自制」并不等于「不能从仓里领」：备库的半成品
    * 本来就该能领；反过来外购件仓里没货照样领不到，类型标签也提醒不了什么。
    *
    * <p>产品没有 BOM 时返回空列表——纯加工类工单不消耗物料，允许下达。
@@ -434,8 +434,8 @@ public class WorkOrderDomainService {
       result.add(
           new MaterialRequirement(
               line.getId(),
-              line.getSpuId(),
-              line.getSkuId(),
+              line.getProductId(),
+              line.getVariantId(),
               line.requiredQuantity(model.getQuantity()),
               // 净单位用量只在倒冲行上快照：这一列的约定就是「有值才能按产出乘回去领料」
               backflush ? line.netUnitQuantity() : null,
@@ -480,8 +480,8 @@ public class WorkOrderDomainService {
   /** 待装配的用料需求，字段与 {@link WorkOrder#addMaterial} 一一对应 */
   private record MaterialRequirement(
       @Nullable Long bomLineId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
       Long unitId,

@@ -14,9 +14,9 @@ public interface BaseEnum {
   String getCode();
 
   /**
-   * 获取名称
+   * 获取标签
    *
-   * @return 名称
+   * @return 标签
    */
-  String getName();
+  String getLabel();
 }

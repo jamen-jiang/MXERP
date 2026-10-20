@@ -10,13 +10,13 @@ import java.lang.annotation.Target;
  *
  * <pre>
  *   // 只用 key
- *   {@code @DistributedLock("'Stock_' + #skuId + '_' + #warehouseId")}
+ *   {@code @DistributedLock("'Stock_' + #variantId + '_' + #warehouseId")}
  *
  *   // prefix + key
- *   {@code @DistributedLock(prefix = "Stock", value = "#skuId + '_' + #warehouseId")}
+ *   {@code @DistributedLock(prefix = "Stock", value = "#variantId + '_' + #warehouseId")}
  *
  *   // prefix + key + condition
- *   {@code @DistributedLock(prefix = "Stock", value = "#skuId", condition = "#qty > 0")}
+ *   {@code @DistributedLock(prefix = "Stock", value = "#variantId", condition = "#qty > 0")}
  * </pre>
  */
 @Target(ElementType.METHOD)

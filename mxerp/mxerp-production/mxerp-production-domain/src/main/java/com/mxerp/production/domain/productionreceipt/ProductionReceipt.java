@@ -29,7 +29,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>生命周期与生产领料单同一套，只有两态：{@code DRAFT → POSTED}。入库那一下同时是审核：实收数量落定、计入工单
  * 已入库、货进成品仓，三件事在同一个动作里完成。草稿不动库存也不动工单，直接删掉即可，所以没有作废状态。已入库的
- * 不在这张单上翻状态——货真进过仓，冲它是在库存那边照原库存单据开一张红字单，本单停在已入库当历史记录，
+ * 不在这张单上翻状态——货真进过仓，冲它是在库存那边照原库存记录开一张红字单，本单停在已入库当历史记录，
  * 「被冲过没有」去库存那边查指着它的红字单。
  */
 @NullMarked
@@ -42,7 +42,7 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_ProductionReceipt_Number", columnList = "Number"),
       @Index(name = "IX_ProductionReceipt_WorkOrderId", columnList = "WorkOrderId"),
-      @Index(name = "IX_ProductionReceipt_SkuId", columnList = "SkuId"),
+      @Index(name = "IX_ProductionReceipt_VariantId", columnList = "VariantId"),
       @Index(name = "IX_ProductionReceipt_Status", columnList = "Status")
     })
 public class ProductionReceipt extends OrderAggregateRoot {
@@ -57,12 +57,12 @@ public class ProductionReceipt extends OrderAggregateRoot {
   private String workOrderNumber;
 
   /** 产出SPU（快照） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 产出SKU（快照） */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 单位Id（快照） */
   @Column(name = "UnitId", nullable = false)
@@ -106,8 +106,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU（快照）
-   * @param skuId 产出SKU（快照）
+   * @param productId 产出SPU（快照）
+   * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
@@ -118,8 +118,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
   ProductionReceipt(
       Long workOrderId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       Long unitId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -130,8 +130,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
     apply(
         workOrderId,
         workOrderNumber,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         unitId,
         warehouseId,
         locationId,
@@ -157,8 +157,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU（快照）
-   * @param skuId 产出SKU（快照）
+   * @param productId 产出SPU（快照）
+   * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
@@ -169,8 +169,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
   public void modify(
       Long workOrderId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       Long unitId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -180,8 +180,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
     apply(
         workOrderId,
         workOrderNumber,
-        spuId,
-        skuId,
+        productId,
+        variantId,
         unitId,
         warehouseId,
         locationId,
@@ -255,8 +255,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * @param workOrderId 工单Id
    * @param workOrderNumber 工单号（快照）
-   * @param spuId 产出SPU（快照）
-   * @param skuId 产出SKU（快照）
+   * @param productId 产出SPU（快照）
+   * @param variantId 产出SKU（快照）
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
@@ -267,8 +267,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
   private void apply(
       Long workOrderId,
       String workOrderNumber,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       Long unitId,
       Long warehouseId,
       @Nullable Long locationId,
@@ -281,10 +281,10 @@ public class ProductionReceipt extends OrderAggregateRoot {
     if (trimmedWorkOrderNumber == null) {
       throw new DomainException("工单号不能为空");
     }
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("产出SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("产出SKU不能为空");
     }
     if (unitId <= 0) {
@@ -302,8 +302,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
 
     this.workOrderId = workOrderId;
     this.workOrderNumber = trimmedWorkOrderNumber;
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.unitId = unitId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;

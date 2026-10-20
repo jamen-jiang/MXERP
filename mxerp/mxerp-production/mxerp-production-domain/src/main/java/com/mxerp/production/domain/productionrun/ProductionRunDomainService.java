@@ -120,8 +120,8 @@ public class ProductionRunDomainService {
         workOrderId,
         workOrderOperationId,
         workOrder.getNumber(),
-        workOrder.getSpuId(),
-        workOrder.getSkuId(),
+        workOrder.getProductId(),
+        workOrder.getVariantId(),
         occupyQuantity,
         allocationWeight,
         remark);

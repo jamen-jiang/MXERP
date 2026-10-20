@@ -38,7 +38,7 @@ import org.jspecify.annotations.Nullable;
       @Index(
           name = "IX_ProductionReturnLine_WorkOrderMaterialId",
           columnList = "WorkOrderMaterialId"),
-      @Index(name = "IX_ProductionReturnLine_SkuId", columnList = "SkuId")
+      @Index(name = "IX_ProductionReturnLine_VariantId", columnList = "VariantId")
     })
 public class ProductionReturnLine extends BaseDeleteEntity {
 
@@ -51,12 +51,12 @@ public class ProductionReturnLine extends BaseDeleteEntity {
   private Long workOrderMaterialId;
 
   /** 物料SPU（快照） */
-  @Column(name = "SpuId", nullable = false)
-  private Long spuId;
+  @Column(name = "ProductId", nullable = false)
+  private Long productId;
 
   /** 物料SKU（快照） */
-  @Column(name = "SkuId", nullable = false)
-  private Long skuId;
+  @Column(name = "VariantId", nullable = false)
+  private Long variantId;
 
   /** 申请退料数量 */
   @Column(name = "AppliedQuantity", nullable = false, precision = 18, scale = 2)
@@ -89,8 +89,8 @@ public class ProductionReturnLine extends BaseDeleteEntity {
    * 构造器
    *
    * @param workOrderMaterialId 工单用料行Id
-   * @param spuId 物料SPU（快照）
-   * @param skuId 物料SKU（快照）
+   * @param productId 物料SPU（快照）
+   * @param variantId 物料SKU（快照）
    * @param appliedQuantity 申请退料数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 退料仓库Id
@@ -100,8 +100,8 @@ public class ProductionReturnLine extends BaseDeleteEntity {
    */
   ProductionReturnLine(
       Long workOrderMaterialId,
-      Long spuId,
-      Long skuId,
+      Long productId,
+      Long variantId,
       BigDecimal appliedQuantity,
       Long unitId,
       Long warehouseId,
@@ -110,10 +110,10 @@ public class ProductionReturnLine extends BaseDeleteEntity {
     if (workOrderMaterialId <= 0) {
       throw new DomainException("工单用料行不能为空");
     }
-    if (spuId <= 0) {
+    if (productId <= 0) {
       throw new DomainException("物料SPU不能为空");
     }
-    if (skuId <= 0) {
+    if (variantId <= 0) {
       throw new DomainException("物料不能为空");
     }
     if (appliedQuantity.signum() <= 0) {
@@ -129,8 +129,8 @@ public class ProductionReturnLine extends BaseDeleteEntity {
       throw new DomainException("库位" + locationId + "有误!");
     }
     this.workOrderMaterialId = workOrderMaterialId;
-    this.spuId = spuId;
-    this.skuId = skuId;
+    this.productId = productId;
+    this.variantId = variantId;
     this.appliedQuantity = appliedQuantity;
     this.approvedQuantity = BigDecimal.ZERO;
     this.unitId = unitId;
@@ -154,7 +154,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
     if (quantity.compareTo(this.appliedQuantity) > 0) {
       throw new DomainException(
           "物料"
-              + this.skuId
+              + this.variantId
               + "核定退料数量"
               + quantity
               + "不能大于申请数量"
