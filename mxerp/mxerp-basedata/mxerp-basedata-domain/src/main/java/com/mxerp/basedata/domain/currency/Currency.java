@@ -57,11 +57,11 @@ public class Currency extends UpdateAggregateRoot {
   @Column(name = "IsStandard", nullable = false)
   private Boolean isStandard;
 
-  /** 是否禁用 */
+/** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
 
-  /**
+/**
    * 构造器
    *
    * @param code 币种代码
@@ -78,8 +78,8 @@ public class Currency extends UpdateAggregateRoot {
       String symbol,
       BigDecimal acceptRate,
       BigDecimal adjustRate,
-      Boolean isStandard,
-      Boolean disabled) {
+      boolean isStandard,
+      boolean disabled) {
     apply(code, name, symbol, acceptRate, adjustRate, isStandard, disabled);
   }
 
@@ -100,8 +100,8 @@ public class Currency extends UpdateAggregateRoot {
       String symbol,
       BigDecimal acceptRate,
       BigDecimal adjustRate,
-      Boolean isStandard,
-      Boolean disabled) {
+      boolean isStandard,
+      boolean disabled) {
     apply(code, name, symbol, acceptRate, adjustRate, isStandard, disabled);
   }
 
@@ -126,8 +126,8 @@ public class Currency extends UpdateAggregateRoot {
       String symbol,
       BigDecimal acceptRate,
       BigDecimal adjustRate,
-      Boolean isStandard,
-      Boolean disabled) {
+      boolean isStandard,
+      boolean disabled) {
     String trimmedCode = StringUtils.trimToNull(code);
     if (trimmedCode == null) {
       throw new DomainException("币种代码不能为空");

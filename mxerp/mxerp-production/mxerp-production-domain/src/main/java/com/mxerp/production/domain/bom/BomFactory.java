@@ -34,8 +34,8 @@ public class BomFactory {
    * @throws DomainException 父件SKU + 版本已存在时抛出
    */
   public Bom create(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,

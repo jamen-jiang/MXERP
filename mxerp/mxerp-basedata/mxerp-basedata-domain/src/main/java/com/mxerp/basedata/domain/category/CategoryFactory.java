@@ -39,7 +39,7 @@ public class CategoryFactory {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     // 校验分类代码全局唯一

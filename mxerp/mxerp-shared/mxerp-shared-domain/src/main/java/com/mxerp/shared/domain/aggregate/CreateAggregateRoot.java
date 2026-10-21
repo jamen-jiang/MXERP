@@ -29,13 +29,13 @@ public abstract class CreateAggregateRoot extends DeleteAggregateRoot implements
   @Column(name = "CreatedOn", nullable = false)
   private LocalDateTime createdOn;
 
-  public void create(Long userId, String userName, @Nullable LocalDateTime dateTime) {
+  public void create(long userId, String userName, @Nullable LocalDateTime dateTime) {
     this.createdBy = userId;
     this.createdByName = userName;
     this.createdOn = dateTime != null ? dateTime : LocalDateTime.now();
   }
 
-  public void create(Long userId, String userName) {
+  public void create(long userId, String userName) {
     create(userId, userName, null);
   }
 }

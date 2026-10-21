@@ -34,7 +34,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * 属性（属性的定义，不是某个对象上填的值）
  *
- * <p>与 {@code com.mxerp.basedata.domain.specificationattribute.SpecificationAttribute} 同形
+ * <p>与 {@code com.mxerp.basedata.domain.specattribute.SpecAttribute} 同形
  * （代码、名称、数据类型、输入类型、候选值、校验规则），但用途不同：规格属性是「拿来做规格维度、
  * 参与 SKU 生成」的那一组定义，挂在分类下；属性是「挂在某类对象上的描述性取值」，挂在持有者类型上
  * （{@code EntityType} 存表名，如
@@ -167,8 +167,8 @@ public class Attribute extends UpdateAggregateRoot {
       String label,
       String inputType,
       String dataType,
-      Boolean isRequired,
-      Boolean isFilter,
+      boolean isRequired,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     String trimmedEntityType = StringUtils.trimToNull(entityType);
@@ -206,8 +206,8 @@ public class Attribute extends UpdateAggregateRoot {
   public void modify(
       String label,
       String inputType,
-      Boolean isRequired,
-      Boolean isFilter,
+      boolean isRequired,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     apply(label, inputType, isRequired, isFilter, sort, remark);
@@ -222,7 +222,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @throws DomainException 属性值在该属性下已存在时抛出
    */
-  public void addValue(String value, String label, Boolean isDefault, @Nullable Integer sort) {
+  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
     if (isExistValue(value)) {
       throw new DomainException("属性" + this.label + ":属性值" + value + " 已存在!");
     }
@@ -240,7 +240,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @throws DomainException 属性值不存在时抛出
    */
-  public void modifyValue(Long valueId, String label, Boolean isDefault, @Nullable Integer sort) {
+  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sort) {
     AttributeValue attributeValue = findValue(valueId);
     if (attributeValue == null) {
       throw new DomainException("属性" + this.label + ":属性值不存在!");
@@ -255,7 +255,7 @@ public class Attribute extends UpdateAggregateRoot {
    *
    * @param valueId 属性值Id
    */
-  public void deleteValue(Long valueId) {
+  public void deleteValue(long valueId) {
     AttributeValue attributeValue = findValue(valueId);
     if (attributeValue == null) {
       return;
@@ -288,7 +288,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @throws DomainException 校验规则不存在时抛出
    */
   public void modifyValidateRule(
-      Long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
+      long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
     AttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       throw new DomainException("属性" + this.label + ":校验规则不存在!");
@@ -303,7 +303,7 @@ public class Attribute extends UpdateAggregateRoot {
    *
    * @param validateRuleId 校验规则Id
    */
-  public void deleteValidateRule(Long validateRuleId) {
+  public void deleteValidateRule(long validateRuleId) {
     AttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       return;
@@ -378,8 +378,8 @@ public class Attribute extends UpdateAggregateRoot {
   private void apply(
       String label,
       String inputType,
-      Boolean isRequired,
-      Boolean isFilter,
+      boolean isRequired,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     String trimmedLabel = StringUtils.trimToNull(label);
@@ -487,7 +487,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @return 属性值（可空），找不到返回 null
    */
   @Nullable
-  private AttributeValue findValue(Long valueId) {
+  private AttributeValue findValue(long valueId) {
     return attributeValues.stream()
         .filter(i -> Objects.equals(i.getId(), valueId))
         .findFirst()
@@ -501,7 +501,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @return 校验规则（可空），找不到返回 null
    */
   @Nullable
-  private AttributeValidateRule findValidateRule(Long validateRuleId) {
+  private AttributeValidateRule findValidateRule(long validateRuleId) {
     return attributeValidateRules.stream()
         .filter(r -> Objects.equals(r.getId(), validateRuleId))
         .findFirst()

@@ -46,8 +46,8 @@ public class BomDomainService {
    * @return BOM 聚合
    */
   public Bom importGenerate(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
@@ -80,8 +80,8 @@ public class BomDomainService {
    */
   public Bom modify(
       long id,
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
@@ -105,8 +105,8 @@ public class BomDomainService {
    */
   public void modify(
       Bom model,
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,

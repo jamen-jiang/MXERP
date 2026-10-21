@@ -48,7 +48,7 @@ public class RoutingDomainService {
    * @return 工艺路线聚合
    */
   public Routing importGenerate(
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,
@@ -97,7 +97,7 @@ public class RoutingDomainService {
    */
   public Routing modify(
       long id,
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,
@@ -135,7 +135,7 @@ public class RoutingDomainService {
    */
   public void modify(
       Routing model,
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,

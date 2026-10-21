@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.specificationattribute;
+package com.mxerp.basedata.domain.specattribute;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -12,5 +12,5 @@ import org.jspecify.annotations.Nullable;
  * @param sort 排序（可空）
  */
 @NullMarked
-public record SpecificationAttributeValueData(
+public record SpecAttributeValueData(
     String value, String label, Boolean isDefault, @Nullable Integer sort) {}

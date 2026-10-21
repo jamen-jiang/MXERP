@@ -109,7 +109,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   ProductionIssue(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark,
@@ -148,7 +148,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @throws DomainException 已发料时抛出
    */
   public void modify(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark) {
@@ -170,12 +170,12 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态、或同一工单用料行已在单内时抛出
    */
   public void addLine(
-      Long workOrderMaterialId,
-      Long materialId,
-      Long variantId,
+      long workOrderMaterialId,
+      long materialId,
+      long variantId,
       BigDecimal appliedQuantity,
-      Long unitId,
-      Long warehouseId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       @Nullable String remark) {
     ensureDraft();
@@ -200,7 +200,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @param workOrderMaterialId 工单用料行Id
    * @throws DomainException 已发料时抛出
    */
-  public void deleteLine(Long workOrderMaterialId) {
+  public void deleteLine(long workOrderMaterialId) {
     ensureDraft();
     ProductionIssueLine line = findLine(workOrderMaterialId);
     if (line == null) {
@@ -286,7 +286,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @throws DomainException 工单或工单号非法时抛出
    */
   private void apply(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark) {
@@ -321,7 +321,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @return 匹配到的领料行，找不到返回 {@code null}
    */
   @Nullable
-  private ProductionIssueLine findLine(Long workOrderMaterialId) {
+  private ProductionIssueLine findLine(long workOrderMaterialId) {
     return productionIssueLines.stream()
         .filter(
             l ->

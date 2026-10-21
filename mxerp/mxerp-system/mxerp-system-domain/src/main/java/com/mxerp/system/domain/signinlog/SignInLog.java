@@ -120,7 +120,7 @@ public class SignInLog extends LogAggregateRoot {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       @Nullable String token,
       @Nullable String refreshToken,
       @Nullable String oldRefreshToken,
@@ -129,7 +129,7 @@ public class SignInLog extends LogAggregateRoot {
       @Nullable String userAgent,
       @Nullable String browser,
       @Nullable String os,
-      Boolean isSuccess,
+      boolean isSuccess,
       @Nullable String errorMessage,
       @Nullable String exception) {
     super(

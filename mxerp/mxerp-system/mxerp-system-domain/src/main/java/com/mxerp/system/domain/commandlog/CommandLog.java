@@ -73,12 +73,12 @@ public class CommandLog extends LogAggregateRoot {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       String name,
       String typeName,
       @Nullable String request,
       @Nullable String response,
-      Boolean isSuccess,
+      boolean isSuccess,
       @Nullable String errorMessage,
       @Nullable String exception) {
     super(

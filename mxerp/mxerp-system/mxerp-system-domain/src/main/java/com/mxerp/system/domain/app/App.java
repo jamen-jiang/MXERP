@@ -96,10 +96,10 @@ public class App extends UpdateAggregateRoot implements Parent {
       String title,
       @Nullable String i18nKey,
       @Nullable String icon,
-      Boolean isKeepAlive,
+      boolean isKeepAlive,
       @Nullable Integer fixedIndexInTab,
-      Boolean isMultiTab,
-      Boolean isHide,
+      boolean isMultiTab,
+      boolean isHide,
       @Nullable Integer sort) {
     this.type = validateType(type);
     this.parentId = parentId;
@@ -126,10 +126,10 @@ public class App extends UpdateAggregateRoot implements Parent {
       String title,
       @Nullable String i18nKey,
       @Nullable String icon,
-      Boolean isKeepAlive,
+      boolean isKeepAlive,
       @Nullable Integer fixedIndexInTab,
-      Boolean isMultiTab,
-      Boolean isHide,
+      boolean isMultiTab,
+      boolean isHide,
       @Nullable Integer sort) {
     if (parentId != null && parentId.equals(this.getId())) {
       throw new DomainException("上级应用不能是自己!");

@@ -42,10 +42,10 @@ public class WorkOrderFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public WorkOrder create(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,

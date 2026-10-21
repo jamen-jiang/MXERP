@@ -15,7 +15,7 @@ public class VariantDeletedEvent extends DomainEvent {
   private final Long materialId;
 
   /** 规格属性值（删除那一刻快照，代码 → 值） */
-  @Nullable private final TreeMap<String, Object> specificationAttributes;
+  @Nullable private final TreeMap<String, Object> specAttributes;
 
   /**
    * 构造器
@@ -25,6 +25,6 @@ public class VariantDeletedEvent extends DomainEvent {
   public VariantDeletedEvent(Variant variant) {
     super(variant);
     this.materialId = variant.getMaterialId();
-    this.specificationAttributes = variant.specificationAttributeValues();
+    this.specAttributes = variant.specAttributeValues();
   }
 }

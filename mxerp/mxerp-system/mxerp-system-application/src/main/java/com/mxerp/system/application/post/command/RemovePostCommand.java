@@ -20,7 +20,7 @@ public class RemovePostCommand extends Command {
    *
    * @param id 岗位Id
    */
-  public RemovePostCommand(Long id) {
+  public RemovePostCommand(long id) {
     this.id = id;
   }
 }

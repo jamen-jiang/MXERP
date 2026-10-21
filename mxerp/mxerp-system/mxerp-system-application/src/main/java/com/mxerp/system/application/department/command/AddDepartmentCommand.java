@@ -74,7 +74,7 @@ public class AddDepartmentCommand extends Command {
    * @param remark 备注（可空）
    */
   public AddDepartmentCommand(
-      Long companyId,
+      long companyId,
       @Nullable Long parentId,
       String code,
       String name,

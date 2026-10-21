@@ -23,7 +23,7 @@ public abstract class DeleteAggregateRoot extends BaseAggregateRoot implements D
   @Column(name = "IsDeleted", nullable = false)
   private Boolean isDeleted = false;
 
-  /** 标记为已删除（逻辑删除） 子类可重写以触发领域事件 */
+/** 标记为已删除（逻辑删除） 子类可重写以触发领域事件 */
   @Override
   public void delete() {
     this.isDeleted = true;

@@ -142,7 +142,7 @@ public class WorkCenter extends UpdateAggregateRoot {
   public void addResource(
       String code,
       String name,
-      Long workCenterResourceCategoryId,
+      long workCenterResourceCategoryId,
       int quantity,
       BigDecimal efficiency,
       boolean disabled,
@@ -173,7 +173,7 @@ public class WorkCenter extends UpdateAggregateRoot {
       long id,
       String code,
       String name,
-      Long workCenterResourceCategoryId,
+      long workCenterResourceCategoryId,
       int quantity,
       BigDecimal efficiency,
       boolean disabled,

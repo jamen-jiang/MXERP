@@ -98,9 +98,9 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
    * @throws DomainException 定位维度非法、状态不在枚举内、转出与转入相同、或数量不为正数时抛出
    */
   StockStatusChangeLine(
-      Long materialId,
-      Long variantId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,

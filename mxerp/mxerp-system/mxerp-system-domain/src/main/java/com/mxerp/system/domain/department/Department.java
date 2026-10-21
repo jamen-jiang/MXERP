@@ -109,7 +109,7 @@ public class Department extends UpdateAggregateRoot implements Parent {
    */
   public Department(
       @Nullable String level,
-      Long companyId,
+      long companyId,
       @Nullable Long parentId,
       String code,
       String name,
@@ -157,7 +157,7 @@ public class Department extends UpdateAggregateRoot implements Parent {
    */
   public void modify(
       @Nullable String level,
-      Long companyId,
+      long companyId,
       @Nullable Long parentId,
       String code,
       String name,

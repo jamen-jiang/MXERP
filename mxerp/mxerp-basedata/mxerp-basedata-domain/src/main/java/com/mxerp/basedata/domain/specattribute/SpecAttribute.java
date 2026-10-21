@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.specificationattribute;
+package com.mxerp.basedata.domain.specattribute;
 
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.enums.DataTypeEnum;
@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>定义挂在分类下面（对标 SAP {@code CABN}）。填到对象上的值不放这张表——只有规格会填规格属性，取值一行
  * 一个落成 {@code VariantAttributeValue}（带 {@code VariantId} 外键），由这些行算出
- * {@code Variant.AttributeSignature} 保证组合不重复；纯描述性的取值走属性那套（平台层的
+ * {@code Variant.Code}（物料代码 + 属性组合）保证组合不重复；纯描述性的取值走属性那套（平台层的
  * {@code com.mxerp.system.domain.attribute.Attribute} 定义 +
  * {@code com.mxerp.system.domain.attribute.AttributeAssignment} 赋值行，相当于 SAP 的 {@code AUSP}）。
  *
@@ -46,15 +46,15 @@ import org.jspecify.annotations.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-    name = "SpecificationAttribute",
+    name = "SpecAttribute",
     indexes = {
-      @Index(name = "IX_SpecificationAttribute_CategoryId", columnList = "CategoryId"),
-      @Index(name = "IX_SpecificationAttribute_Code", columnList = "Code"),
-      @Index(name = "IX_SpecificationAttribute_Label", columnList = "Label"),
-      @Index(name = "IX_SpecificationAttribute_Sort", columnList = "Sort")
+      @Index(name = "IX_SpecAttribute_CategoryId", columnList = "CategoryId"),
+      @Index(name = "IX_SpecAttribute_Code", columnList = "Code"),
+      @Index(name = "IX_SpecAttribute_Label", columnList = "Label"),
+      @Index(name = "IX_SpecAttribute_Sort", columnList = "Sort")
       // 注意：CategoryId + Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
-public class SpecificationAttribute extends UpdateAggregateRoot {
+public class SpecAttribute extends UpdateAggregateRoot {
 
   /** 所属分类Id */
   @Column(name = "CategoryId", nullable = false)
@@ -84,7 +84,7 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
   @Column(name = "IsFilter", nullable = false)
   private Boolean isFilter;
 
-  /** 排序（可空） */
+/** 排序（可空） */
   @Column(name = "Sort")
   @Nullable
   private Integer sort;
@@ -100,18 +100,18 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
       fetch = FetchType.EAGER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       orphanRemoval = true)
-  @JoinColumn(name = "SpecificationAttributeId")
+  @JoinColumn(name = "SpecAttributeId")
   @SQLRestriction("IsDeleted = 0")
-  private List<SpecificationAttributeValue> specificationAttributeValues = new ArrayList<>();
+  private List<SpecAttributeValue> specAttributeValues = new ArrayList<>();
 
   /** 校验规则列表（只读） */
   @OneToMany(
       fetch = FetchType.EAGER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       orphanRemoval = true)
-  @JoinColumn(name = "SpecificationAttributeId")
+  @JoinColumn(name = "SpecAttributeId")
   @SQLRestriction("IsDeleted = 0")
-  private List<SpecificationAttributeValidateRule> specificationAttributeValidateRules =
+  private List<SpecAttributeValidateRule> specAttributeValidateRules =
       new ArrayList<>();
 
   /**
@@ -119,8 +119,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    *
    * @return 不可变列表
    */
-  public List<SpecificationAttributeValue> getSpecificationAttributeValues() {
-    return Collections.unmodifiableList(specificationAttributeValues);
+  public List<SpecAttributeValue> getSpecAttributeValues() {
+    return Collections.unmodifiableList(specAttributeValues);
   }
 
   /**
@@ -128,8 +128,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    *
    * @return 不可变列表
    */
-  public List<SpecificationAttributeValidateRule> getSpecificationAttributeValidateRules() {
-    return Collections.unmodifiableList(specificationAttributeValidateRules);
+  public List<SpecAttributeValidateRule> getSpecAttributeValidateRules() {
+    return Collections.unmodifiableList(specAttributeValidateRules);
   }
 
   /**
@@ -144,13 +144,13 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @param remark 备注（可空）
    */
-  SpecificationAttribute(
-      Long categoryId,
+  SpecAttribute(
+      long categoryId,
       String code,
       String label,
       String inputType,
       String dataType,
-      Boolean isFilter,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
@@ -182,7 +182,7 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
   public void modify(
       String label,
       String inputType,
-      Boolean isFilter,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     apply(label, inputType, isFilter, sort, remark);
@@ -197,13 +197,13 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @throws DomainException 规格属性值在该规格属性下已存在时抛出
    */
-  public void addValue(String value, String label, Boolean isDefault, @Nullable Integer sort) {
+  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
     if (isExistValue(value)) {
       throw new DomainException("规格属性" + this.label + ":规格属性值" + value + " 已存在!");
     }
-    SpecificationAttributeValue specificationAttributeValue =
-        new SpecificationAttributeValue(value, label, isDefault, sort);
-    specificationAttributeValues.add(specificationAttributeValue);
+    SpecAttributeValue specAttributeValue =
+        new SpecAttributeValue(value, label, isDefault, sort);
+    specAttributeValues.add(specAttributeValue);
   }
 
   /**
@@ -217,12 +217,12 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @param sort 排序（可空）
    * @throws DomainException 规格属性值不存在时抛出
    */
-  public void modifyValue(Long valueId, String label, Boolean isDefault, @Nullable Integer sort) {
-    SpecificationAttributeValue specificationAttributeValue = findValue(valueId);
-    if (specificationAttributeValue == null) {
+  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sort) {
+    SpecAttributeValue specAttributeValue = findValue(valueId);
+    if (specAttributeValue == null) {
       throw new DomainException("规格属性" + this.label + ":规格属性值不存在!");
     }
-    specificationAttributeValue.modify(label, isDefault, sort);
+    specAttributeValue.modify(label, isDefault, sort);
   }
 
   /**
@@ -232,12 +232,12 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    *
    * @param valueId 规格属性值Id
    */
-  public void deleteValue(Long valueId) {
-    SpecificationAttributeValue specificationAttributeValue = findValue(valueId);
-    if (specificationAttributeValue == null) {
+  public void deleteValue(long valueId) {
+    SpecAttributeValue specAttributeValue = findValue(valueId);
+    if (specAttributeValue == null) {
       return;
     }
-    specificationAttributeValue.delete();
+    specAttributeValue.delete();
   }
 
   /**
@@ -252,8 +252,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
     if (isExistValidateRule(expression)) {
       throw new DomainException("规格属性" + this.label + ":校验规则已存在!");
     }
-    specificationAttributeValidateRules.add(
-        new SpecificationAttributeValidateRule(expression, errorMessage, sort));
+    specAttributeValidateRules.add(
+        new SpecAttributeValidateRule(expression, errorMessage, sort));
   }
 
   /**
@@ -266,8 +266,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @throws DomainException 校验规则不存在时抛出
    */
   public void modifyValidateRule(
-      Long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
-    SpecificationAttributeValidateRule validateRule = findValidateRule(validateRuleId);
+      long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
+    SpecAttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       throw new DomainException("规格属性" + this.label + ":校验规则不存在!");
     }
@@ -281,8 +281,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    *
    * @param validateRuleId 校验规则Id
    */
-  public void deleteValidateRule(Long validateRuleId) {
-    SpecificationAttributeValidateRule validateRule = findValidateRule(validateRuleId);
+  public void deleteValidateRule(long validateRuleId) {
+    SpecAttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       return;
     }
@@ -305,7 +305,7 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
   private void apply(
       String label,
       String inputType,
-      Boolean isFilter,
+      boolean isFilter,
       @Nullable Integer sort,
       @Nullable String remark) {
     String trimmedLabel = StringUtils.trimToNull(label);
@@ -356,8 +356,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @return 规格属性值（可空），找不到返回 null
    */
   @Nullable
-  private SpecificationAttributeValue findValue(Long valueId) {
-    return specificationAttributeValues.stream()
+  private SpecAttributeValue findValue(long valueId) {
+    return specAttributeValues.stream()
         .filter(i -> Objects.equals(i.getId(), valueId))
         .findFirst()
         .orElse(null);
@@ -370,8 +370,8 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @return 校验规则（可空），找不到返回 null
    */
   @Nullable
-  private SpecificationAttributeValidateRule findValidateRule(Long validateRuleId) {
-    return specificationAttributeValidateRules.stream()
+  private SpecAttributeValidateRule findValidateRule(long validateRuleId) {
+    return specAttributeValidateRules.stream()
         .filter(r -> Objects.equals(r.getId(), validateRuleId))
         .findFirst()
         .orElse(null);
@@ -386,7 +386,7 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @return true：已存在
    */
   private boolean isExistValue(String value) {
-    return specificationAttributeValues.stream()
+    return specAttributeValues.stream()
         .anyMatch(i -> i.getValue().equals(value) && !i.getIsDeleted());
   }
 
@@ -399,7 +399,7 @@ public class SpecificationAttribute extends UpdateAggregateRoot {
    * @return true：已存在
    */
   private boolean isExistValidateRule(String expression) {
-    return specificationAttributeValidateRules.stream()
+    return specAttributeValidateRules.stream()
         .anyMatch(r -> r.getExpression().equals(expression) && !r.getIsDeleted());
   }
 }

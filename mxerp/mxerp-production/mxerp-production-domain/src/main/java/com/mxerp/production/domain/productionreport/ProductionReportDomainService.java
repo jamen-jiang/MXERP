@@ -73,8 +73,8 @@ public class ProductionReportDomainService {
    * @throws DomainException 工单或工序行不存在、工序未开工、报工数超过投入数、或按批取时却没有标准批量时抛出
    */
   public ProductionReport create(
-      Long workOrderId,
-      Long workOrderOperationId,
+      long workOrderId,
+      long workOrderOperationId,
       BigDecimal goodQuantity,
       BigDecimal scrapQuantity,
       @Nullable BigDecimal workTime,
@@ -151,7 +151,7 @@ public class ProductionReportDomainService {
    * @return 工单聚合
    * @throws DomainException 工单不存在时抛出
    */
-  private WorkOrder requireWorkOrder(Long workOrderId) {
+  private WorkOrder requireWorkOrder(long workOrderId) {
     WorkOrder workOrder = workOrderRepository.get(workOrderId);
     if (workOrder == null) {
       throw new DomainException("工单" + workOrderId + "不存在!");
@@ -167,7 +167,7 @@ public class ProductionReportDomainService {
    * @return 工单工序行
    * @throws DomainException 工序行不属于这张工单时抛出
    */
-  private WorkOrderOperation requireOperation(WorkOrder workOrder, Long workOrderOperationId) {
+  private WorkOrderOperation requireOperation(WorkOrder workOrder, long workOrderOperationId) {
     return workOrder.getWorkOrderOperations().stream()
         .filter(operation -> operation.getId().equals(workOrderOperationId))
         .findFirst()

@@ -20,7 +20,7 @@ public class RemoveUserCommand extends Command {
    *
    * @param id 用户Id
    */
-  public RemoveUserCommand(Long id) {
+  public RemoveUserCommand(long id) {
     this.id = id;
   }
 }

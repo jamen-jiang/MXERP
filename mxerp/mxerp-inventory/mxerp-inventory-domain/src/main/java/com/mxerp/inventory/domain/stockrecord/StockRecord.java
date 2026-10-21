@@ -131,7 +131,7 @@ public class StockRecord extends OrderAggregateRoot {
    */
   StockRecord(
       String sourceType,
-      Long sourceId,
+      long sourceId,
       String sourceNumber,
       String direction,
       @Nullable Long operatorId,
@@ -183,10 +183,10 @@ public class StockRecord extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态、正负号与本单性质不符、或同一位置同一状态已在单内时抛出
    */
   public void addLine(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long warehouseId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       @Nullable String remark) {
@@ -290,7 +290,7 @@ public class StockRecord extends OrderAggregateRoot {
    */
   private void apply(
       String sourceType,
-      Long sourceId,
+      long sourceId,
       String sourceNumber,
       String direction,
       @Nullable Long operatorId,
@@ -344,7 +344,7 @@ public class StockRecord extends OrderAggregateRoot {
    */
   @Nullable
   private StockRecordLine findLine(
-      Long variantId, Long warehouseId, @Nullable Long locationId, String stockStatus) {
+      long variantId, long warehouseId, @Nullable Long locationId, String stockStatus) {
     return stockRecordLines.stream()
         .filter(
             l ->

@@ -40,7 +40,7 @@ public abstract class BaseUpdateEntity extends BaseCreateEntity implements Updat
    * @param userName 更新人名称
    */
   @Override
-  public void update(Long userId, String userName) {
+  public void update(long userId, String userName) {
     this.updatedBy = userId;
     this.updatedByName = userName;
     this.updatedOn = LocalDateTime.now();

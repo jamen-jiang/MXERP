@@ -1,8 +1,8 @@
 package com.mxerp.basedata.domain.variant;
 
-import com.mxerp.basedata.domain.specificationattribute.AssignedSpecificationAttributeData;
-import com.mxerp.basedata.domain.specificationattribute.SpecificationAttribute;
-import com.mxerp.basedata.domain.specificationattribute.SpecificationAttributeRepository;
+import com.mxerp.basedata.domain.specattribute.AssignedSpecAttributeData;
+import com.mxerp.basedata.domain.specattribute.SpecAttribute;
+import com.mxerp.basedata.domain.specattribute.SpecAttributeRepository;
 import com.mxerp.basedata.domain.material.Material;
 import com.mxerp.basedata.domain.material.MaterialRepository;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -23,7 +23,7 @@ import org.jspecify.annotations.Nullable;
  * 再取物料的 {@code categoryId}。这样不会出现「SKU 说是成品、物料却是辅料」这种两张皮的数据。
  *
  * <p>分类下配的规格属性就是生成规格用的维度：每条规格属性的「规格属性值」做笛卡尔积，一个组合落一条 SKU，
- * 组合摊成 {@code VariantAttributeValue} 行存在这条 SKU 上，再由这些行算出签名；生成完之后不再有
+ * 组合摊成 {@code VariantAttributeValue} 行存在这条 SKU 上，再由这些行拼出规格编码；生成完之后不再有
  * 「哪个规格属性算规格」这个开关——是规格就由组合决定。
  *
  * <p>描述性取值本来是另一套（平台层的 {@code Attribute} 定义 + {@code AttributeAssignment} 赋值行），
@@ -43,7 +43,7 @@ public class VariantDomainService {
   private final MaterialRepository materialRepository;
 
   /** 规格属性仓储 */
-  private final SpecificationAttributeRepository specificationAttributeRepository;
+  private final SpecAttributeRepository specAttributeRepository;
 
   // 属性仓储：属性那套定义/赋值已挪到平台层 com.mxerp.system.domain.attribute，本模块不依赖
   // system-domain，挂载先停用，接回来时再放开下面两处。
@@ -55,15 +55,15 @@ public class VariantDomainService {
    *
    * @param variantRepository SKU 仓储
    * @param materialRepository 物料仓储
-   * @param specificationAttributeRepository 规格属性仓储
+   * @param specAttributeRepository 规格属性仓储
    */
   public VariantDomainService(
       VariantRepository variantRepository,
       MaterialRepository materialRepository,
-      SpecificationAttributeRepository specificationAttributeRepository) {
+      SpecAttributeRepository specAttributeRepository) {
     this.variantRepository = variantRepository;
     this.materialRepository = materialRepository;
-    this.specificationAttributeRepository = specificationAttributeRepository;
+    this.specAttributeRepository = specAttributeRepository;
     // this.attributeRepository = attributeRepository;
   }
 
@@ -74,7 +74,7 @@ public class VariantDomainService {
    *
    * @param materialId MaterialId
    * @param opc OPC（可空）
-   * @param specificationAttributes 规格属性值——这一条规格由哪组值构成（可空）
+   * @param specAttributes 规格属性值——这一条规格由哪组值构成（可空）
    * @param attributes 属性值（可空，属性挂载已停用，暂不生效）
    * @return SKU 聚合
    * @throws DomainException 物料不存在 / OPC 已存在 / 规格属性不存在 / 规格属性组合重复时抛出
@@ -82,13 +82,14 @@ public class VariantDomainService {
   public Variant create(
       long materialId,
       @Nullable String opc,
-      @Nullable Map<String, Object> specificationAttributes,
+      @Nullable Map<String, Object> specAttributes,
       @Nullable Map<String, Object> attributes) {
     Material material = getExistMaterial(materialId);
     return buildVariant(
         materialId,
+        material.getCode(),
         opc,
-        resolveSpecificationAttributes(material.getCategoryId(), specificationAttributes));
+        resolveSpecAttributes(material.getCategoryId(), specAttributes));
   }
 
   /**
@@ -96,7 +97,7 @@ public class VariantDomainService {
    *
    * @param materialId 物料Id
    * @param opc OPC（可空）
-   * @param specificationAttributes 规格属性值（可空）
+   * @param specAttributes 规格属性值（可空）
    * @param attributes 属性值（可空，属性挂载已停用，暂不生效）
    * @return SKU 聚合
    * @throws DomainException 物料不存在 / 规格属性不存在 / OPC 已存在时抛出
@@ -104,19 +105,19 @@ public class VariantDomainService {
   public Variant importGenerate(
       long materialId,
       @Nullable String opc,
-      @Nullable Map<String, Object> specificationAttributes,
+      @Nullable Map<String, Object> specAttributes,
       @Nullable Map<String, Object> attributes) {
     Material material = getExistMaterial(materialId);
     // 1. 规格属性值落成行数据（代码必须在物料所属分类下有定义）
-    List<AssignedSpecificationAttributeData> specificationAttributeRows =
-        resolveSpecificationAttributes(material.getCategoryId(), specificationAttributes);
+    List<AssignedSpecAttributeData> specAttributeRows =
+        resolveSpecAttributes(material.getCategoryId(), specAttributes);
 
-    // 2. 按签名查询，存在则修改，不存在则新建
-    String signature = Variant.calculateSignature(materialId, specificationAttributeRows);
-    Variant model = variantRepository.getByAttributeSignature(signature);
+    // 2. 按规格编码查询，存在则修改，不存在则新建
+    String code = Variant.buildCode(material.getCode(), specAttributeRows);
+    Variant model = variantRepository.getByCode(code);
 
     if (model == null) {
-      model = buildVariant(materialId, opc, specificationAttributeRows);
+      model = buildVariant(materialId, material.getCode(), opc, specAttributeRows);
     } else {
       modify(model, opc);
     }
@@ -159,23 +160,23 @@ public class VariantDomainService {
   public List<Variant> createFromMaterial(long materialId) {
     // 1. 查物料与其分类下的规格属性
     Material material = getExistMaterial(materialId);
-    List<SpecificationAttribute> specificationAttributes =
-        specificationAttributeRepository.getListByCategoryId(material.getCategoryId());
+    List<SpecAttribute> specAttributes =
+        specAttributeRepository.getListByCategoryId(material.getCategoryId());
 
     // 2. 查已有 SKU
     List<Variant> existing = variantRepository.getListByMaterialId(material.getId());
 
     // 3. 没有规格属性：只保证有一条没有规格属性值的 SKU
-    if (specificationAttributes.isEmpty()) {
+    if (specAttributes.isEmpty()) {
       return generateEmptyVariant(material, existing);
     }
 
     // 4. 逐个规格属性取候选值行，再做笛卡尔积
-    Map<String, List<AssignedSpecificationAttributeData>> candidates = new LinkedHashMap<>();
-    for (SpecificationAttribute specificationAttribute : specificationAttributes) {
-      candidates.put(specificationAttribute.getCode(), candidateRows(specificationAttribute));
+    Map<String, List<AssignedSpecAttributeData>> candidates = new LinkedHashMap<>();
+    for (SpecAttribute specAttribute : specAttributes) {
+      candidates.put(specAttribute.getCode(), candidateRows(specAttribute));
     }
-    List<List<AssignedSpecificationAttributeData>> combinations = cartesian(candidates);
+    List<List<AssignedSpecAttributeData>> combinations = cartesian(candidates);
     if (combinations.size() > MAX_GENERATE_COUNT) {
       throw new DomainException(
           "规格属性组合共" + combinations.size() + "种，超过单次生成上限" + MAX_GENERATE_COUNT + "，请缩减规格属性取值!");
@@ -183,12 +184,11 @@ public class VariantDomainService {
 
     // 5. 生成候选值内的 SKU
     List<Variant> toSave = new ArrayList<>();
-    for (List<AssignedSpecificationAttributeData> combination : combinations) {
-      String signature = Variant.calculateSignature(material.getId(), combination);
-      boolean exists =
-          existing.stream().anyMatch(x -> signature.equals(x.getAttributeSignature()));
+    for (List<AssignedSpecAttributeData> combination : combinations) {
+      String code = Variant.buildCode(material.getCode(), combination);
+      boolean exists = existing.stream().anyMatch(x -> code.equals(x.getCode()));
       if (!exists) {
-        toSave.add(buildVariant(material.getId(), null, combination));
+        toSave.add(buildVariant(material.getId(), material.getCode(), null, combination));
       }
     }
 
@@ -209,14 +209,15 @@ public class VariantDomainService {
    *
    * @param materialId MaterialId
    * @param opc OPC（可空）
-   * @param specificationAttributeRows 规格属性值行数据（已校验）
+   * @param specAttributeRows 规格属性值行数据（已校验）
    * @return SKU
    * @throws DomainException OPC 已存在 / 规格属性组合重复时抛出
    */
   private Variant buildVariant(
       long materialId,
+      String materialCode,
       @Nullable String opc,
-      List<AssignedSpecificationAttributeData> specificationAttributeRows) {
+      List<AssignedSpecAttributeData> specAttributeRows) {
     // 1. OPC 唯一性（可空）
     if (opc != null
         && !opc.isBlank()
@@ -225,10 +226,10 @@ public class VariantDomainService {
     }
 
     // 2. 构造规格（规格属性值行在构造时写入）
-    Variant model = new Variant(materialId, opc, specificationAttributeRows);
+    Variant model = new Variant(materialId, materialCode, opc, specAttributeRows);
 
-    // 3. 规格属性签名唯一性
-    if (variantRepository.isExistByAttributeSignature(model.getAttributeSignature())) {
+    // 3. 规格编码唯一性
+    if (variantRepository.isExistByCode(model.getCode())) {
       throw new DomainException("相同规格属性组合的规格已存在!");
     }
 
@@ -260,38 +261,38 @@ public class VariantDomainService {
   /**
    * 解析规格属性值入参：按代码在物料所属分类下找定义，摊平成「一个取值一行」的行数据
    *
-   * <p>代码对不上就当场报错：签名是按代码算的，留下一个分类下没有的代码，重新生成时这条 SKU
+   * <p>代码对不上就当场报错：编码是按属性代码拼的，留下一个分类下没有的代码，重新生成时这条 SKU
    * 会被当成「取值已失效」删掉。
    *
-   * <p>取值存维护好的原样文本，不做按 {@code DataType} 的类型换算——数字规范只在算签名时做，
+   * <p>取值存维护好的原样文本，不做按 {@code DataType} 的类型换算——数字规范只在拼编码时做，
    * 否则 {@code 0755} 这种当编码用的取值会被削成 {@code 755}。
    *
    * @param categoryId 物料分类Id
-   * @param specificationAttributes 规格属性值（可空，一个值可以是标量或数组）
+   * @param specAttributes 规格属性值（可空，一个值可以是标量或数组）
    * @return 规格属性值行数据，没有给值时返回空列表
    * @throws DomainException 规格属性不存在时抛出
    */
-  private List<AssignedSpecificationAttributeData> resolveSpecificationAttributes(
-      long categoryId, @Nullable Map<String, Object> specificationAttributes) {
-    Map<String, List<String>> flattened = ValueTextUtils.flatten(specificationAttributes);
+  private List<AssignedSpecAttributeData> resolveSpecAttributes(
+      long categoryId, @Nullable Map<String, Object> specAttributes) {
+    Map<String, List<String>> flattened = ValueTextUtils.flatten(specAttributes);
     if (flattened.isEmpty()) {
       return List.of();
     }
-    Map<String, SpecificationAttribute> dict = new TreeMap<>();
-    for (SpecificationAttribute definition :
-        specificationAttributeRepository.getListByCategoryId(categoryId)) {
+    Map<String, SpecAttribute> dict = new TreeMap<>();
+    for (SpecAttribute definition :
+        specAttributeRepository.getListByCategoryId(categoryId)) {
       dict.put(definition.getCode(), definition);
     }
 
-    List<AssignedSpecificationAttributeData> rows = new ArrayList<>();
+    List<AssignedSpecAttributeData> rows = new ArrayList<>();
     for (Map.Entry<String, List<String>> entry : flattened.entrySet()) {
-      SpecificationAttribute definition = dict.get(entry.getKey());
+      SpecAttribute definition = dict.get(entry.getKey());
       if (definition == null) {
         throw new DomainException("规格属性" + entry.getKey() + "不存在!");
       }
       for (String value : entry.getValue()) {
         rows.add(
-            new AssignedSpecificationAttributeData(
+            new AssignedSpecAttributeData(
                 definition.getId(), definition.getCode(), value));
       }
     }
@@ -304,24 +305,24 @@ public class VariantDomainService {
    * <p>候选值只有这一个来源：规格属性上维护好的「规格属性值」。没有值就是没有可生成的规格，不做任何按名字猜区间的
    * 兜底——否则规格属性上多一个键就多出一种隐式语义，查问题时根本看不出来它是谁。
    *
-   * @param specificationAttribute 规格属性
+   * @param specAttribute 规格属性
    * @return 规格属性值行数据（同一代码的每个候选值一行）
    * @throws DomainException 规格属性没有维护规格属性值时抛出
    */
-  private List<AssignedSpecificationAttributeData> candidateRows(
-      SpecificationAttribute specificationAttribute) {
-    List<AssignedSpecificationAttributeData> rows =
-        specificationAttribute.getSpecificationAttributeValues().stream()
+  private List<AssignedSpecAttributeData> candidateRows(
+      SpecAttribute specAttribute) {
+    List<AssignedSpecAttributeData> rows =
+        specAttribute.getSpecAttributeValues().stream()
             .filter(value -> !value.getIsDeleted())
             .map(
                 value ->
-                    new AssignedSpecificationAttributeData(
-                        specificationAttribute.getId(),
-                        specificationAttribute.getCode(),
+                    new AssignedSpecAttributeData(
+                        specAttribute.getId(),
+                        specAttribute.getCode(),
                         value.getValue()))
             .toList();
     if (rows.isEmpty()) {
-      throw new DomainException("规格属性" + specificationAttribute.getCode() + "没有维护规格属性值，无法生成SKU!");
+      throw new DomainException("规格属性" + specAttribute.getCode() + "没有维护规格属性值，无法生成SKU!");
     }
     return rows;
   }
@@ -337,31 +338,30 @@ public class VariantDomainService {
    */
   private List<Variant> generateEmptyVariant(Material material, List<Variant> existing) {
     List<Variant> toSave = new ArrayList<>();
-    String signature = Variant.calculateSignature(material.getId(), null);
-    boolean exists =
-        existing.stream().anyMatch(x -> signature.equals(x.getAttributeSignature()));
+    String code = Variant.buildCode(material.getCode(), null);
+    boolean exists = existing.stream().anyMatch(x -> code.equals(x.getCode()));
     if (!exists) {
-      toSave.add(buildVariant(material.getId(), null, List.of()));
+      toSave.add(buildVariant(material.getId(), material.getCode(), null, List.of()));
     }
     return toSave;
   }
 
   /**
-   * 规格属性组合的笛卡尔积，结果按代码排序保证签名稳定
+   * 规格属性组合的笛卡尔积，结果按代码排序保证编码稳定
    *
    * @param candidates 每个规格属性的候选值行
    * @return 组合列表，一个组合就是一组规格属性值行
    */
-  private List<List<AssignedSpecificationAttributeData>> cartesian(
-      Map<String, List<AssignedSpecificationAttributeData>> candidates) {
-    List<List<AssignedSpecificationAttributeData>> result = new ArrayList<>();
+  private List<List<AssignedSpecAttributeData>> cartesian(
+      Map<String, List<AssignedSpecAttributeData>> candidates) {
+    List<List<AssignedSpecAttributeData>> result = new ArrayList<>();
     result.add(List.of());
-    for (Map.Entry<String, List<AssignedSpecificationAttributeData>> entry :
+    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry :
         candidates.entrySet()) {
-      List<List<AssignedSpecificationAttributeData>> expanded = new ArrayList<>();
-      for (List<AssignedSpecificationAttributeData> combination : result) {
-        for (AssignedSpecificationAttributeData row : entry.getValue()) {
-          List<AssignedSpecificationAttributeData> next = new ArrayList<>(combination);
+      List<List<AssignedSpecAttributeData>> expanded = new ArrayList<>();
+      for (List<AssignedSpecAttributeData> combination : result) {
+        for (AssignedSpecAttributeData row : entry.getValue()) {
+          List<AssignedSpecAttributeData> next = new ArrayList<>(combination);
           next.add(row);
           expanded.add(next);
         }
@@ -379,15 +379,15 @@ public class VariantDomainService {
    * @return true：某个规格属性在这一条规格上没有值，或值已失效
    */
   private boolean isOutOfRange(
-      Variant variant, Map<String, List<AssignedSpecificationAttributeData>> candidates) {
+      Variant variant, Map<String, List<AssignedSpecAttributeData>> candidates) {
     Map<String, List<String>> filled =
-        variant.getSpecificationAttributes().stream()
+        variant.getSpecAttributes().stream()
             .collect(
                 Collectors.groupingBy(
                     VariantAttributeValue::getCode,
                     Collectors.mapping(VariantAttributeValue::getValue, Collectors.toList())));
 
-    for (Map.Entry<String, List<AssignedSpecificationAttributeData>> entry :
+    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry :
         candidates.entrySet()) {
       List<String> actual = filled.get(entry.getKey());
       if (actual == null || actual.isEmpty()) {

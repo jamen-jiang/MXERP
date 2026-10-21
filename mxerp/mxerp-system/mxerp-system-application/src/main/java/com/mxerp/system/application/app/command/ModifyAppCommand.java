@@ -30,7 +30,7 @@ public class ModifyAppCommand extends AddAppCommand {
    * @param meta 路由元数据
    */
   public ModifyAppCommand(
-      Long id,
+      long id,
       String type,
       @Nullable Long parentId,
       @Nullable String name,

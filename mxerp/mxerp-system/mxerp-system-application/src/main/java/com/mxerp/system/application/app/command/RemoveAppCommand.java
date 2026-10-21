@@ -20,7 +20,7 @@ public class RemoveAppCommand extends Command {
    *
    * @param id 应用Id
    */
-  public RemoveAppCommand(Long id) {
+  public RemoveAppCommand(long id) {
     this.id = id;
   }
 }

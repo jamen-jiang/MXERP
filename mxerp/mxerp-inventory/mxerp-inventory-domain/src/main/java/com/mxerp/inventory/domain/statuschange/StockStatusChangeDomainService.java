@@ -141,7 +141,7 @@ public class StockStatusChangeDomainService {
    * @throws DomainException 仓库不存在，或库位填法与仓库的开关不符时抛出
    */
   private void validateLocationUsage(
-      Long warehouseId, @Nullable Long locationId, Map<Long, Warehouse> warehouses) {
+      long warehouseId, @Nullable Long locationId, Map<Long, Warehouse> warehouses) {
     Warehouse warehouse =
         warehouses.computeIfAbsent(
             warehouseId,

@@ -101,7 +101,7 @@ public class AddCommandLogCommand extends Command implements NoLogCommand {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       String name,
       String typeName,
       @Nullable String request,

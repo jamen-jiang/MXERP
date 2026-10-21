@@ -36,7 +36,7 @@ public class RoutingFactory {
    * @throws DomainException 路线代码 + 版本已存在时抛出
    */
   public Routing create(
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,

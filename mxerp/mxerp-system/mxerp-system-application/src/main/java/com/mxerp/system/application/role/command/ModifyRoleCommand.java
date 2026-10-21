@@ -22,7 +22,7 @@ public class ModifyRoleCommand extends AddRoleCommand {
    * @param name 角色名称
    * @param remark 备注（可空）
    */
-  public ModifyRoleCommand(Long id, String name, @Nullable String remark) {
+  public ModifyRoleCommand(long id, String name, @Nullable String remark) {
     super(name, remark);
     this.id = id;
   }

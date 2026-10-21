@@ -25,7 +25,7 @@ public class GetRoleByIdQuery implements Query {
    *
    * @param id 角色Id
    */
-  public GetRoleByIdQuery(Long id) {
+  public GetRoleByIdQuery(long id) {
     this.id = id;
   }
 }

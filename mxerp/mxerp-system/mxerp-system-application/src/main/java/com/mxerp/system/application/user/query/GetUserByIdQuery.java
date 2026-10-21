@@ -25,7 +25,7 @@ public class GetUserByIdQuery implements Query {
    *
    * @param id 用户Id
    */
-  public GetUserByIdQuery(Long id) {
+  public GetUserByIdQuery(long id) {
     this.id = id;
   }
 }

@@ -41,12 +41,12 @@ public class ProductionReportFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public ProductionReport create(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long workOrderOperationId,
-      Long operationId,
+      long workOrderOperationId,
+      long operationId,
       String operationName,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,

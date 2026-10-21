@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.specificationattribute;
+package com.mxerp.basedata.domain.specattribute;
 
 import com.mxerp.shared.domain.entity.BaseDeleteEntity;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -22,18 +22,18 @@ import org.jspecify.annotations.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-    name = "SpecificationAttributeValidateRule",
+    name = "SpecAttributeValidateRule",
     indexes = {
       @Index(
-          name = "IX_SpecificationAttributeValidateRule_SpecificationAttributeId",
-          columnList = "SpecificationAttributeId"),
-      @Index(name = "IX_SpecificationAttributeValidateRule_Sort", columnList = "Sort")
+          name = "IX_SpecAttributeValidateRule_SpecAttributeId",
+          columnList = "SpecAttributeId"),
+      @Index(name = "IX_SpecAttributeValidateRule_Sort", columnList = "Sort")
     })
-public class SpecificationAttributeValidateRule extends BaseDeleteEntity {
+public class SpecAttributeValidateRule extends BaseDeleteEntity {
 
   /** 规格属性Id */
-  @Column(name = "SpecificationAttributeId", nullable = false)
-  private Long specificationAttributeId;
+  @Column(name = "SpecAttributeId", nullable = false)
+  private Long specAttributeId;
 
   /** 表达式 */
   @Nationalized
@@ -57,7 +57,7 @@ public class SpecificationAttributeValidateRule extends BaseDeleteEntity {
    * @param errorMessage 错误提示
    * @param sort 排序（可空）
    */
-  SpecificationAttributeValidateRule(
+  SpecAttributeValidateRule(
       String expression, String errorMessage, @Nullable Integer sort) {
     apply(expression, errorMessage, sort);
   }

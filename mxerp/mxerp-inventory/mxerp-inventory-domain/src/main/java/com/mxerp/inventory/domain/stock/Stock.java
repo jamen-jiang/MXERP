@@ -96,9 +96,9 @@ public class Stock extends UpdateAggregateRoot {
    * @throws DomainException SPU或SKU或仓库不合法、库位Id非法、库存状态不在枚举内时抛出
    */
   Stock(
-      Long materialId,
-      Long variantId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus) {
     if (materialId <= 0) {

@@ -116,12 +116,12 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   ProductionReceipt(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long materialId,
-      Long variantId,
-      Long unitId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       BigDecimal appliedQuantity,
       @Nullable String remark,
@@ -167,12 +167,12 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @throws DomainException 已入库时抛出
    */
   public void modify(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long materialId,
-      Long variantId,
-      Long unitId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       BigDecimal appliedQuantity,
       @Nullable String remark) {
@@ -265,12 +265,12 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @throws DomainException 工单、快照字段、仓库非法或申报数量不为正时抛出
    */
   private void apply(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long materialId,
-      Long variantId,
-      Long unitId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       BigDecimal appliedQuantity,
       @Nullable String remark) {

@@ -78,7 +78,7 @@ public class AttributeAssignment extends BaseDeleteEntity {
    * @param value 属性值
    * @throws DomainException 持有者表名为空 / 代码为空 / 值为空时抛出
    */
-  public AttributeAssignment(String entityType, Long attributeId, String code, String value) {
+  public AttributeAssignment(String entityType, long attributeId, String code, String value) {
     String trimmedEntityType = StringUtils.trimToNull(entityType);
     if (trimmedEntityType == null) {
       throw new DomainException("属性值的持有者不能为空");

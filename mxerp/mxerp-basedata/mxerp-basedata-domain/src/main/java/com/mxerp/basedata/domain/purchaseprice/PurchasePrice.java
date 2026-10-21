@@ -102,11 +102,11 @@ public class PurchasePrice extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   PurchasePrice(
-      Long supplierId,
-      Long materialId,
+      long supplierId,
+      long materialId,
       @Nullable Long variantId,
       BigDecimal price,
-      Long currencyId,
+      long currencyId,
       @Nullable BigDecimal moq,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,

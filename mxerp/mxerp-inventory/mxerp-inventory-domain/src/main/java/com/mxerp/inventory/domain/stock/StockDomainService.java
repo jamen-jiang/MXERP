@@ -48,9 +48,9 @@ public class StockDomainService {
    * @return 库存行（新建的为未落库实体，由调用方保存）
    */
   public Stock inbound(
-      Long materialId,
-      Long variantId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       BigDecimal quantity) {
@@ -81,8 +81,8 @@ public class StockDomainService {
    * @throws DomainException 该键没有库存行、仓库不存在、或在库与可用都不足且该仓不允许负库存时抛出
    */
   public Stock outbound(
-      Long variantId,
-      Long warehouseId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       BigDecimal quantity) {
@@ -103,8 +103,8 @@ public class StockDomainService {
    * @throws DomainException 该键没有库存行、状态不可动用、或可用量不足时抛出
    */
   public Stock reserve(
-      Long variantId,
-      Long warehouseId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       BigDecimal quantity) {
@@ -125,8 +125,8 @@ public class StockDomainService {
    * @throws DomainException 该键没有库存行、状态不可动用、或超过已预留时抛出
    */
   public Stock unreserve(
-      Long variantId,
-      Long warehouseId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       BigDecimal quantity) {
@@ -156,9 +156,9 @@ public class StockDomainService {
    * @throws DomainException 转出与转入相同、或转出那行不够时抛出
    */
   public List<Stock> move(
-      Long materialId,
-      Long variantId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,
@@ -181,7 +181,7 @@ public class StockDomainService {
    * @return true：允许负库存出库
    * @throws DomainException 仓库不存在时抛出
    */
-  private boolean isNegativeStockAllowed(Long warehouseId) {
+  private boolean isNegativeStockAllowed(long warehouseId) {
     Warehouse warehouse = warehouseRepository.get(warehouseId);
     if (warehouse == null) {
       throw new DomainException("仓库" + warehouseId + "不存在!");

@@ -38,12 +38,12 @@ public class ProductionReceiptFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public ProductionReceipt create(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long materialId,
-      Long variantId,
-      Long unitId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       BigDecimal appliedQuantity,
       @Nullable String remark,

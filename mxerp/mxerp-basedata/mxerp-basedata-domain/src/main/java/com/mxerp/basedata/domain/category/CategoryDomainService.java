@@ -51,7 +51,7 @@ public class CategoryDomainService {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     return categoryFactory.create(parentId, code, name, disabled, sort, remark);
@@ -76,7 +76,7 @@ public class CategoryDomainService {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     Category model = getExist(id);

@@ -25,7 +25,7 @@ public class GetAppByIdQuery implements Query {
    *
    * @param id 应用Id
    */
-  public GetAppByIdQuery(Long id) {
+  public GetAppByIdQuery(long id) {
     this.id = id;
   }
 }

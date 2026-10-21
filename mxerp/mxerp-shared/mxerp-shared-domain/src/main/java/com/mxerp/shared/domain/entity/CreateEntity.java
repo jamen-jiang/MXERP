@@ -23,7 +23,7 @@ public interface CreateEntity {
    * @param userName 创建人名称
    * @param dateTime 创建时间（可空，为空时取当前时间）
    */
-  void create(Long userId, String userName, @Nullable LocalDateTime dateTime);
+  void create(long userId, String userName, @Nullable LocalDateTime dateTime);
 
   /**
    * 设置创建审计信息（使用当前时间）
@@ -31,5 +31,5 @@ public interface CreateEntity {
    * @param userId 创建人Id
    * @param userName 创建人名称
    */
-  void create(Long userId, String userName);
+  void create(long userId, String userName);
 }

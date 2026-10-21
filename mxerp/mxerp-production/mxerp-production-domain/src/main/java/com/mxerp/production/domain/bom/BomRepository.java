@@ -47,7 +47,7 @@ public interface BomRepository extends Repository<Bom> {
    * @param id 排除的BOM Id（可空，新增时传 null）
    * @return true 表示已存在
    */
-  boolean isExistByVariantIdAndVersionExcludeId(Long variantId, String version, @Nullable Long id);
+  boolean isExistByVariantIdAndVersionExcludeId(long variantId, String version, @Nullable Long id);
 
   /**
    * 判断父件SKU + 版本是否存在
@@ -56,7 +56,7 @@ public interface BomRepository extends Repository<Bom> {
    * @param version 版本号
    * @return true 表示已存在
    */
-  default boolean isExistByVariantIdAndVersionExcludeId(Long variantId, String version) {
+  default boolean isExistByVariantIdAndVersionExcludeId(long variantId, String version) {
     return isExistByVariantIdAndVersionExcludeId(variantId, version, null);
   }
 }

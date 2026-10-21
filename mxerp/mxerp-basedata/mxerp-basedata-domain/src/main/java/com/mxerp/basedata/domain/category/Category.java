@@ -68,7 +68,7 @@ public class Category extends UpdateAggregateRoot implements Parent {
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
 
-  /** 排序（可空） */
+/** 排序（可空） */
   @Column(name = "Sort")
   @Nullable
   private Integer sort;
@@ -95,7 +95,7 @@ public class Category extends UpdateAggregateRoot implements Parent {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     apply(level, parentId, code, name, disabled, sort, remark);
@@ -117,7 +117,7 @@ public class Category extends UpdateAggregateRoot implements Parent {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     apply(level, parentId, code, name, disabled, sort, remark);
@@ -153,7 +153,7 @@ public class Category extends UpdateAggregateRoot implements Parent {
       @Nullable Long parentId,
       String code,
       String name,
-      Boolean disabled,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);

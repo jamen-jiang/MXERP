@@ -19,7 +19,7 @@ public class UniqueVariantInfoData {
   private final Long warehouseId;
 
   /** 数量 */
-  private final Double qty;
+  private final double qty;
 
   /**
    * 构造器（qty 可空，null 时视为 0）
@@ -29,7 +29,7 @@ public class UniqueVariantInfoData {
    * @param warehouseId 仓库Id
    * @param qty 数量（可空）
    */
-  public UniqueVariantInfoData(Long id, Long variantId, Long warehouseId, @Nullable Double qty) {
+  public UniqueVariantInfoData(long id, long variantId, long warehouseId, @Nullable Double qty) {
     this.id = id;
     this.variantId = variantId;
     this.warehouseId = warehouseId;

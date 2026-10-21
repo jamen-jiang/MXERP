@@ -20,7 +20,7 @@ public class RemoveDepartmentCommand extends Command {
    *
    * @param id 部门Id
    */
-  public RemoveDepartmentCommand(Long id) {
+  public RemoveDepartmentCommand(long id) {
     this.id = id;
   }
 }

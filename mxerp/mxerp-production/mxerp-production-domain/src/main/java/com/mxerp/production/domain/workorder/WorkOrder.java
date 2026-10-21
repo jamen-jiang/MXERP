@@ -187,10 +187,10 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   WorkOrder(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
@@ -278,10 +278,10 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态时抛出
    */
   public void modify(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
@@ -335,12 +335,12 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态、或工序顺序重复时抛出
    */
   public void addOperation(
-      Integer sequence,
-      Long operationId,
+      int sequence,
+      long operationId,
       String operationName,
       boolean isOptional,
       boolean isOutsourced,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       BigDecimal setupTime,
       BigDecimal runTime,
@@ -399,11 +399,11 @@ public class WorkOrder extends OrderAggregateRoot {
    */
   public void addMaterial(
       @Nullable Long bomLineId,
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       boolean isKeyPart,
@@ -529,7 +529,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 工单已结束、或工序未放行时抛出
    */
   public void startOperation(
-      Long workOrderOperationId, @Nullable Long operatorId, LocalDateTime startTime) {
+      long workOrderOperationId, @Nullable Long operatorId, LocalDateTime startTime) {
     ensureExecutable();
     requireOperation(workOrderOperationId).start(operatorId, startTime);
     if (isReleased()) {
@@ -546,7 +546,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param time 回厂时间
    * @throws DomainException 工单已结束、工序不存在或非外协工序时抛出
    */
-  public void returnOperation(Long workOrderOperationId, LocalDateTime time) {
+  public void returnOperation(long workOrderOperationId, LocalDateTime time) {
     ensureExecutable();
     requireOperation(workOrderOperationId).confirmReturn(time);
   }
@@ -563,7 +563,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 工单已结束、或报工数据非法时抛出
    */
   public void reportOperation(
-      Long workOrderOperationId,
+      long workOrderOperationId,
       BigDecimal goodQuantity,
       BigDecimal scrapQuantity,
       BigDecimal workTime) {
@@ -591,7 +591,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException 工单未下达/已关闭/已取消、后续工序已报过工、冲回数非法、或冲完低于已入库数时抛出
    */
   public void unreportOperation(
-      Long workOrderOperationId,
+      long workOrderOperationId,
       BigDecimal goodQuantity,
       BigDecimal scrapQuantity,
       BigDecimal workTime) {
@@ -621,7 +621,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param endTime 实际完工时间
    * @throws DomainException 工单已结束、或工序未开工时抛出
    */
-  public void completeOperation(Long workOrderOperationId, LocalDateTime endTime) {
+  public void completeOperation(long workOrderOperationId, LocalDateTime endTime) {
     ensureExecutable();
     requireOperation(workOrderOperationId).complete(endTime);
     promoteNextOperation();
@@ -635,7 +635,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param endTime 操作时间
    * @throws DomainException 工单已结束、或工序不是可选工序时抛出
    */
-  public void skipOperation(Long workOrderOperationId, LocalDateTime endTime) {
+  public void skipOperation(long workOrderOperationId, LocalDateTime endTime) {
     ensureExecutable();
     requireOperation(workOrderOperationId).skip();
     promoteNextOperation();
@@ -651,7 +651,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次领用数量
    * @throws DomainException 工单已结束、用料行不存在、或净领料累计超过需求数量时抛出
    */
-  public void issueMaterial(Long workOrderMaterialId, BigDecimal quantity) {
+  public void issueMaterial(long workOrderMaterialId, BigDecimal quantity) {
     ensureExecutable();
     requireMaterial(workOrderMaterialId).issue(quantity);
   }
@@ -663,7 +663,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次退料数量
    * @throws DomainException 工单已结束、用料行不存在、或退料超过已领未耗数量时抛出
    */
-  public void returnMaterial(Long workOrderMaterialId, BigDecimal quantity) {
+  public void returnMaterial(long workOrderMaterialId, BigDecimal quantity) {
     ensureExecutable();
     requireMaterial(workOrderMaterialId).returnMaterial(quantity);
   }
@@ -678,7 +678,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次撤回数量
    * @throws DomainException 工单已关闭/已取消、用料行不存在、或撤回超过已领未耗数量时抛出
    */
-  public void unissueMaterial(Long workOrderMaterialId, BigDecimal quantity) {
+  public void unissueMaterial(long workOrderMaterialId, BigDecimal quantity) {
     ensureRevocable("撤回领料");
     requireMaterial(workOrderMaterialId).unissue(quantity);
   }
@@ -690,7 +690,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次撤回数量
    * @throws DomainException 工单已关闭/已取消、用料行不存在、或撤回超过已退数量时抛出
    */
-  public void unreturnMaterial(Long workOrderMaterialId, BigDecimal quantity) {
+  public void unreturnMaterial(long workOrderMaterialId, BigDecimal quantity) {
     ensureRevocable("撤回退料");
     requireMaterial(workOrderMaterialId).unreturn(quantity);
   }
@@ -702,7 +702,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param quantity 本次耗用数量
    * @throws DomainException 工单已结束、或用料行不存在时抛出
    */
-  public void consumeMaterial(Long workOrderMaterialId, BigDecimal quantity) {
+  public void consumeMaterial(long workOrderMaterialId, BigDecimal quantity) {
     ensureExecutable();
     requireMaterial(workOrderMaterialId).consume(quantity);
   }
@@ -819,7 +819,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @return 匹配到的工序，找不到返回 {@code null}
    */
   @Nullable
-  private WorkOrderOperation findOperation(Long workOrderOperationId) {
+  private WorkOrderOperation findOperation(long workOrderOperationId) {
     return workOrderOperations.stream()
         .filter(o -> Objects.equals(o.getId(), workOrderOperationId) && !o.getIsDeleted())
         .findFirst()
@@ -833,7 +833,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @return 匹配到的工序，找不到返回 {@code null}
    */
   @Nullable
-  private WorkOrderOperation findOperationBySequence(Integer sequence) {
+  private WorkOrderOperation findOperationBySequence(int sequence) {
     return workOrderOperations.stream()
         .filter(o -> Objects.equals(o.getSequence(), sequence) && !o.getIsDeleted())
         .findFirst()
@@ -847,7 +847,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @return 匹配到的用料行，找不到返回 {@code null}
    */
   @Nullable
-  private WorkOrderMaterial findMaterial(Long workOrderMaterialId) {
+  private WorkOrderMaterial findMaterial(long workOrderMaterialId) {
     return workOrderMaterials.stream()
         .filter(m -> Objects.equals(m.getId(), workOrderMaterialId) && !m.getIsDeleted())
         .findFirst()
@@ -928,10 +928,10 @@ public class WorkOrder extends OrderAggregateRoot {
    * @throws DomainException SPU、SKU、数量、单位、来源类型非法，或计划时间倒挂时抛出
    */
   private void apply(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
@@ -1015,7 +1015,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @return 工单工序
    * @throws DomainException 工序不存在时抛出
    */
-  private WorkOrderOperation requireOperation(Long workOrderOperationId) {
+  private WorkOrderOperation requireOperation(long workOrderOperationId) {
     WorkOrderOperation operation = findOperation(workOrderOperationId);
     if (operation == null) {
       throw new DomainException("工单工序不存在!");
@@ -1030,7 +1030,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @return 工单用料
    * @throws DomainException 用料行不存在时抛出
    */
-  private WorkOrderMaterial requireMaterial(Long workOrderMaterialId) {
+  private WorkOrderMaterial requireMaterial(long workOrderMaterialId) {
     WorkOrderMaterial material = findMaterial(workOrderMaterialId);
     if (material == null) {
       throw new DomainException("工单用料不存在!");

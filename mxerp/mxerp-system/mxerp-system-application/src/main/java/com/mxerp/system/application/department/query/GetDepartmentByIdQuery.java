@@ -25,7 +25,7 @@ public class GetDepartmentByIdQuery implements Query {
    *
    * @param id 部门Id
    */
-  public GetDepartmentByIdQuery(Long id) {
+  public GetDepartmentByIdQuery(long id) {
     this.id = id;
   }
 }

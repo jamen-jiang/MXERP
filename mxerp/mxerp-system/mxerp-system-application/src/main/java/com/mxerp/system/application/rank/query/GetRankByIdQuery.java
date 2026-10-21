@@ -25,7 +25,7 @@ public class GetRankByIdQuery implements Query {
    *
    * @param id 职级Id
    */
-  public GetRankByIdQuery(Long id) {
+  public GetRankByIdQuery(long id) {
     this.id = id;
   }
 }

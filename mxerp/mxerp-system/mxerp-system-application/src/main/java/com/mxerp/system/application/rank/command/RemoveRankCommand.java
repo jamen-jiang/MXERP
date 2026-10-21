@@ -20,7 +20,7 @@ public class RemoveRankCommand extends Command {
    *
    * @param id 职级Id
    */
-  public RemoveRankCommand(Long id) {
+  public RemoveRankCommand(long id) {
     this.id = id;
   }
 }

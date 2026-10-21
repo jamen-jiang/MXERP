@@ -62,7 +62,7 @@ public class AttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  AttributeValue(String value, String label, Boolean isDefault, @Nullable Integer sort) {
+  AttributeValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
     String trimmedValue = StringUtils.trimToNull(value);
     if (trimmedValue == null) {
       throw new DomainException("属性值不能为空");
@@ -79,7 +79,7 @@ public class AttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  void modify(String label, Boolean isDefault, @Nullable Integer sort) {
+  void modify(String label, boolean isDefault, @Nullable Integer sort) {
     apply(label, isDefault, sort);
   }
 
@@ -94,7 +94,7 @@ public class AttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  private void apply(String label, Boolean isDefault, @Nullable Integer sort) {
+  private void apply(String label, boolean isDefault, @Nullable Integer sort) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
       throw new DomainException("属性值标签不能为空");

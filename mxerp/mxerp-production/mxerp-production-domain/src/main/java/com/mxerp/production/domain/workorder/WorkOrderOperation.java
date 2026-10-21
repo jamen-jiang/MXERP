@@ -194,12 +194,12 @@ public class WorkOrderOperation extends BaseDeleteEntity {
    * @param remark 备注（可空）
    */
   WorkOrderOperation(
-      Integer sequence,
-      Long operationId,
+      int sequence,
+      long operationId,
       String operationName,
       boolean isOptional,
       boolean isOutsourced,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       BigDecimal setupTime,
       BigDecimal runTime,
@@ -567,12 +567,12 @@ public class WorkOrderOperation extends BaseDeleteEntity {
    * @throws DomainException 快照字段非法时抛出
    */
   private void apply(
-      Integer sequence,
-      Long operationId,
+      int sequence,
+      long operationId,
       String operationName,
       boolean isOptional,
       boolean isOutsourced,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       BigDecimal setupTime,
       BigDecimal runTime,

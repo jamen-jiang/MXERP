@@ -88,10 +88,10 @@ public class StockRecordLine extends BaseDeleteEntity {
    * @throws DomainException SPU、SKU、仓库、库位非法，库存状态为空，或数量为零时抛出
    */
   StockRecordLine(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long warehouseId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       @Nullable String remark) {

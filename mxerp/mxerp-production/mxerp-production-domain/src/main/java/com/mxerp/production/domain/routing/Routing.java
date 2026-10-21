@@ -30,12 +30,10 @@ import org.jspecify.annotations.Nullable;
  * 工艺路线（挂在物料系列上）
  *
  * <p>路线按 SPU 维护，不按 SKU：同一系列下几百个度数走的是同一套工序，挂到变体等于给每个度数复制一份。
- * 一个系列可以有多条路线（标准、试制、返工），其中一条标为主路线；工单下达时没指定路线，就取该物料在
- * 该时点生效的主路线。个别度数要走别的路线，在工单上直接指定即可。
+ * 一个系列可以有多条路线（标准、试制、返工），其中一条标为主路线；工单下达时没指定路线，就取该物料在 该时点生效的主路线。个别度数要走别的路线，在工单上直接指定即可。
  *
- * <p><b>版本与生效链。</b>同一代码可以并存多个版本，用生效日期接力：草稿可随便改，发布后冻结（要改就
- * {@code revise} 升版），作废只退出可选池。已发布版本必须带生效时间，且同一代码的生效区间不许重叠，
- * 发布新版时生效更早的那一版自动收口到新版起点。主路线跨代码也守同一条时间线：新主路线发布时，
+ * <p><b>版本与生效链。</b>同一代码可以并存多个版本，用生效日期接力：草稿可随便改，发布后冻结（要改就 {@code revise}
+ * 升版），作废只退出可选池。已发布版本必须带生效时间，且同一代码的生效区间不许重叠， 发布新版时生效更早的那一版自动收口到新版起点。主路线跨代码也守同一条时间线：新主路线发布时，
  * 旧主路线在交接点收口。工单下达按「时点」取版本，历史工单的工序与工时才不会漂。
  *
  * <p>费率不在这里：工序行只引用费率卡（{@code RoutingOperation.rateId}）。电价、人工、外协谈价随时在变，
@@ -132,7 +130,7 @@ public class Routing extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   Routing(
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,
@@ -158,7 +156,7 @@ public class Routing extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,
@@ -189,9 +187,9 @@ public class Routing extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废、工序顺序重复时抛出
    */
   public void addOperation(
-      Integer sequence,
-      Long operationId,
-      Long workCenterId,
+      int sequence,
+      long operationId,
+      long workCenterId,
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
@@ -243,10 +241,10 @@ public class Routing extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废、路线工序不存在、工序顺序重复时抛出
    */
   public void modifyOperation(
-      Long routingOperationId,
-      Integer sequence,
-      Long operationId,
-      Long workCenterId,
+      long routingOperationId,
+      int sequence,
+      long operationId,
+      long workCenterId,
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
@@ -287,7 +285,7 @@ public class Routing extends UpdateAggregateRoot {
    * @param routingOperationId 路线工序Id
    * @throws DomainException 已发布或已作废时抛出
    */
-  public void deleteOperation(Long routingOperationId) {
+  public void deleteOperation(long routingOperationId) {
     checkDraft();
     RoutingOperation target = findOperation(routingOperationId);
     if (target == null) {
@@ -371,8 +369,7 @@ public class Routing extends UpdateAggregateRoot {
   /**
    * 判断指定时点本版路线是否生效
    *
-   * <p>生效区间左闭右开：{@code effectiveFrom <= moment < effectiveTo}，失效时间为空表示无限期。
-   * 未发布的版本对任何时点都不生效。
+   * <p>生效区间左闭右开：{@code effectiveFrom <= moment < effectiveTo}，失效时间为空表示无限期。 未发布的版本对任何时点都不生效。
    *
    * @param moment 判定时点（由调用方传入，领域层不取当前时间）
    * @return true：该时点可以用这一版下达工单
@@ -390,8 +387,7 @@ public class Routing extends UpdateAggregateRoot {
   /**
    * 判断生效区间是否与给定区间重叠
    *
-   * <p>两个左闭右开区间有交集即算重叠；开区间端（{@code null}）视为无穷。同一代码的已发布版本必须
-   * 互不重叠，否则「按时点取版本」会取出两条，下达时无法确定用哪一版。
+   * <p>两个左闭右开区间有交集即算重叠；开区间端（{@code null}）视为无穷。同一代码的已发布版本必须 互不重叠，否则「按时点取版本」会取出两条，下达时无法确定用哪一版。
    *
    * @param from 待比较区间的生效时间（可空，空视为无起始）
    * @param to 待比较区间的失效时间（可空，空视为无限期）
@@ -422,8 +418,7 @@ public class Routing extends UpdateAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参，
-   * 否则导入或改表头就能把已发布版本悄悄退回草稿。
+   * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参， 否则导入或改表头就能把已发布版本悄悄退回草稿。
    *
    * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
@@ -435,7 +430,7 @@ public class Routing extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   private void apply(
-      Long materialId,
+      long materialId,
       String code,
       String name,
       String version,
@@ -479,7 +474,7 @@ public class Routing extends UpdateAggregateRoot {
    * @return 匹配到的工序，找不到返回 {@code null}
    */
   @Nullable
-  private RoutingOperation findOperation(Long routingOperationId) {
+  private RoutingOperation findOperation(long routingOperationId) {
     return routingOperations.stream()
         .filter(o -> Objects.equals(o.getId(), routingOperationId) && !o.getIsDeleted())
         .findFirst()
@@ -495,7 +490,7 @@ public class Routing extends UpdateAggregateRoot {
    * @param excludeId 需要排除的路线工序Id（新增时传 {@code null}）
    * @return true：已被其它未删除的工序占用
    */
-  private boolean isExistSequence(Integer sequence, @Nullable Long excludeId) {
+  private boolean isExistSequence(int sequence, @Nullable Long excludeId) {
     return routingOperations.stream()
         .filter(o -> !o.getIsDeleted())
         .filter(o -> !Objects.equals(o.getId(), excludeId))

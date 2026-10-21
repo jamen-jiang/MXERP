@@ -115,7 +115,7 @@ public class OperationLog extends LogAggregateRoot {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       String apiModule,
       String apiName,
       String apiUrl,
@@ -127,7 +127,7 @@ public class OperationLog extends LogAggregateRoot {
       @Nullable String os,
       @Nullable String request,
       @Nullable String response,
-      Boolean isSuccess,
+      boolean isSuccess,
       @Nullable String errorMessage,
       @Nullable String exception) {
     super(

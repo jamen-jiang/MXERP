@@ -33,7 +33,7 @@ public interface DepartmentJpa
    * @param parentId 父Id
    * @return 部门列表
    */
-  List<Department> findByParentId(Long parentId);
+  List<Department> findByParentId(long parentId);
 
   /**
    * 判断部门编码是否存在（可排除指定 Id）
@@ -110,7 +110,7 @@ public interface DepartmentJpa
    * @param id 部门ID
    * @return 部门及其子部门列表
    */
-  default List<Department> findWithChildren(Long id) {
+  default List<Department> findWithChildren(long id) {
     Specification<Department> spec =
         (root, query, cb) ->
             cb.or(

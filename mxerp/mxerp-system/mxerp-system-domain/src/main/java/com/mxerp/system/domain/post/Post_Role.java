@@ -38,7 +38,7 @@ public class Post_Role extends BaseDeleteEntity {
    *
    * @param roleId 角色Id
    */
-  public Post_Role(Long roleId) {
+  public Post_Role(long roleId) {
     this.roleId = roleId;
   }
 }

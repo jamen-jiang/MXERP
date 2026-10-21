@@ -120,9 +120,9 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @param remark 备注（可空）
    */
   RoutingOperation(
-      Integer sequence,
-      Long operationId,
-      Long workCenterId,
+      int sequence,
+      long operationId,
+      long workCenterId,
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
@@ -167,9 +167,9 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @param remark 备注（可空）
    */
   void modify(
-      Integer sequence,
-      Long operationId,
-      Long workCenterId,
+      int sequence,
+      long operationId,
+      long workCenterId,
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,
@@ -220,9 +220,9 @@ public class RoutingOperation extends BaseDeleteEntity {
    * @throws DomainException 顺序、工序、工作中心、费率卡、工时、取时公式、批量、返工工序非法时抛出
    */
   private void apply(
-      Integer sequence,
-      Long operationId,
-      Long workCenterId,
+      int sequence,
+      long operationId,
+      long workCenterId,
       BigDecimal setupTime,
       BigDecimal runTime,
       BigDecimal queueTime,

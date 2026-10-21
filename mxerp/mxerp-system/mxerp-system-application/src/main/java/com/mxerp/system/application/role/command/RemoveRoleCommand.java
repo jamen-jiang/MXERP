@@ -20,7 +20,7 @@ public class RemoveRoleCommand extends Command {
    *
    * @param id 角色Id
    */
-  public RemoveRoleCommand(Long id) {
+  public RemoveRoleCommand(long id) {
     this.id = id;
   }
 }

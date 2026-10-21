@@ -46,8 +46,8 @@ public class AddPostCommand extends Command {
    */
   public AddPostCommand(
       String name,
-      Long departmentId,
-      Long rankId,
+      long departmentId,
+      long rankId,
       @Nullable String remark,
       @Nullable List<Long> roleIds) {
     this.name = name;

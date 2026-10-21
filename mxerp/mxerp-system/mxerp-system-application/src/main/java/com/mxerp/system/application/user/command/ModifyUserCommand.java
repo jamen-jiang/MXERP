@@ -29,7 +29,7 @@ public class ModifyUserCommand extends AddUserCommand {
    * @param roleIds 角色Id列表（可空）
    */
   public ModifyUserCommand(
-      Long id,
+      long id,
       String name,
       String userName,
       @Nullable String email,

@@ -63,7 +63,7 @@ public class ProductionReturnDomainService {
    * @return 生产退料单聚合
    */
   public ProductionReturn create(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark,
@@ -98,7 +98,7 @@ public class ProductionReturnDomainService {
    */
   public ProductionReturn modify(
       long id,
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark) {
@@ -137,7 +137,7 @@ public class ProductionReturnDomainService {
    * @return 生产退料单聚合
    * @throws DomainException 退料单不存在时抛出
    */
-  public ProductionReturn deleteLine(long id, Long workOrderMaterialId) {
+  public ProductionReturn deleteLine(long id, long workOrderMaterialId) {
     ProductionReturn model = getExist(id);
     model.deleteLine(workOrderMaterialId);
     return model;
@@ -225,7 +225,7 @@ public class ProductionReturnDomainService {
    * @return 退料行
    * @throws DomainException 该用料行不在本单内时抛出
    */
-  private ProductionReturnLine requireLine(ProductionReturn model, Long workOrderMaterialId) {
+  private ProductionReturnLine requireLine(ProductionReturn model, long workOrderMaterialId) {
     for (ProductionReturnLine line : model.getProductionReturnLines()) {
       if (Objects.equals(line.getWorkOrderMaterialId(), workOrderMaterialId)
           && !line.getIsDeleted()) {
@@ -257,7 +257,7 @@ public class ProductionReturnDomainService {
    * @return 工单聚合
    * @throws DomainException 工单不存在时抛出
    */
-  private WorkOrder requireWorkOrder(Long workOrderId) {
+  private WorkOrder requireWorkOrder(long workOrderId) {
     WorkOrder workOrder = workOrderRepository.get(workOrderId);
     if (workOrder == null) {
       throw new DomainException("工单" + workOrderId + "不存在!");

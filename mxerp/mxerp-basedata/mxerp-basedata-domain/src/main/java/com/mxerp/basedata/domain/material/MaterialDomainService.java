@@ -1,6 +1,8 @@
 package com.mxerp.basedata.domain.material;
 
 import com.mxerp.basedata.domain.category.CategoryRepository;
+import com.mxerp.basedata.domain.variant.Variant;
+import com.mxerp.basedata.domain.variant.VariantRepository;
 import com.mxerp.shared.domain.exception.DomainException;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  * 挂载暂时停用，本类里的属性校验与同步一并注释保留，接回来时恢复即可。公开的 {@code attributes} 入参
  * 先留着不生效，避免改签名牵连调用方。
  *
- * <p>校验只看属性定义，不要求代码同时是「参与规格生成的规格属性」（{@code SpecificationAttribute}）：两套定义各有
+ * <p>校验只看属性定义，不要求代码同时是「参与规格生成的规格属性」（{@code SpecAttribute}）：两套定义各有
  * 用途，若在保存物料时强制查规格属性表，想在物料上记一个「重量」都得先去分类下建规格属性。
  */
 @NullMarked
@@ -27,6 +29,9 @@ public class MaterialDomainService {
   /** 分类仓储 */
   private final CategoryRepository categoryRepository;
 
+  /** 规格仓储：物料代码变了要级联重算规格编码 */
+  private final VariantRepository variantRepository;
+
   // 属性仓储随属性挂载停用
   // /** 属性仓储 */
   // private final AttributeRepository attributeRepository;
@@ -36,11 +41,15 @@ public class MaterialDomainService {
    *
    * @param materialRepository 物料仓储
    * @param categoryRepository 分类仓储
+   * @param variantRepository 规格仓储
    */
   public MaterialDomainService(
-      MaterialRepository materialRepository, CategoryRepository categoryRepository) {
+      MaterialRepository materialRepository,
+      CategoryRepository categoryRepository,
+      VariantRepository variantRepository) {
     this.materialRepository = materialRepository;
     this.categoryRepository = categoryRepository;
+    this.variantRepository = variantRepository;
     // this.attributeRepository = attributeRepository;
   }
 
@@ -268,7 +277,10 @@ public class MaterialDomainService {
     }
     // 3. 属性值按物料这一类型下的定义校验（随属性挂载停用）
     // List<AssignedAttributeData> attributeRows = resolveAttributes(attributes);
-    // 4. 修改主字段
+    // 4. 记下旧代码：规格编码里带着物料代码，改了要跟着换
+    String oldCode = material.getCode();
+
+    // 5. 修改主字段
     material.modify(
         categoryId,
         procurementType,
@@ -281,7 +293,13 @@ public class MaterialDomainService {
         disabled,
         remark,
         attachmentIds);
-    // 5. 同步属性值行（按「代码 + 值」匹配，输入里没有的行标记删除）
+    // 6. 物料代码变了，规格编码的前缀一起换（不换的话编码与物料对不上，唯一性也跟着错）
+    if (!oldCode.equals(material.getCode())) {
+      for (Variant variant : variantRepository.getListByMaterialId(material.getId())) {
+        variant.recalcCode(material.getCode());
+      }
+    }
+    // 7. 同步属性值行（按「代码 + 值」匹配，输入里没有的行标记删除）
     // material.syncAttributes(attributeRows);
   }
 

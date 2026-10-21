@@ -31,8 +31,8 @@ public class ModifyDepartmentCommand extends AddDepartmentCommand {
    * @param remark 备注（可空）
    */
   public ModifyDepartmentCommand(
-      Long id,
-      Long companyId,
+      long id,
+      long companyId,
       @Nullable Long parentId,
       String code,
       String name,

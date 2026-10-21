@@ -85,7 +85,7 @@ public class Operation extends UpdateAggregateRoot {
   Operation(
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -114,7 +114,7 @@ public class Operation extends UpdateAggregateRoot {
   void modify(
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -167,7 +167,7 @@ public class Operation extends UpdateAggregateRoot {
   private void apply(
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,

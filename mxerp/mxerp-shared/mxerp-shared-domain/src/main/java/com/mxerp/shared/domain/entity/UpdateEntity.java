@@ -22,5 +22,5 @@ public interface UpdateEntity {
    * @param userId 更新人Id
    * @param userName 更新人名称
    */
-  void update(Long userId, String userName);
+  void update(long userId, String userName);
 }

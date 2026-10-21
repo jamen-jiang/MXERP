@@ -60,7 +60,7 @@ public class WarehouseLocation extends BaseDeleteEntity {
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
 
-  /** 备注（可空） */
+/** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
   @Nullable

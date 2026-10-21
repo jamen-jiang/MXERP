@@ -167,9 +167,9 @@ public class StockStatusChange extends OrderAggregateRoot {
    * @throws DomainException 非草稿状态，或同一格上同一对状态已在单内时抛出
    */
   public void addLine(
-      Long materialId,
-      Long variantId,
-      Long warehouseId,
+      long materialId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,
@@ -314,8 +314,8 @@ public class StockStatusChange extends OrderAggregateRoot {
    */
   @Nullable
   private StockStatusChangeLine findLine(
-      Long variantId,
-      Long warehouseId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus) {

@@ -46,7 +46,7 @@ public class AppDomainService {
    * @throws DomainException 应用不存在时抛出
    */
   public List<App> modify(
-      Long id,
+      long id,
       @Nullable Long parentId,
       @Nullable String name,
       @Nullable String path,
@@ -95,7 +95,7 @@ public class AppDomainService {
    * @param id 应用Id
    * @return 需要持久化的聚合列表（已标记删除）
    */
-  public List<App> removeWithChildren(Long id) {
+  public List<App> removeWithChildren(long id) {
     List<App> list = appRepository.getWithChildren(id);
     for (App item : list) {
       item.delete();

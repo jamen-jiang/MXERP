@@ -38,7 +38,7 @@ public class User_Role extends BaseDeleteEntity {
    *
    * @param roleId 角色Id
    */
-  public User_Role(Long roleId) {
+  public User_Role(long roleId) {
     this.roleId = roleId;
   }
 }

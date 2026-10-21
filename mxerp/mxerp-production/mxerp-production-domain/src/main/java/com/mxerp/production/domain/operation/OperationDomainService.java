@@ -50,7 +50,7 @@ public class OperationDomainService {
   public Operation importGenerate(
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -103,7 +103,7 @@ public class OperationDomainService {
       long id,
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -141,7 +141,7 @@ public class OperationDomainService {
       Operation model,
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,
@@ -167,7 +167,7 @@ public class OperationDomainService {
    * @param workCenterId 工作中心Id
    * @throws DomainException 未指定工作中心、或工作中心不存在时抛出
    */
-  private void requireWorkCenter(Long workCenterId) {
+  private void requireWorkCenter(long workCenterId) {
     if (workCenterId <= 0) {
       throw new DomainException("工序必须指定工作中心");
     }

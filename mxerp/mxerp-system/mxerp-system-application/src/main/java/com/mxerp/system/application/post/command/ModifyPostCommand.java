@@ -27,10 +27,10 @@ public class ModifyPostCommand extends AddPostCommand {
    * @param roleIds 角色Id列表（可空）
    */
   public ModifyPostCommand(
-      Long id,
+      long id,
       String name,
-      Long departmentId,
-      Long rankId,
+      long departmentId,
+      long rankId,
       @Nullable String remark,
       @Nullable List<Long> roleIds) {
     super(name, departmentId, rankId, remark, roleIds);

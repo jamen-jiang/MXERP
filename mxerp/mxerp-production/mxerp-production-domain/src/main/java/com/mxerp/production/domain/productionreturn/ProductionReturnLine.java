@@ -99,12 +99,12 @@ public class ProductionReturnLine extends BaseDeleteEntity {
    * @throws DomainException 用料行、SPU、SKU、单位、仓库非法或申请数量不为正时抛出
    */
   ProductionReturnLine(
-      Long workOrderMaterialId,
-      Long materialId,
-      Long variantId,
+      long workOrderMaterialId,
+      long materialId,
+      long variantId,
       BigDecimal appliedQuantity,
-      Long unitId,
-      Long warehouseId,
+      long unitId,
+      long warehouseId,
       @Nullable Long locationId,
       @Nullable String remark) {
     if (workOrderMaterialId <= 0) {

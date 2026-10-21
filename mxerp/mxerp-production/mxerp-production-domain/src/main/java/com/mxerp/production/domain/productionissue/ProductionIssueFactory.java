@@ -32,7 +32,7 @@ public class ProductionIssueFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public ProductionIssue create(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
       @Nullable Long operatorId,
       @Nullable String remark,

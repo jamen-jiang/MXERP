@@ -35,7 +35,7 @@ public abstract class BaseCreateEntity extends BaseDeleteEntity implements Creat
    * @param userName 创建人名称
    * @param dateTime 创建时间（可空，为空时取当前时间）
    */
-  public void create(Long userId, String userName, @Nullable LocalDateTime dateTime) {
+  public void create(long userId, String userName, @Nullable LocalDateTime dateTime) {
     this.createdBy = userId;
     this.createdByName = userName;
     this.createdOn = dateTime != null ? dateTime : LocalDateTime.now();
@@ -48,7 +48,7 @@ public abstract class BaseCreateEntity extends BaseDeleteEntity implements Creat
    * @param userId 创建人 ID
    * @param userName 创建人名称
    */
-  public void create(Long userId, String userName) {
+  public void create(long userId, String userName) {
     create(userId, userName, null);
   }
 }

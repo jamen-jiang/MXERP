@@ -35,7 +35,7 @@ public abstract class UpdateAggregateRoot extends CreateAggregateRoot implements
   private LocalDateTime updatedOn;
 
   @Override
-  public void update(Long userId, String userName) {
+  public void update(long userId, String userName) {
     this.updatedBy = userId;
     this.updatedByName = userName;
     this.updatedOn = LocalDateTime.now();

@@ -36,7 +36,7 @@ public class OperationFactory {
   public Operation create(
       String code,
       String name,
-      Long workCenterId,
+      long workCenterId,
       boolean isCorrective,
       boolean qualityInspectionRequired,
       @Nullable String description,

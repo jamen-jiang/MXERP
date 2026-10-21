@@ -38,7 +38,7 @@ public class User_Post extends BaseDeleteEntity {
    *
    * @param postId 岗位Id
    */
-  public User_Post(Long postId) {
+  public User_Post(long postId) {
     this.postId = postId;
   }
 }

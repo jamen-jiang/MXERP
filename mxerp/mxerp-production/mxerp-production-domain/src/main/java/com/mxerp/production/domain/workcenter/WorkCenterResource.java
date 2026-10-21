@@ -91,7 +91,7 @@ public class WorkCenterResource extends BaseDeleteEntity {
   WorkCenterResource(
       String code,
       String name,
-      Long workCenterResourceCategoryId,
+      long workCenterResourceCategoryId,
       int quantity,
       BigDecimal efficiency,
       boolean disabled,
@@ -113,7 +113,7 @@ public class WorkCenterResource extends BaseDeleteEntity {
   void modify(
       String code,
       String name,
-      Long workCenterResourceCategoryId,
+      long workCenterResourceCategoryId,
       int quantity,
       BigDecimal efficiency,
       boolean disabled,
@@ -140,7 +140,7 @@ public class WorkCenterResource extends BaseDeleteEntity {
   private void apply(
       String code,
       String name,
-      Long workCenterResourceCategoryId,
+      long workCenterResourceCategoryId,
       int quantity,
       BigDecimal efficiency,
       boolean disabled,

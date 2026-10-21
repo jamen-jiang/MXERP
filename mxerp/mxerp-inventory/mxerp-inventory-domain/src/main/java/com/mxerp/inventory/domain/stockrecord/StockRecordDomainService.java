@@ -65,7 +65,7 @@ public class StockRecordDomainService {
    */
   public StockRecord create(
       String sourceType,
-      Long sourceId,
+      long sourceId,
       String sourceNumber,
       String direction,
       @Nullable Long operatorId,
@@ -198,7 +198,7 @@ public class StockRecordDomainService {
    * @throws DomainException 仓库不存在，或库位填法与仓库的开关不符时抛出
    */
   private void validateLocationUsage(
-      Long warehouseId, @Nullable Long locationId, Map<Long, Warehouse> warehouses) {
+      long warehouseId, @Nullable Long locationId, Map<Long, Warehouse> warehouses) {
     Warehouse warehouse =
         warehouses.computeIfAbsent(
             warehouseId,
@@ -275,8 +275,8 @@ public class StockRecordDomainService {
    */
   private boolean isSamePosition(
       StockRecordLine line,
-      Long variantId,
-      Long warehouseId,
+      long variantId,
+      long warehouseId,
       @Nullable Long locationId,
       String stockStatus) {
     return Objects.equals(line.getVariantId(), variantId)

@@ -25,7 +25,7 @@ public class ModifyRankCommand extends AddRankCommand {
    * @param remark 备注（可空）
    */
   public ModifyRankCommand(
-      Long id,
+      long id,
       @Nullable Long parentId,
       String name,
       @Nullable Integer sort,

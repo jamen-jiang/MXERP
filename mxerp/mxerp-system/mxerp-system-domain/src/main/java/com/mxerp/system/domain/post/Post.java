@@ -78,7 +78,7 @@ public class Post extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    * @param roleIds 角色Id列表（可空）
    */
-  Post(String name, Long departmentId, Long rankId, @Nullable String remark, List<Long> roleIds) {
+  Post(String name, long departmentId, long rankId, @Nullable String remark, List<Long> roleIds) {
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("岗位名称不能为空");
@@ -100,7 +100,7 @@ public class Post extends UpdateAggregateRoot {
    * @param roleIds 角色Id列表（可空）
    */
   void modify(
-      String name, Long departmentId, Long rankId, @Nullable String remark, List<Long> roleIds) {
+      String name, long departmentId, long rankId, @Nullable String remark, List<Long> roleIds) {
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("岗位名称不能为空");
@@ -117,7 +117,7 @@ public class Post extends UpdateAggregateRoot {
    *
    * @param roleId 角色Id
    */
-  void deleteRole(Long roleId) {
+  void deleteRole(long roleId) {
     Post_Role item =
         postRoles.stream()
             .filter(x -> Objects.equals(x.getId(), roleId) && !x.getIsDeleted())

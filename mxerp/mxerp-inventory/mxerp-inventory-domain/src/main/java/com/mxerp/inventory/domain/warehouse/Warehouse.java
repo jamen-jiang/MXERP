@@ -82,15 +82,15 @@ public class Warehouse extends UpdateAggregateRoot {
   @Column(name = "LocationManaged", nullable = false)
   private Boolean locationManaged;
 
-  /** 是否允许负库存出库 */
+/** 是否允许负库存出库 */
   @Column(name = "AllowNegativeStock", nullable = false)
   private Boolean allowNegativeStock;
 
-  /** 是否停用 */
+/** 是否停用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
 
-  /** 备注（可空） */
+/** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
   @Nullable
@@ -201,7 +201,7 @@ public class Warehouse extends UpdateAggregateRoot {
    * @throws DomainException 库位不存在、或代码被本仓其它库位占用时抛出
    */
   public void modifyLocation(
-      Long locationId, String code, String name, boolean disabled, @Nullable String remark) {
+      long locationId, String code, String name, boolean disabled, @Nullable String remark) {
     WarehouseLocation target = findLocation(locationId);
     if (target == null) {
       throw new DomainException("库位不存在!");
@@ -220,7 +220,7 @@ public class Warehouse extends UpdateAggregateRoot {
    *
    * @param locationId 库位Id
    */
-  public void deleteLocation(Long locationId) {
+  public void deleteLocation(long locationId) {
     WarehouseLocation target = findLocation(locationId);
     if (target == null) {
       return;
@@ -287,7 +287,7 @@ public class Warehouse extends UpdateAggregateRoot {
    * @return 匹配到的库位，找不到返回 {@code null}
    */
   @Nullable
-  private WarehouseLocation findLocation(Long locationId) {
+  private WarehouseLocation findLocation(long locationId) {
     return locations.stream()
         .filter(l -> Objects.equals(l.getId(), locationId) && !l.getIsDeleted())
         .findFirst()

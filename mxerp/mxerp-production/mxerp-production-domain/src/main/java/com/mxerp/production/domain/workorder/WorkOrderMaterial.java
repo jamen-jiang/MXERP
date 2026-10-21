@@ -136,11 +136,11 @@ public class WorkOrderMaterial extends BaseDeleteEntity {
    */
   WorkOrderMaterial(
       @Nullable Long bomLineId,
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal requiredQuantity,
       @Nullable BigDecimal unitQuantity,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       boolean isKeyPart,

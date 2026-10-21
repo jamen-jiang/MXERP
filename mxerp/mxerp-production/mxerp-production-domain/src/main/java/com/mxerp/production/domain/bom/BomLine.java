@@ -120,12 +120,12 @@ public class BomLine extends BaseDeleteEntity {
    * @param remark 备注（可空）
    */
   BomLine(
-      Integer sequence,
-      Long materialId,
-      Long variantId,
+      int sequence,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       @Nullable Long warehouseId,
@@ -161,12 +161,12 @@ public class BomLine extends BaseDeleteEntity {
    * @param remark 备注（可空）
    */
   void modify(
-      Integer sequence,
-      Long materialId,
-      Long variantId,
+      int sequence,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       @Nullable Long warehouseId,
@@ -257,12 +257,12 @@ public class BomLine extends BaseDeleteEntity {
    * @throws DomainException 行号、SPU、子件、用量、单位、发料方式、发料触发非法时抛出
    */
   private void apply(
-      Integer sequence,
-      Long materialId,
-      Long variantId,
+      int sequence,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       @Nullable Long warehouseId,

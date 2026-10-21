@@ -32,7 +32,7 @@ public class ModifyCompanyCommand extends AddCompanyCommand {
    * @param remark 备注（可空）
    */
   public ModifyCompanyCommand(
-      Long id,
+      long id,
       String code,
       String name,
       @Nullable String telephone,

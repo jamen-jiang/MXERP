@@ -237,7 +237,7 @@ public class User extends UpdateAggregateRoot {
    *
    * @param userPostId 用户岗位关联Id
    */
-  private void deletePost(Long userPostId) {
+  private void deletePost(long userPostId) {
     userPosts.stream()
         .filter(x -> Objects.equals(x.getId(), userPostId))
         .findFirst()
@@ -249,7 +249,7 @@ public class User extends UpdateAggregateRoot {
    *
    * @param userRoleId 用户角色关联Id
    */
-  private void deleteRole(Long userRoleId) {
+  private void deleteRole(long userRoleId) {
     userRoles.stream()
         .filter(x -> Objects.equals(x.getId(), userRoleId))
         .findFirst()

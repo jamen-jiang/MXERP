@@ -25,7 +25,7 @@ public class GetPostByIdQuery implements Query {
    *
    * @param id 岗位Id
    */
-  public GetPostByIdQuery(Long id) {
+  public GetPostByIdQuery(long id) {
     this.id = id;
   }
 }

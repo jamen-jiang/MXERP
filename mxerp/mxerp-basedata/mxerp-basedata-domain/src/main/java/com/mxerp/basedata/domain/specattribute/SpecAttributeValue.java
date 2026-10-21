@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.specificationattribute;
+package com.mxerp.basedata.domain.specattribute;
 
 import com.mxerp.shared.domain.entity.BaseDeleteEntity;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -22,20 +22,20 @@ import org.jspecify.annotations.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-    name = "SpecificationAttributeValue",
+    name = "SpecAttributeValue",
     indexes = {
       @Index(
-          name = "IX_SpecificationAttributeValue_SpecificationAttributeId",
-          columnList = "SpecificationAttributeId"),
-      @Index(name = "IX_SpecificationAttributeValue_Value", columnList = "Value"),
-      @Index(name = "IX_SpecificationAttributeValue_Sort", columnList = "Sort")
-      // 注意：SpecificationAttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
+          name = "IX_SpecAttributeValue_SpecAttributeId",
+          columnList = "SpecAttributeId"),
+      @Index(name = "IX_SpecAttributeValue_Value", columnList = "Value"),
+      @Index(name = "IX_SpecAttributeValue_Sort", columnList = "Sort")
+      // 注意：SpecAttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
-public class SpecificationAttributeValue extends BaseDeleteEntity {
+public class SpecAttributeValue extends BaseDeleteEntity {
 
   /** 规格属性Id */
-  @Column(name = "SpecificationAttributeId", nullable = false)
-  private Long specificationAttributeId;
+  @Column(name = "SpecAttributeId", nullable = false)
+  private Long specAttributeId;
 
   /** 规格属性值（如：-25,-50） */
   @Nationalized
@@ -51,7 +51,7 @@ public class SpecificationAttributeValue extends BaseDeleteEntity {
   @Column(name = "IsDefault", nullable = false)
   private Boolean isDefault;
 
-  /** 排序（可空） */
+/** 排序（可空） */
   @Column(name = "Sort")
   @Nullable
   private Integer sort;
@@ -64,8 +64,8 @@ public class SpecificationAttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  SpecificationAttributeValue(
-      String value, String label, Boolean isDefault, @Nullable Integer sort) {
+  SpecAttributeValue(
+      String value, String label, boolean isDefault, @Nullable Integer sort) {
     String trimmedValue = StringUtils.trimToNull(value);
     if (trimmedValue == null) {
       throw new DomainException("规格属性值不能为空");
@@ -82,7 +82,7 @@ public class SpecificationAttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  void modify(String label, Boolean isDefault, @Nullable Integer sort) {
+  void modify(String label, boolean isDefault, @Nullable Integer sort) {
     apply(label, isDefault, sort);
   }
 
@@ -97,7 +97,7 @@ public class SpecificationAttributeValue extends BaseDeleteEntity {
    * @param isDefault 是否默认
    * @param sort 排序（可空）
    */
-  private void apply(String label, Boolean isDefault, @Nullable Integer sort) {
+  private void apply(String label, boolean isDefault, @Nullable Integer sort) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
       throw new DomainException("规格属性值标签不能为空");

@@ -22,7 +22,7 @@ public abstract class BaseDeleteEntity extends BaseEntity implements DeleteEntit
   @Column(name = "IsDeleted", nullable = false)
   private Boolean isDeleted = false;
 
-  /** 标记为已删除（逻辑删除） */
+/** 标记为已删除（逻辑删除） */
   @Override
   public void delete() {
     this.isDeleted = true;

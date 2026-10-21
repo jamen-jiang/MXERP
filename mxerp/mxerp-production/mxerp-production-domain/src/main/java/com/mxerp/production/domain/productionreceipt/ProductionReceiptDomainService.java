@@ -60,7 +60,7 @@ public class ProductionReceiptDomainService {
    * @throws DomainException 工单不存在、没有可入库数量、或入库仓库定不下来时抛出
    */
   public ProductionReceipt create(
-      Long workOrderId,
+      long workOrderId,
       @Nullable BigDecimal quantity,
       @Nullable Long warehouseId,
       @Nullable Long locationId,
@@ -102,7 +102,7 @@ public class ProductionReceiptDomainService {
    */
   public ProductionReceipt modify(
       long id,
-      Long workOrderId,
+      long workOrderId,
       BigDecimal quantity,
       @Nullable Long warehouseId,
       @Nullable Long locationId,
@@ -220,7 +220,7 @@ public class ProductionReceiptDomainService {
    * @return 工单聚合
    * @throws DomainException 工单不存在时抛出
    */
-  private WorkOrder requireWorkOrder(Long workOrderId) {
+  private WorkOrder requireWorkOrder(long workOrderId) {
     WorkOrder workOrder = workOrderRepository.get(workOrderId);
     if (workOrder == null) {
       throw new DomainException("工单" + workOrderId + "不存在!");

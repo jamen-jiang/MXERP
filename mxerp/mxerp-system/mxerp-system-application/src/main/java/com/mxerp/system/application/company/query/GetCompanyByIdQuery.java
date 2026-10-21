@@ -25,7 +25,7 @@ public class GetCompanyByIdQuery implements Query {
    *
    * @param id 公司Id
    */
-  public GetCompanyByIdQuery(Long id) {
+  public GetCompanyByIdQuery(long id) {
     this.id = id;
   }
 }

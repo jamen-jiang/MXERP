@@ -125,12 +125,12 @@ public class ProductionReport extends OrderAggregateRoot {
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
   ProductionReport(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long workOrderOperationId,
-      Long operationId,
+      long workOrderOperationId,
+      long operationId,
       String operationName,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,
@@ -220,12 +220,12 @@ public class ProductionReport extends OrderAggregateRoot {
    * @throws DomainException 工单/工序/工作中心为空、工时或数量为负、良品与报废同时为0时抛出
    */
   private void apply(
-      Long workOrderId,
+      long workOrderId,
       String workOrderNumber,
-      Long workOrderOperationId,
-      Long operationId,
+      long workOrderOperationId,
+      long operationId,
       String operationName,
-      Long workCenterId,
+      long workCenterId,
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,

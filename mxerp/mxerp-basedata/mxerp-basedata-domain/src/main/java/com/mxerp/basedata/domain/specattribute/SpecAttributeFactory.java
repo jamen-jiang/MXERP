@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.specificationattribute;
+package com.mxerp.basedata.domain.specattribute;
 
 import com.mxerp.shared.domain.exception.DomainException;
 import org.jspecify.annotations.NullMarked;
@@ -6,19 +6,19 @@ import org.jspecify.annotations.Nullable;
 
 /** 规格属性工厂，负责创建规格属性 */
 @NullMarked
-public class SpecificationAttributeFactory {
+public class SpecAttributeFactory {
 
   /** 规格属性仓储 */
-  private final SpecificationAttributeRepository specificationAttributeRepository;
+  private final SpecAttributeRepository specAttributeRepository;
 
   /**
    * 构造器注入
    *
-   * @param specificationAttributeRepository 规格属性仓储
+   * @param specAttributeRepository 规格属性仓储
    */
-  public SpecificationAttributeFactory(
-      SpecificationAttributeRepository specificationAttributeRepository) {
-    this.specificationAttributeRepository = specificationAttributeRepository;
+  public SpecAttributeFactory(
+      SpecAttributeRepository specAttributeRepository) {
+    this.specAttributeRepository = specAttributeRepository;
   }
 
   /**
@@ -35,8 +35,8 @@ public class SpecificationAttributeFactory {
    * @return 规格属性聚合
    * @throws DomainException 同一分类下规格属性代码已存在时抛出
    */
-  public SpecificationAttribute create(
-      Long categoryId,
+  public SpecAttribute create(
+      long categoryId,
       String code,
       String label,
       String inputType,
@@ -45,10 +45,10 @@ public class SpecificationAttributeFactory {
       @Nullable Integer sort,
       @Nullable String remark) {
     // 校验同一分类下规格属性代码唯一
-    if (specificationAttributeRepository.isExistByCategoryIdAndCodeExcludeId(categoryId, code)) {
+    if (specAttributeRepository.isExistByCategoryIdAndCodeExcludeId(categoryId, code)) {
       throw new DomainException("分类" + categoryId + "下规格属性代码" + code + "已存在!");
     }
-    return new SpecificationAttribute(
+    return new SpecAttribute(
         categoryId, code, label, inputType, dataType, isFilter, sort, remark);
   }
 }

@@ -53,7 +53,7 @@ public abstract class LogAggregateRoot extends DeleteAggregateRoot {
   @Column(name = "IsSuccess", nullable = false)
   private Boolean isSuccess;
 
-  /** 错误信息（可空） */
+/** 错误信息（可空） */
   @Nationalized
   @Column(name = "ErrorMessage")
   @Nullable
@@ -87,10 +87,10 @@ public abstract class LogAggregateRoot extends DeleteAggregateRoot {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       @Nullable String request,
       @Nullable String response,
-      Boolean isSuccess,
+      boolean isSuccess,
       @Nullable String errorMessage,
       @Nullable String exception) {
     // userId 为 0 时视为 null

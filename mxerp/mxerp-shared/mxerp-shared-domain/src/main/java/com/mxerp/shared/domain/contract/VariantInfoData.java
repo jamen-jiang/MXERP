@@ -20,7 +20,7 @@ public class VariantInfoData {
   private final Long warehouseId;
 
   /** 数量 */
-  private final Double qty;
+  private final double qty;
 
   /**
    * 构造器（qty 可空，null 时视为 0）
@@ -29,7 +29,7 @@ public class VariantInfoData {
    * @param warehouseId 仓库Id
    * @param qty 数量（可空）
    */
-  public VariantInfoData(Long variantId, Long warehouseId, @Nullable Double qty) {
+  public VariantInfoData(long variantId, long warehouseId, @Nullable Double qty) {
     this.variantId = variantId;
     this.warehouseId = warehouseId;
     this.qty = qty == null ? 0.0 : qty;

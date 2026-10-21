@@ -38,11 +38,11 @@ public class PurchasePriceFactory {
    * @throws DomainException 同键同生效时间已有卡时抛出
    */
   public PurchasePrice create(
-      Long supplierId,
-      Long materialId,
+      long supplierId,
+      long materialId,
       @Nullable Long variantId,
       BigDecimal price,
-      Long currencyId,
+      long currencyId,
       @Nullable BigDecimal moq,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,

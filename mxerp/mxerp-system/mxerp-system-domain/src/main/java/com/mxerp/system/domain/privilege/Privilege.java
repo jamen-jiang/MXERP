@@ -61,7 +61,7 @@ public class Privilege extends DeleteAggregateRoot {
    * @param access 权限通道
    * @param accessValue 权限通道值
    */
-  public Privilege(MasterEnum master, Long masterValue, AccessEnum access, Long accessValue) {
+  public Privilege(MasterEnum master, long masterValue, AccessEnum access, long accessValue) {
     this.master = master.getCode();
     this.masterValue = masterValue;
     this.access = access.getCode();
@@ -78,7 +78,7 @@ public class Privilege extends DeleteAggregateRoot {
    * @param accessValue 权限通道值
    * @throws DomainException 权限对象或权限通道不在枚举中时抛出
    */
-  public Privilege(String master, Long masterValue, String access, Long accessValue) {
+  public Privilege(String master, long masterValue, String access, long accessValue) {
     this.master = validateMaster(master);
     this.masterValue = masterValue;
     this.access = validateAccess(access);

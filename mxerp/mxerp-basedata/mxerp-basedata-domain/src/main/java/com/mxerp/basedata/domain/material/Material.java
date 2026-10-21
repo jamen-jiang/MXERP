@@ -100,7 +100,7 @@ public class Material extends UpdateAggregateRoot {
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
 
-  /** 备注（可空） */
+/** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
   @Nullable
@@ -202,15 +202,15 @@ public class Material extends UpdateAggregateRoot {
    * @param attachmentIds 附件Id集合（可空）
    */
   Material(
-      Long categoryId,
+      long categoryId,
       String procurementType,
       @Nullable Long brandId,
       String code,
       String name,
       @Nullable String description,
-      Long unitId,
+      long unitId,
       @Nullable Long taxRateId,
-      Boolean disabled,
+      boolean disabled,
       @Nullable String remark,
       @Nullable List<Long> attachmentIds) {
     apply(
@@ -243,15 +243,15 @@ public class Material extends UpdateAggregateRoot {
    * @param attachmentIds 附件Id集合（可空）
    */
   void modify(
-      Long categoryId,
+      long categoryId,
       String procurementType,
       @Nullable Long brandId,
       String code,
       String name,
       @Nullable String description,
-      Long unitId,
+      long unitId,
       @Nullable Long taxRateId,
-      Boolean disabled,
+      boolean disabled,
       @Nullable String remark,
       @Nullable List<Long> attachmentIds) {
     apply(
@@ -294,17 +294,17 @@ public class Material extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   private void apply(
-      Long categoryId,
+      long categoryId,
       String procurementType,
       @Nullable Long brandId,
       String code,
       String name,
       @Nullable String description,
-      Long unitId,
+      long unitId,
       @Nullable Long taxRateId,
-      Boolean disabled,
+      boolean disabled,
       @Nullable String remark) {
-    if (categoryId == null) {
+    if (categoryId <= 0) {
       throw new DomainException("物料分类不能为空");
     }
     validateProcurementType(procurementType);

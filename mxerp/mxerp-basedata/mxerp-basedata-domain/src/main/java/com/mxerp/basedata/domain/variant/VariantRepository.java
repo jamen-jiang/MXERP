@@ -18,12 +18,12 @@ public interface VariantRepository extends Repository<Variant> {
   List<Variant> getListByIds(Collection<Long> ids);
 
   /**
-   * 按规格属性标识码查询
+   * 按规格编码查询
    *
-   * @param attributeSignature 规格属性标识码
+   * @param code 规格编码（物料代码 + 规格属性组合）
    * @return SKU（可空），不存在返回 null
    */
-  @Nullable Variant getByAttributeSignature(String attributeSignature);
+  @Nullable Variant getByCode(String code);
 
   /**
    * 按 MaterialId 查询列表
@@ -34,12 +34,12 @@ public interface VariantRepository extends Repository<Variant> {
   List<Variant> getListByMaterialId(long materialId);
 
   /**
-   * 判断规格属性标识码是否存在
+   * 判断规格编码是否存在
    *
-   * @param attributeSignature 规格属性标识码
+   * @param code 规格编码
    * @return true：存在
    */
-  boolean isExistByAttributeSignature(String attributeSignature);
+  boolean isExistByCode(String code);
 
   /**
    * 判断 OPC 是否存在（排除指定 Id，用于修改时排除自身）

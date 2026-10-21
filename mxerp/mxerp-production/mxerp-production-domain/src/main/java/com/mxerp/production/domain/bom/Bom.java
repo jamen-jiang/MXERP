@@ -121,8 +121,8 @@ public class Bom extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   Bom(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
@@ -143,8 +143,8 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
@@ -170,12 +170,12 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废、行号或子件重复时抛出
    */
   public void addLine(
-      Integer sequence,
-      Long materialId,
-      Long variantId,
+      int sequence,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       @Nullable Long warehouseId,
@@ -221,13 +221,13 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException 已发布或已作废、行不存在、行号或子件重复时抛出
    */
   public void modifyLine(
-      Long bomLineId,
-      Integer sequence,
-      Long materialId,
-      Long variantId,
+      long bomLineId,
+      int sequence,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
       BigDecimal lossRate,
-      Long unitId,
+      long unitId,
       String issueMode,
       String issueTrigger,
       @Nullable Long warehouseId,
@@ -264,7 +264,7 @@ public class Bom extends UpdateAggregateRoot {
    * @param bomLineId BOM 行Id
    * @throws DomainException 已发布或已作废时抛出
    */
-  public void deleteLine(Long bomLineId) {
+  public void deleteLine(long bomLineId) {
     checkDraft();
     BomLine target = findLine(bomLineId);
     if (target == null) {
@@ -280,7 +280,7 @@ public class Bom extends UpdateAggregateRoot {
    * @return 匹配到的用料行，找不到返回 {@code null}
    */
   @Nullable
-  private BomLine findLine(Long bomLineId) {
+  private BomLine findLine(long bomLineId) {
     return bomLines.stream()
         .filter(i -> Objects.equals(i.getId(), bomLineId) && !i.getIsDeleted())
         .findFirst()
@@ -423,8 +423,8 @@ public class Bom extends UpdateAggregateRoot {
    * @throws DomainException SPU 或 SKU 为空、版本为空、生效区间倒挂时抛出
    */
   private void apply(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       String version,
       @Nullable LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
@@ -460,7 +460,7 @@ public class Bom extends UpdateAggregateRoot {
    * @param excludeId 需要排除的 BOM 行Id（新增时传 {@code null}）
    * @return true：已被其它未删除的行占用
    */
-  private boolean isExistSequence(Integer sequence, @Nullable Long excludeId) {
+  private boolean isExistSequence(int sequence, @Nullable Long excludeId) {
     return bomLines.stream()
         .filter(i -> !i.getIsDeleted())
         .filter(i -> !Objects.equals(i.getId(), excludeId))
@@ -476,7 +476,7 @@ public class Bom extends UpdateAggregateRoot {
    * @param excludeId 需要排除的 BOM 行Id（新增时传 {@code null}）
    * @return true：已存在
    */
-  private boolean isExistComponent(Long variantId, @Nullable Long excludeId) {
+  private boolean isExistComponent(long variantId, @Nullable Long excludeId) {
     return bomLines.stream()
         .filter(i -> !i.getIsDeleted())
         .filter(i -> !Objects.equals(i.getId(), excludeId))

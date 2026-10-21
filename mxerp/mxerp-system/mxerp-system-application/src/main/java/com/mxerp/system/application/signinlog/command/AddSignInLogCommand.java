@@ -129,7 +129,7 @@ public class AddSignInLogCommand extends Command implements NoLogCommand {
       @Nullable String userName,
       LocalDateTime startedOn,
       LocalDateTime endedOn,
-      Long elapsedMilliseconds,
+      long elapsedMilliseconds,
       @Nullable String token,
       @Nullable String refreshToken,
       @Nullable String oldRefreshToken,

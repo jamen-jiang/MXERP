@@ -80,10 +80,10 @@ public class MetaVO extends ValueObject {
       String title,
       @Nullable String i18nKey,
       @Nullable String icon,
-      Boolean isKeepAlive,
+      boolean isKeepAlive,
       @Nullable Integer fixedIndexInTab,
-      Boolean isMultiTab,
-      Boolean isHide,
+      boolean isMultiTab,
+      boolean isHide,
       @Nullable Integer sort) {
     this.title = StringUtils.trimToNull(title);
     this.i18nKey = StringUtils.trimToNull(i18nKey);
