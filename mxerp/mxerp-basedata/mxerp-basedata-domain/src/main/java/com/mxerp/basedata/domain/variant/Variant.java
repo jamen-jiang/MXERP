@@ -33,7 +33,7 @@ import org.jspecify.annotations.Nullable;
  * <p>这里只放「这个规格是什么」：OPC、规格属性值。采购价、币种、起订量不在这里，见 {@code
  * com.mxerp.basedata.domain.purchaseprice.PurchasePrice}——同一个规格可以被多个供应商报价， 钉在规格上只能留下最新一个值。
  *
- * <p>值分两处存，是因为它们的作用根本不同：{@link VariantAttributeValue} 是这一行的身份 （哪一组值构成一个规格），一行一个取值，改它就等于换一条规格，所以
+ * <p>值分两处存，是因为它们的作用根本不同：{@link VariantSpecAttributeValue} 是这一行的身份 （哪一组值构成一个规格），一行一个取值，改它就等于换一条规格，所以
  * {@code modify} 不碰它， 唯一性由这些行拼成 {@code Code}（物料代码 + 属性组合）来保证；描述性取值另存通用赋值表 {@code
  * AttributeAssignment}（{@code EntityType = 'Variant'}，定义在 {@code Attribute}，相当于 SAP 的 {@code CABN}
  * 与 {@code AUSP}），改它不影响身份。 Odoo 也是这个分法：变体组合由 {@code material.template.attribute.line} 展开成 {@code
@@ -88,7 +88,7 @@ public class Variant extends UpdateAggregateRoot {
       orphanRemoval = true)
   @JoinColumn(name = "VariantId")
   @SQLRestriction("IsDeleted = 0")
-  private List<VariantAttributeValue> specAttributes = new ArrayList<>();
+  private List<VariantSpecAttributeValue> specAttributes = new ArrayList<>();
 
   // 属性值挂载先停用：属性那套（Attribute / AttributeAssignment）已挪到平台层
   // com.mxerp.system.domain.attribute，basedata-domain 不依赖 system-domain，所以这里整段注释保留；
@@ -112,7 +112,7 @@ public class Variant extends UpdateAggregateRoot {
    *
    * @return 不可变列表
    */
-  public List<VariantAttributeValue> getSpecAttributes() {
+  public List<VariantSpecAttributeValue> getSpecAttributes() {
     return Collections.unmodifiableList(specAttributes);
   }
 
@@ -201,7 +201,7 @@ public class Variant extends UpdateAggregateRoot {
     if (specAttributeRows != null) {
       for (AssignedSpecAttributeData data : specAttributeRows) {
         this.specAttributes.add(
-            new VariantAttributeValue(data.specAttributeId(), data.code(), data.value()));
+            new VariantSpecAttributeValue(data.specAttributeId(), data.code(), data.value()));
       }
     }
 
@@ -279,7 +279,7 @@ public class Variant extends UpdateAggregateRoot {
    */
   private Map<String, List<String>> groupValues() {
     Map<String, List<String>> grouped = new TreeMap<>();
-    for (VariantAttributeValue row : specAttributes) {
+    for (VariantSpecAttributeValue row : specAttributes) {
       if (row.getIsDeleted()) {
         continue;
       }

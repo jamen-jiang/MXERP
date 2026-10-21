@@ -1,10 +1,10 @@
 package com.mxerp.basedata.domain.variant;
 
+import com.mxerp.basedata.domain.material.Material;
+import com.mxerp.basedata.domain.material.MaterialRepository;
 import com.mxerp.basedata.domain.specattribute.AssignedSpecAttributeData;
 import com.mxerp.basedata.domain.specattribute.SpecAttribute;
 import com.mxerp.basedata.domain.specattribute.SpecAttributeRepository;
-import com.mxerp.basedata.domain.material.Material;
-import com.mxerp.basedata.domain.material.MaterialRepository;
 import com.mxerp.shared.domain.exception.DomainException;
 import com.mxerp.shared.domain.util.ValueTextUtils;
 import java.util.ArrayList;
@@ -19,16 +19,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * SKU 领域服务
  *
- * <p>规格属性的归属用「分类」表达：SKU 自己不存物料类型，需要校验规格属性时顺着 {@code materialId} 找到物料，
- * 再取物料的 {@code categoryId}。这样不会出现「SKU 说是成品、物料却是辅料」这种两张皮的数据。
+ * <p>规格属性的归属用「分类」表达：SKU 自己不存物料类型，需要校验规格属性时顺着 {@code materialId} 找到物料， 再取物料的 {@code
+ * categoryId}。这样不会出现「SKU 说是成品、物料却是辅料」这种两张皮的数据。
  *
- * <p>分类下配的规格属性就是生成规格用的维度：每条规格属性的「规格属性值」做笛卡尔积，一个组合落一条 SKU，
- * 组合摊成 {@code VariantAttributeValue} 行存在这条 SKU 上，再由这些行拼出规格编码；生成完之后不再有
- * 「哪个规格属性算规格」这个开关——是规格就由组合决定。
+ * <p>分类下配的规格属性就是生成规格用的维度：每条规格属性的「规格属性值」做笛卡尔积，一个组合落一条 SKU， 组合摊成 {@code VariantAttributeValue} 行存在这条
+ * SKU 上，再由这些行拼出规格编码；生成完之后不再有 「哪个规格属性算规格」这个开关——是规格就由组合决定。
  *
  * <p>描述性取值本来是另一套（平台层的 {@code Attribute} 定义 + {@code AttributeAssignment} 赋值行），
- * 这套已挪出本模块，规格聚合上的属性挂载随之停用：公开方法的 {@code attributes} 入参先留着但不生效，
- * 恢复挂载时把注释里的 {@code resolveAttributes} 与 {@code syncAttributes} 接回来即可。
+ * 这套已挪出本模块，规格聚合上的属性挂载随之停用：公开方法的 {@code attributes} 入参先留着但不生效， 恢复挂载时把注释里的 {@code resolveAttributes}
+ * 与 {@code syncAttributes} 接回来即可。
  */
 @NullMarked
 public class VariantDomainService {
@@ -135,8 +134,7 @@ public class VariantDomainService {
    * @return SKU 聚合
    * @throws DomainException SKU 不存在 / 物料不存在时抛出
    */
-  public Variant modify(
-      long id, @Nullable String opc, @Nullable Map<String, Object> attributes) {
+  public Variant modify(long id, @Nullable String opc, @Nullable Map<String, Object> attributes) {
     Variant model = variantRepository.get(id);
     if (model == null) {
       throw new DomainException("物料Variant不存在!");
@@ -148,8 +146,7 @@ public class VariantDomainService {
   /**
    * 从 Material 生成 SKU（按分类下的规格属性做笛卡尔积）
    *
-   * <p>每条规格属性的候选值就是它在规格属性上维护好的「规格属性值」；分类下没有规格属性时只生成一条没有规格属性值的
-   * SKU——没有规格维度的物料天然落在这一支，不需要为它写分支。
+   * <p>每条规格属性的候选值就是它在规格属性上维护好的「规格属性值」；分类下没有规格属性时只生成一条没有规格属性值的 SKU——没有规格维度的物料天然落在这一支，不需要为它写分支。
    *
    * <p>规格属性值增删后重新生成，落在候选值之外的旧 SKU 标记删除，保证 SKU 集合始终等于当前配置的展开。
    *
@@ -261,11 +258,10 @@ public class VariantDomainService {
   /**
    * 解析规格属性值入参：按代码在物料所属分类下找定义，摊平成「一个取值一行」的行数据
    *
-   * <p>代码对不上就当场报错：编码是按属性代码拼的，留下一个分类下没有的代码，重新生成时这条 SKU
-   * 会被当成「取值已失效」删掉。
+   * <p>代码对不上就当场报错：编码是按属性代码拼的，留下一个分类下没有的代码，重新生成时这条 SKU 会被当成「取值已失效」删掉。
    *
-   * <p>取值存维护好的原样文本，不做按 {@code DataType} 的类型换算——数字规范只在拼编码时做，
-   * 否则 {@code 0755} 这种当编码用的取值会被削成 {@code 755}。
+   * <p>取值存维护好的原样文本，不做按 {@code DataType} 的类型换算——数字规范只在拼编码时做， 否则 {@code 0755} 这种当编码用的取值会被削成 {@code
+   * 755}。
    *
    * @param categoryId 物料分类Id
    * @param specAttributes 规格属性值（可空，一个值可以是标量或数组）
@@ -279,8 +275,7 @@ public class VariantDomainService {
       return List.of();
     }
     Map<String, SpecAttribute> dict = new TreeMap<>();
-    for (SpecAttribute definition :
-        specAttributeRepository.getListByCategoryId(categoryId)) {
+    for (SpecAttribute definition : specAttributeRepository.getListByCategoryId(categoryId)) {
       dict.put(definition.getCode(), definition);
     }
 
@@ -291,9 +286,7 @@ public class VariantDomainService {
         throw new DomainException("规格属性" + entry.getKey() + "不存在!");
       }
       for (String value : entry.getValue()) {
-        rows.add(
-            new AssignedSpecAttributeData(
-                definition.getId(), definition.getCode(), value));
+        rows.add(new AssignedSpecAttributeData(definition.getId(), definition.getCode(), value));
       }
     }
     return rows;
@@ -309,17 +302,14 @@ public class VariantDomainService {
    * @return 规格属性值行数据（同一代码的每个候选值一行）
    * @throws DomainException 规格属性没有维护规格属性值时抛出
    */
-  private List<AssignedSpecAttributeData> candidateRows(
-      SpecAttribute specAttribute) {
+  private List<AssignedSpecAttributeData> candidateRows(SpecAttribute specAttribute) {
     List<AssignedSpecAttributeData> rows =
         specAttribute.getSpecAttributeValues().stream()
             .filter(value -> !value.getIsDeleted())
             .map(
                 value ->
                     new AssignedSpecAttributeData(
-                        specAttribute.getId(),
-                        specAttribute.getCode(),
-                        value.getValue()))
+                        specAttribute.getId(), specAttribute.getCode(), value.getValue()))
             .toList();
     if (rows.isEmpty()) {
       throw new DomainException("规格属性" + specAttribute.getCode() + "没有维护规格属性值，无法生成SKU!");
@@ -356,8 +346,7 @@ public class VariantDomainService {
       Map<String, List<AssignedSpecAttributeData>> candidates) {
     List<List<AssignedSpecAttributeData>> result = new ArrayList<>();
     result.add(List.of());
-    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry :
-        candidates.entrySet()) {
+    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry : candidates.entrySet()) {
       List<List<AssignedSpecAttributeData>> expanded = new ArrayList<>();
       for (List<AssignedSpecAttributeData> combination : result) {
         for (AssignedSpecAttributeData row : entry.getValue()) {
@@ -384,11 +373,10 @@ public class VariantDomainService {
         variant.getSpecAttributes().stream()
             .collect(
                 Collectors.groupingBy(
-                    VariantAttributeValue::getCode,
-                    Collectors.mapping(VariantAttributeValue::getValue, Collectors.toList())));
+                    VariantSpecAttributeValue::getCode,
+                    Collectors.mapping(VariantSpecAttributeValue::getValue, Collectors.toList())));
 
-    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry :
-        candidates.entrySet()) {
+    for (Map.Entry<String, List<AssignedSpecAttributeData>> entry : candidates.entrySet()) {
       List<String> actual = filled.get(entry.getKey());
       if (actual == null || actual.isEmpty()) {
         return true;
