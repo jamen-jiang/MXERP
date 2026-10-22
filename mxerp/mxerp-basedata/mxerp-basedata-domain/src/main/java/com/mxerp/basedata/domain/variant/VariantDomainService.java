@@ -72,22 +72,22 @@ public class VariantDomainService {
    * 创建 SKU（入参为 Id，不解析 Code）
    *
    * @param materialId MaterialId
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    * @param specAttributes 规格属性值——这一条规格由哪组值构成（可空）
    * @param attributes 属性值（可空，属性挂载已停用，暂不生效）
    * @return SKU 聚合
-   * @throws DomainException 物料不存在 / OPC 已存在 / 规格属性不存在 / 规格属性组合重复时抛出
+   * @throws DomainException 物料不存在 / 规格属性不存在 / 规格属性组合重复时抛出
    */
   public Variant create(
       long materialId,
-      @Nullable String opc,
+      @Nullable String barcode,
       @Nullable Map<String, Object> specAttributes,
       @Nullable Map<String, Object> attributes) {
     Material material = getExistMaterial(materialId);
     return buildVariant(
         materialId,
         material.getCode(),
-        opc,
+        barcode,
         resolveSpecAttributes(material.getCategoryId(), specAttributes));
   }
 
@@ -95,15 +95,15 @@ public class VariantDomainService {
    * 导入生成（存在则修改，不存在则新建）
    *
    * @param materialId 物料Id
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    * @param specAttributes 规格属性值（可空）
    * @param attributes 属性值（可空，属性挂载已停用，暂不生效）
    * @return SKU 聚合
-   * @throws DomainException 物料不存在 / 规格属性不存在 / OPC 已存在时抛出
+   * @throws DomainException 物料不存在 / 规格属性不存在时抛出
    */
   public Variant importGenerate(
       long materialId,
-      @Nullable String opc,
+      @Nullable String barcode,
       @Nullable Map<String, Object> specAttributes,
       @Nullable Map<String, Object> attributes) {
     Material material = getExistMaterial(materialId);
@@ -116,9 +116,9 @@ public class VariantDomainService {
     Variant model = variantRepository.getByCode(code);
 
     if (model == null) {
-      model = buildVariant(materialId, material.getCode(), opc, specAttributeRows);
+      model = buildVariant(materialId, material.getCode(), barcode, specAttributeRows);
     } else {
-      modify(model, opc);
+      modify(model, barcode);
     }
     return model;
   }
@@ -129,17 +129,20 @@ public class VariantDomainService {
    * <p>规格属性值不可改：那组行就是这条规格的身份，换一组等于换一条 SKU，应该走删除 + 重新生成。
    *
    * @param id SKU Id
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    * @param attributes 属性值（可空，属性挂载已停用，暂不生效）
    * @return SKU 聚合
    * @throws DomainException SKU 不存在 / 物料不存在时抛出
    */
-  public Variant modify(long id, @Nullable String opc, @Nullable Map<String, Object> attributes) {
+  public Variant modify(
+      long id,
+      @Nullable String barcode,
+      @Nullable Map<String, Object> attributes) {
     Variant model = variantRepository.get(id);
     if (model == null) {
       throw new DomainException("物料Variant不存在!");
     }
-    modify(model, opc);
+    modify(model, barcode);
     return model;
   }
 
@@ -202,30 +205,23 @@ public class VariantDomainService {
   // ==================== 私有：创建 / 修改 ====================
 
   /**
-   * 构建 SKU（含 OPC 唯一性、规格属性组合唯一性校验）
+   * 构建 SKU（含规格属性组合唯一性校验）
    *
    * @param materialId MaterialId
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    * @param specAttributeRows 规格属性值行数据（已校验）
    * @return SKU
-   * @throws DomainException OPC 已存在 / 规格属性组合重复时抛出
+   * @throws DomainException 规格属性组合重复时抛出
    */
   private Variant buildVariant(
       long materialId,
       String materialCode,
-      @Nullable String opc,
+      @Nullable String barcode,
       List<AssignedSpecAttributeData> specAttributeRows) {
-    // 1. OPC 唯一性（可空）
-    if (opc != null
-        && !opc.isBlank()
-        && variantRepository.isExistByMaterialIdAndOpcExcludeId(materialId, opc)) {
-      throw new DomainException("OPC:" + opc + "已存在!");
-    }
+    // 1. 构造规格（规格属性值行在构造时写入）
+    Variant model = new Variant(materialId, materialCode, barcode, specAttributeRows);
 
-    // 2. 构造规格（规格属性值行在构造时写入）
-    Variant model = new Variant(materialId, materialCode, opc, specAttributeRows);
-
-    // 3. 规格编码唯一性
+    // 2. 规格编码唯一性
     if (variantRepository.isExistByCode(model.getCode())) {
       throw new DomainException("相同规格属性组合的规格已存在!");
     }
@@ -237,20 +233,11 @@ public class VariantDomainService {
    * 修改（使用已有聚合，避免重复查询）
    *
    * @param model SKU 聚合
-   * @param opc OPC（可空）
-   * @throws DomainException OPC 已存在 / 物料不存在时抛出
+   * @param barcode 条码（可空）
    */
-  private void modify(Variant model, @Nullable String opc) {
-    // 1. OPC 唯一性（排除自身）
-    if (opc != null
-        && !opc.isBlank()
-        && variantRepository.isExistByMaterialIdAndOpcExcludeId(
-            model.getMaterialId(), opc, model.getId())) {
-      throw new DomainException("OPC:" + opc + "已存在!");
-    }
-
-    // 2. 修改（只动可变字段，规格属性值行保持不变）
-    model.modify(opc);
+  private void modify(Variant model, @Nullable String barcode) {
+    // 修改（只动可变字段，规格属性值行保持不变）
+    model.modify(barcode);
   }
 
   // ==================== 私有：规格属性值解析 ====================

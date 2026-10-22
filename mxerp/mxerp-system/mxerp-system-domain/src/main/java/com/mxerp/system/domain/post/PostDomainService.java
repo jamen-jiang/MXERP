@@ -60,11 +60,11 @@ public class PostDomainService {
         name,
         departmentId,
         parentId,
-        HierarchyUtils.resolveLevel(parentId, parent, "上级岗位"),
+        HierarchyUtils.resolveParentPath(parentId, parent, "上级岗位"),
         disabled,
         remark);
     List<Post> list = new ArrayList<>();
-    setChildrenLevel(model, list);
+    setChildrenParentPath(model, list);
     list.addFirst(model);
     return list;
   }
@@ -126,14 +126,14 @@ public class PostDomainService {
    * @param model 岗位
    * @param list 下级岗位收集列表
    */
-  private void setChildrenLevel(Post model, List<Post> list) {
+  private void setChildrenParentPath(Post model, List<Post> list) {
     if (model.getId() == 0) {
       return;
     }
     List<Post> children = postRepository.getListByParentId(model.getId());
-    HierarchyUtils.resetChildrenLevel(model, children);
+    HierarchyUtils.resetChildrenParentPath(model, children);
     for (Post child : children) {
-      setChildrenLevel(child, list);
+      setChildrenParentPath(child, list);
       list.add(child);
     }
   }

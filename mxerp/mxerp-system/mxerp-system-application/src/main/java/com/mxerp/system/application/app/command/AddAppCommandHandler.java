@@ -56,7 +56,7 @@ public class AddAppCommandHandler {
             command.getMeta().getFixedIndexInTab(),
             command.getMeta().getIsMultiTab(),
             command.getMeta().getIsHide(),
-            command.getMeta().getSort());
+            command.getMeta().getSequence());
     appRepository.save(model);
     return model.getId();
   }

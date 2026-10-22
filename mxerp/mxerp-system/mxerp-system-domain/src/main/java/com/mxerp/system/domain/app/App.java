@@ -38,11 +38,11 @@ public class App extends UpdateAggregateRoot implements Parent {
   @Nullable
   private Long parentId;
 
-  /** 应用级别字符串（可空） */
+  /** 父级路径（可空，形如 "1-3-5"） */
   @Nationalized
-  @Column(name = "Level")
+  @Column(name = "ParentPath")
   @Nullable
-  private String level;
+  private String parentPath;
 
   /** 名称（可空） */
   @Nationalized
@@ -86,7 +86,7 @@ public class App extends UpdateAggregateRoot implements Parent {
   App(
       String type,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       @Nullable String name,
       @Nullable String path,
       @Nullable String component,
@@ -100,10 +100,10 @@ public class App extends UpdateAggregateRoot implements Parent {
       @Nullable Integer fixedIndexInTab,
       boolean isMultiTab,
       boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     this.type = validateType(type);
     this.parentId = parentId;
-    this.level = StringUtils.trimToNull(level);
+    this.parentPath = StringUtils.trimToNull(parentPath);
     this.name = StringUtils.trimToNull(name);
     this.path = StringUtils.trimToNull(path);
     this.component = StringUtils.trimToNull(component);
@@ -111,12 +111,12 @@ public class App extends UpdateAggregateRoot implements Parent {
     this.license = StringUtils.trimToNull(license);
     this.remark = remark;
     this.meta =
-        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sort);
+        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
   }
 
   void modify(
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       @Nullable String name,
       @Nullable String path,
       @Nullable String component,
@@ -130,12 +130,12 @@ public class App extends UpdateAggregateRoot implements Parent {
       @Nullable Integer fixedIndexInTab,
       boolean isMultiTab,
       boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     if (parentId != null && parentId.equals(this.getId())) {
       throw new DomainException("上级应用不能是自己!");
     }
     this.parentId = parentId;
-    this.level = level;
+    this.parentPath = parentPath;
     this.name = StringUtils.trimToNull(name);
     this.path = StringUtils.trimToNull(path);
     this.component = StringUtils.trimToNull(component);
@@ -143,12 +143,12 @@ public class App extends UpdateAggregateRoot implements Parent {
     this.license = StringUtils.trimToNull(license);
     this.remark = remark;
     this.meta =
-        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sort);
+        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
   }
 
   @Override
-  public void changeLevel(@Nullable String level) {
-    this.level = level;
+  public void changeParentPath(@Nullable String parentPath) {
+    this.parentPath = parentPath;
   }
 
   /**

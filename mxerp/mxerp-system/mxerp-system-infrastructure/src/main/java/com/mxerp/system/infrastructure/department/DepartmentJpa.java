@@ -54,7 +54,7 @@ public interface DepartmentJpa
   }
 
   /**
-   * 按Id集合查部门（含子孙，Level 路径包含）
+   * 按Id集合查部门（含子孙，ParentPath 路径包含）
    *
    * @param ids 部门Id集合
    * @return 部门列表
@@ -63,14 +63,15 @@ public interface DepartmentJpa
     Specification<Department> spec =
         (root, query, cb) -> {
           var idPredicate = root.get("id").in(ids);
-          var levelPredicates =
+          var parentPathPredicates =
               ids.stream()
                   .map(
                       id ->
                           cb.like(
-                              cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"))
+                              cb.concat(cb.concat("-", root.get("parentPath")), "-"),
+                              "%-" + id + "-%"))
                   .toArray(jakarta.persistence.criteria.Predicate[]::new);
-          return cb.or(idPredicate, cb.or(levelPredicates));
+          return cb.or(idPredicate, cb.or(parentPathPredicates));
         };
     return findAll(spec);
   }
@@ -86,7 +87,7 @@ public interface DepartmentJpa
         (root, query, cb) ->
             cb.or(
                 cb.equal(root.get("id"), id),
-                cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
+                cb.like(cb.concat(cb.concat("-", root.get("parentPath")), "-"), "%-" + id + "-%"));
     return findAll(spec);
   }
 }

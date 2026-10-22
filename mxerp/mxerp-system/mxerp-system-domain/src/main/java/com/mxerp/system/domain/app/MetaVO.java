@@ -60,9 +60,9 @@ public class MetaVO extends ValueObject {
   private Boolean isHide = false;
 
   /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /**
    * 全参构造器
@@ -74,7 +74,7 @@ public class MetaVO extends ValueObject {
    * @param fixedIndexInTab 固定页签序号（可空）
    * @param isMultiTab 是否多页签
    * @param isHide 是否隐藏
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   MetaVO(
       String title,
@@ -84,7 +84,7 @@ public class MetaVO extends ValueObject {
       @Nullable Integer fixedIndexInTab,
       boolean isMultiTab,
       boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     this.title = StringUtils.trimToNull(title);
     this.i18nKey = StringUtils.trimToNull(i18nKey);
     this.icon = StringUtils.trimToNull(icon);
@@ -92,7 +92,7 @@ public class MetaVO extends ValueObject {
     this.fixedIndexInTab = fixedIndexInTab;
     this.isMultiTab = isMultiTab;
     this.isHide = isHide;
-    this.sort = sort;
+    this.sequence = sequence;
   }
 
   /**
@@ -103,7 +103,7 @@ public class MetaVO extends ValueObject {
   @Override
   protected @Nullable Object[] getEqualityComponents() {
     return new @Nullable Object[] {
-      title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sort
+      title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence
     };
   }
 }

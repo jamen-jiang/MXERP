@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("单位 Unit")
 class UnitTest {
 
-  /** 建一个组内单位：换算率 = factor（1 基准 = factor 本单位），步长 = rounding */
+  /** 建一个组内单位：换算率 = factor（1 本单位 = factor 基准单位），步长 = rounding */
   private static Unit unit(
       long groupId, String code, String factor, String rounding, boolean isBase) {
     return new Unit(
@@ -31,7 +31,7 @@ class UnitTest {
   @DisplayName("组内换算：米 → 厘米按 factor 折出")
   void metreToCentimetre() {
     Unit metre = unit(1L, "M", "1", "0.001", true);
-    Unit centimetre = unit(1L, "CM", "100", "0.1", false);
+    Unit centimetre = unit(1L, "CM", "0.01", "0.1", false);
 
     BigDecimal result = metre.convertTo(centimetre, new BigDecimal("2.5"));
     assertEquals(0, new BigDecimal("250.0").compareTo(result));
@@ -41,21 +41,21 @@ class UnitTest {
   @DisplayName("组内换算：厘米 → 米折回基准再折出")
   void centimetreToMetre() {
     Unit metre = unit(1L, "M2", "1", "0.001", true);
-    Unit centimetre = unit(1L, "CM2", "100", "0.1", false);
+    Unit centimetre = unit(1L, "CM2", "0.01", "0.1", false);
 
     BigDecimal result = centimetre.convertTo(metre, new BigDecimal("250"));
     assertEquals(0, new BigDecimal("2.500").compareTo(result));
   }
 
   @Test
-  @DisplayName("除不尽的换算率不会把整件算多：1件=1/12箱，12箱折回144件")
+  @DisplayName("除不尽的换算率不会把数量算多：3根=1公斤，3根折成 1.00 公斤")
   void truncatedFactorDoesNotInflate() {
-    Unit piece = unit(2L, "PC", "1", "1", true);
-    // 1 件 = 1/12 箱 → 箱的 factor 存成 12 位小数，末位有误差
-    Unit box = unit(2L, "BOX", "0.083333333333", "1", false);
+    Unit kilogram = unit(2L, "KG", "1", "0.01", true);
+    // 1 根 = 1/3 公斤 → 只能存近似值，3 根折出来是 0.999999999999
+    Unit rod = unit(2L, "ROD", "0.333333333333", "0.01", false);
 
-    BigDecimal result = box.convertTo(piece, new BigDecimal("12"));
-    assertEquals(0, new BigDecimal("144").compareTo(result));
+    BigDecimal result = rod.convertTo(kilogram, new BigDecimal("3"));
+    assertEquals(0, new BigDecimal("1.00").compareTo(result));
   }
 
   @Test
@@ -94,7 +94,7 @@ class UnitTest {
   @DisplayName("数量为负报错")
   void negativeQuantityRejected() {
     Unit metre = unit(9L, "M9", "1", "0.001", true);
-    Unit centimetre = unit(9L, "CM9", "100", "0.1", false);
+    Unit centimetre = unit(9L, "CM9", "0.01", "0.1", false);
 
     assertThrows(
         DomainException.class, () -> metre.convertTo(centimetre, new BigDecimal("-1")));

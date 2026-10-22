@@ -71,9 +71,9 @@ public class SupplierContact extends UpdateAggregateRoot {
   private String email;
 
   /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /**
    * 构造器
@@ -84,7 +84,7 @@ public class SupplierContact extends UpdateAggregateRoot {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   SupplierContact(
       long supplierId,
@@ -93,12 +93,12 @@ public class SupplierContact extends UpdateAggregateRoot {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     if (supplierId <= 0) {
       throw new DomainException("联系人必须属于某个供应商");
     }
     this.supplierId = supplierId;
-    apply(name, telephone, mobile, fax, email, sort);
+    apply(name, telephone, mobile, fax, email, sequence);
   }
 
   /**
@@ -109,7 +109,7 @@ public class SupplierContact extends UpdateAggregateRoot {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   void modify(
       String name,
@@ -117,8 +117,8 @@ public class SupplierContact extends UpdateAggregateRoot {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
-    apply(name, telephone, mobile, fax, email, sort);
+      @Nullable Integer sequence) {
+    apply(name, telephone, mobile, fax, email, sequence);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -131,7 +131,7 @@ public class SupplierContact extends UpdateAggregateRoot {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 姓名为空时抛出
    */
   private void apply(
@@ -140,7 +140,7 @@ public class SupplierContact extends UpdateAggregateRoot {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("联系人姓名不能为空");
@@ -150,6 +150,6 @@ public class SupplierContact extends UpdateAggregateRoot {
     this.mobile = StringUtils.trimToNull(mobile);
     this.fax = StringUtils.trimToNull(fax);
     this.email = StringUtils.trimToNull(email);
-    this.sort = sort;
+    this.sequence = sequence;
   }
 }

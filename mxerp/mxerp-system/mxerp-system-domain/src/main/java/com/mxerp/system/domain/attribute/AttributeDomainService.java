@@ -43,10 +43,10 @@ public class AttributeDomainService {
       Long id = existingDict.get(data.value());
       if (id != null) {
         // 存在：修改
-        attribute.modifyValue(id, data.label(), data.isDefault(), data.sort());
+        attribute.modifyValue(id, data.label(), data.isDefault(), data.sequence());
       } else {
         // 不存在：添加
-        attribute.addValue(data.value(), data.label(), data.isDefault(), data.sort());
+        attribute.addValue(data.value(), data.label(), data.isDefault(), data.sequence());
       }
     }
   }
@@ -89,10 +89,10 @@ public class AttributeDomainService {
       Long id = existingDict.get(item.expression());
       if (id != null) {
         // 存在：修改
-        attribute.modifyValidateRule(id, item.expression(), item.errorMessage(), item.sort());
+        attribute.modifyValidateRule(id, item.expression(), item.errorMessage(), item.sequence());
       } else {
         // 不存在：添加
-        attribute.addValidateRule(item.expression(), item.errorMessage(), item.sort());
+        attribute.addValidateRule(item.expression(), item.errorMessage(), item.sequence());
       }
     }
   }

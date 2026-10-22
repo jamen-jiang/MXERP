@@ -30,8 +30,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Variant（一条规格型号，业务口中就是 SKU）
  *
- * <p>这里只放「这个规格是什么」：OPC、规格属性值。采购价、币种、起订量不在这里，见 {@code
- * com.mxerp.basedata.domain.purchaseprice.PurchasePrice}——同一个规格可以被多个供应商报价， 钉在规格上只能留下最新一个值。
+ * <p>这里只放「这个规格是什么」：条码、规格属性值。采购价、币种、起订量不在这里，见 {@code
+ * com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}——同一个规格可以被多个供应商报价， 钉在规格上只能留下最新一个值。
  *
  * <p>值分两处存，是因为它们的作用根本不同：{@link VariantSpecAttributeValue} 是这一行的身份 （哪一组值构成一个规格），一行一个取值，改它就等于换一条规格，所以
  * {@code modify} 不碰它， 唯一性由这些行拼成 {@code Code}（物料代码 + 属性组合）来保证；描述性取值另存通用赋值表 {@code
@@ -51,10 +51,8 @@ import org.jspecify.annotations.Nullable;
     name = "Variant",
     indexes = {
       @Index(name = "IX_Variant_MaterialId", columnList = "MaterialId"),
-      @Index(name = "IX_Variant_Code", columnList = "Code"),
-      @Index(name = "IX_Variant_Opc", columnList = "Opc")
+      @Index(name = "IX_Variant_Code", columnList = "Code")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，用 Flyway 创建
-      // 注意：MaterialId + Opc 的过滤唯一索引带 WHERE IsDeleted=0 AND Opc IS NOT NULL AND Opc<>''，用 Flyway 创建
     })
 public class Variant extends UpdateAggregateRoot {
 
@@ -67,11 +65,11 @@ public class Variant extends UpdateAggregateRoot {
   @Column(name = "Code", nullable = false, length = 500)
   private String code;
 
-  /** OPC（可空） */
+  /** 条码（可空）：每个规格可不同，照 Odoo 的 barcode */
   @Nationalized
-  @Column(name = "Opc", length = 100)
+  @Column(name = "Barcode", length = 100)
   @Nullable
-  private String opc;
+  private String barcode;
 
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
@@ -188,13 +186,13 @@ public class Variant extends UpdateAggregateRoot {
    *
    * @param materialId MaterialId
    * @param materialCode 物料代码（拼进规格编码，改名时由物料那边级联重算）
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    * @param specAttributeRows 规格属性值行数据——这一条规格由哪组值构成（可空）
    */
   Variant(
       long materialId,
       String materialCode,
-      @Nullable String opc,
+      @Nullable String barcode,
       @Nullable List<AssignedSpecAttributeData> specAttributeRows) {
     // 不可变字段：MaterialId 与规格属性值行（决定唯一性编码）创建后不允许修改
     this.materialId = materialId;
@@ -206,7 +204,7 @@ public class Variant extends UpdateAggregateRoot {
     }
 
     // 可变字段交给 apply 统一处理
-    apply(opc);
+    apply(barcode);
 
     // 编码依赖物料代码 + 规格属性值行，必须在两者赋值完成后计算
     this.code = buildCode(materialCode, groupValues());
@@ -215,10 +213,10 @@ public class Variant extends UpdateAggregateRoot {
   /**
    * 修改
    *
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    */
-  void modify(@Nullable String opc) {
-    apply(opc);
+  void modify(@Nullable String barcode) {
+    apply(barcode);
   }
 
   /**
@@ -359,9 +357,9 @@ public class Variant extends UpdateAggregateRoot {
    * <p>{@code materialId}、规格属性值行属于不可变字段（决定唯一性编码），由调用方单独赋值；其余字段全部在此 收敛，避免构造器与 {@link #modify}
    * 两处各写一遍导致漏改。
    *
-   * @param opc OPC（可空）
+   * @param barcode 条码（可空）
    */
-  private void apply(@Nullable String opc) {
-    this.opc = StringUtils.trimToNull(opc);
+  private void apply(@Nullable String barcode) {
+    this.barcode = StringUtils.trimToNull(barcode);
   }
 }

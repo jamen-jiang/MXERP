@@ -1,6 +1,7 @@
 package com.mxerp.basedata.domain.suppliergroup;
 
 import com.mxerp.shared.domain.exception.DomainException;
+import com.mxerp.shared.domain.util.HierarchyUtils;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -27,7 +28,7 @@ public class SupplierGroupFactory {
    * @param name 名称
    * @param parentId 上级分类Id（可空）
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 供应商分类聚合
    * @throws DomainException 供应商分类代码已存在时抛出
@@ -37,12 +38,30 @@ public class SupplierGroupFactory {
       String name,
       @Nullable Long parentId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验供应商分类代码唯一
     if (supplierGroupRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("供应商分类代码" + code + "已存在!");
     }
-    return new SupplierGroup(code, name, parentId, disabled, sort, remark);
+    return new SupplierGroup(
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "上级分类"),
+        code,
+        name,
+        parentId,
+        disabled,
+        sequence,
+        remark);
+  }
+
+  /**
+   * 查询上级分类
+   *
+   * @param parentId 上级分类Id（可空）
+   * @return 上级分类，无父Id或不存在时返回 null（可空）
+   */
+  @Nullable
+  private SupplierGroup getParent(@Nullable Long parentId) {
+    return parentId == null ? null : supplierGroupRepository.get(parentId);
   }
 }

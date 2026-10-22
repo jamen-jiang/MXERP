@@ -47,10 +47,10 @@ public class SpecAttributeDomainService {
       Long id = existingDict.get(data.value());
       if (id != null) {
         // 存在：修改
-        specAttribute.modifyValue(id, data.label(), data.isDefault(), data.sort());
+        specAttribute.modifyValue(id, data.label(), data.isDefault(), data.sequence());
       } else {
         // 不存在：添加
-        specAttribute.addValue(data.value(), data.label(), data.isDefault(), data.sort());
+        specAttribute.addValue(data.value(), data.label(), data.isDefault(), data.sequence());
       }
     }
   }
@@ -97,10 +97,10 @@ public class SpecAttributeDomainService {
       if (id != null) {
         // 存在：修改
         specAttribute.modifyValidateRule(
-            id, item.expression(), item.errorMessage(), item.sort());
+            id, item.expression(), item.errorMessage(), item.sequence());
       } else {
         // 不存在：添加
-        specAttribute.addValidateRule(item.expression(), item.errorMessage(), item.sort());
+        specAttribute.addValidateRule(item.expression(), item.errorMessage(), item.sequence());
       }
     }
   }

@@ -29,7 +29,7 @@ public class SupplierContactFactory {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 联系人聚合
    * @throws DomainException 同一供应商下姓名重复时抛出
    */
@@ -40,9 +40,9 @@ public class SupplierContactFactory {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     checkUnique(supplierId, name, null);
-    return new SupplierContact(supplierId, name, telephone, mobile, fax, email, sort);
+    return new SupplierContact(supplierId, name, telephone, mobile, fax, email, sequence);
   }
 
   /**

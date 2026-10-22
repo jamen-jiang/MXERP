@@ -42,7 +42,7 @@ public class ModifyAppCommandHandler {
   @Transactional
   @DistributedLock(prefix = EntityConst.APP, value = "#command.id")
   public void handle(ModifyAppCommand command) {
-    // 1. 通过领域服务修改应用（内部算 level + 递归子应用）
+    // 1. 通过领域服务修改应用（内部算 parentPath + 递归子应用）
     List<App> list =
         appDomainService.modify(
             command.getId(),
@@ -60,9 +60,9 @@ public class ModifyAppCommandHandler {
             command.getMeta().getFixedIndexInTab(),
             command.getMeta().getIsMultiTab(),
             command.getMeta().getIsHide(),
-            command.getMeta().getSort());
+            command.getMeta().getSequence());
 
-    // 2. 保存主应用与所有子孙（level 被更新）
+    // 2. 保存主应用与所有子孙（parentPath 被更新）
     for (App item : list) {
       appRepository.save(item);
     }

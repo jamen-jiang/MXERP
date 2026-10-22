@@ -51,7 +51,7 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_SpecAttribute_CategoryId", columnList = "CategoryId"),
       @Index(name = "IX_SpecAttribute_Code", columnList = "Code"),
       @Index(name = "IX_SpecAttribute_Label", columnList = "Label"),
-      @Index(name = "IX_SpecAttribute_Sort", columnList = "Sort")
+      @Index(name = "IX_SpecAttribute_Sequence", columnList = "Sequence")
       // 注意：CategoryId + Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class SpecAttribute extends UpdateAggregateRoot {
@@ -85,9 +85,9 @@ public class SpecAttribute extends UpdateAggregateRoot {
   private Boolean isFilter;
 
 /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /** 备注（可空） */
   @Nationalized
@@ -141,7 +141,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param inputType 输入类型
    * @param dataType 数据类型
    * @param isFilter 是否用于筛选
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   SpecAttribute(
@@ -151,7 +151,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
       String inputType,
       String dataType,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     if (trimmedCode == null) {
@@ -165,7 +165,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
     this.dataType = dataType;
 
     // 可变字段交给 apply 统一处理
-    apply(label, inputType, isFilter, sort, remark);
+    apply(label, inputType, isFilter, sequence, remark);
   }
 
   /**
@@ -176,16 +176,16 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param label 规格属性标签
    * @param inputType 输入类型
    * @param isFilter 是否用于筛选
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
       String label,
       String inputType,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(label, inputType, isFilter, sort, remark);
+    apply(label, inputType, isFilter, sequence, remark);
   }
 
   /**
@@ -194,15 +194,15 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param value 规格属性值
    * @param label 规格属性值标签
    * @param isDefault 是否默认项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 规格属性值在该规格属性下已存在时抛出
    */
-  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
+  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sequence) {
     if (isExistValue(value)) {
       throw new DomainException("规格属性" + this.label + ":规格属性值" + value + " 已存在!");
     }
     SpecAttributeValue specAttributeValue =
-        new SpecAttributeValue(value, label, isDefault, sort);
+        new SpecAttributeValue(value, label, isDefault, sequence);
     specAttributeValues.add(specAttributeValue);
   }
 
@@ -214,15 +214,15 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param valueId 规格属性值Id
    * @param label 规格属性值标签
    * @param isDefault 是否默认项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 规格属性值不存在时抛出
    */
-  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sort) {
+  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sequence) {
     SpecAttributeValue specAttributeValue = findValue(valueId);
     if (specAttributeValue == null) {
       throw new DomainException("规格属性" + this.label + ":规格属性值不存在!");
     }
-    specAttributeValue.modify(label, isDefault, sort);
+    specAttributeValue.modify(label, isDefault, sequence);
   }
 
   /**
@@ -245,15 +245,15 @@ public class SpecAttribute extends UpdateAggregateRoot {
    *
    * @param expression 校验表达式
    * @param errorMessage 校验失败提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 相同表达式已存在时抛出
    */
-  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sort) {
+  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sequence) {
     if (isExistValidateRule(expression)) {
       throw new DomainException("规格属性" + this.label + ":校验规则已存在!");
     }
     specAttributeValidateRules.add(
-        new SpecAttributeValidateRule(expression, errorMessage, sort));
+        new SpecAttributeValidateRule(expression, errorMessage, sequence));
   }
 
   /**
@@ -262,16 +262,16 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param validateRuleId 校验规则Id
    * @param expression 校验表达式
    * @param errorMessage 校验失败提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 校验规则不存在时抛出
    */
   public void modifyValidateRule(
-      long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
+      long validateRuleId, String expression, String errorMessage, @Nullable Integer sequence) {
     SpecAttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       throw new DomainException("规格属性" + this.label + ":校验规则不存在!");
     }
-    validateRule.modify(expression, errorMessage, sort);
+    validateRule.modify(expression, errorMessage, sequence);
   }
 
   /**
@@ -299,14 +299,14 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param label 规格属性标签
    * @param inputType 输入类型
    * @param isFilter 是否用于筛选
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   private void apply(
       String label,
       String inputType,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
@@ -317,7 +317,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
     this.label = trimmedLabel;
     this.inputType = inputType;
     this.isFilter = isFilter;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 

@@ -20,13 +20,18 @@ import org.jspecify.annotations.Nullable;
 /**
  * 公司（集团下属分工厂）
  *
- * <p>字段照别家的公司主数据取：ERPNext {@code Company} 的 {@code abbr}（简称，单据页眉和编号前缀要用）、
- * {@code parent_company}（上级公司）、{@code tax_id}、{@code date_of_establishment}、
- * {@code default_currency}（必填）；Odoo {@code res.company} 的 {@code company_registry}（工商注册号）、
- * {@code currency_id}（必填）；金蝶「组织机构」的上级组织与禁用。
+ * <p>字段照别家的公司主数据取：ERPNext {@code Company} 的 {@code parent_company}（上级公司）、{@code tax_id}、
+ * {@code date_of_establishment}、{@code default_currency}（必填）；Odoo {@code res.company} 的
+ * {@code company_registry}（工商注册号）、{@code currency_id}（必填）；金蝶「组织机构」的上级组织与禁用。
  *
  * <p>地址与 {@code Supplier} 同形：{@code Country/Province/City/District/Zip} + 详细地址一段（{@code Address}），
  * 便于以后按省市统计和打印。
+ *
+ * <p>代码与简称是两件事，别混用：代码是给机器认的稳定串（导入对码、以后拼单号前缀），改了要断历史，所以全司唯一且必填——
+ * SAP 的公司代码 {@code BUKRS}（4 位，本身就是主键，名称另存 {@code BUTXT}）、D365 的法人编号（{@code USMF} 这种）、
+ * ERPNext 的 {@code abbr}（必填，会被拼进科目、仓库、成本中心编码前）、金蝶组织机构的 {@code FNumber} 都是这一列；
+ * Odoo 是唯一没有代码列的，它靠 {@code partner_id} 把公司指成一个联系人、用 {@code company_registry} 当对外唯一号。
+ * 简称是给人在单据页眉上看的短名，想改随时能改，可空。
  *
  * <p>上级公司构成一棵树，层级路径由 {@link CompanyDomainService} 维护（与 {@code Category}、{@code Department}
  * 同一套）；往返、跨公司校验放在领域服务里。
@@ -39,12 +44,30 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Company",
     indexes = {
+      @Index(name = "IX_Company_Code", columnList = "Code"),
       @Index(name = "IX_Company_Name", columnList = "Name"),
       @Index(name = "IX_Company_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Company_Level", columnList = "Level")
+      @Index(name = "IX_Company_ParentPath", columnList = "ParentPath")
+      // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，用 Flyway 创建
       // 注意：同级公司名称唯一由 CompanyRepository.isExistByNameAndParentIdExcludeId 校验
     })
 public class Company extends UpdateAggregateRoot implements Parent {
+
+  /** 上级公司Id（可空，空表示顶级） */
+  @Column(name = "ParentId")
+  @Nullable
+  private Long parentId;
+
+  /** 层级路径（可空，形如 "1-3-5"，由层级编排逻辑维护） */
+  @Nationalized
+  @Column(name = "ParentPath")
+  @Nullable
+  private String parentPath;
+
+  /** 公司代码 */
+  @Nationalized
+  @Column(name = "Code", nullable = false, length = 50)
+  private String code;
 
   /** 名称 */
   @Nationalized
@@ -57,16 +80,26 @@ public class Company extends UpdateAggregateRoot implements Parent {
   @Nullable
   private String shortName;
 
-  /** 上级公司Id（可空，空表示顶级） */
-  @Column(name = "ParentId")
-  @Nullable
-  private Long parentId;
-
-  /** 层级路径（可空，形如 "1,3,5"，由层级编排逻辑维护） */
+  /** 税务登记号（可空） */
   @Nationalized
-  @Column(name = "Level")
+  @Column(name = "TaxRegisterCode", length = 50)
   @Nullable
-  private String level;
+  private String taxRegisterCode;
+
+  /** 工商注册号（可空） */
+  @Nationalized
+  @Column(name = "RegistryCode", length = 50)
+  @Nullable
+  private String registryCode;
+
+  /** 成立日期（可空） */
+  @Column(name = "EstablishedDate")
+  @Nullable
+  private LocalDate establishedDate;
+
+  /** 默认币别Id */
+  @Column(name = "CurrencyId", nullable = false)
+  private Long currencyId;
 
   /** 电话号码（可空） */
   @Nationalized
@@ -122,35 +155,14 @@ public class Company extends UpdateAggregateRoot implements Parent {
   @Nullable
   private String address;
 
-  /** 税务登记号（可空） */
-  @Nationalized
-  @Column(name = "TaxRegisterCode", length = 50)
+  /** 排序（可空） */
+  @Column(name = "Sequence")
   @Nullable
-  private String taxRegisterCode;
-
-  /** 工商注册号（可空） */
-  @Nationalized
-  @Column(name = "RegistryCode", length = 50)
-  @Nullable
-  private String registryCode;
-
-  /** 成立日期（可空） */
-  @Column(name = "EstablishedDate")
-  @Nullable
-  private LocalDate establishedDate;
-
-  /** 默认币别Id */
-  @Column(name = "CurrencyId", nullable = false)
-  private Long currencyId;
+  private Integer sequence;
 
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -161,10 +173,11 @@ public class Company extends UpdateAggregateRoot implements Parent {
   /**
    * 构造器
    *
+   * @param code 公司代码
    * @param name 名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param telephone 电话号码（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
@@ -179,14 +192,15 @@ public class Company extends UpdateAggregateRoot implements Parent {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   Company(
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       @Nullable String telephone,
       @Nullable String fax,
       @Nullable String email,
@@ -201,13 +215,14 @@ public class Company extends UpdateAggregateRoot implements Parent {
       @Nullable LocalDate establishedDate,
       long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     apply(
+        code,
         name,
         shortName,
         parentId,
-        level,
+        parentPath,
         telephone,
         fax,
         email,
@@ -222,17 +237,18 @@ public class Company extends UpdateAggregateRoot implements Parent {
         establishedDate,
         currencyId,
         disabled,
-        sort,
+        sequence,
         remark);
   }
 
   /**
    * 修改公司
    *
+   * @param code 公司代码
    * @param name 名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param telephone 电话号码（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
@@ -247,14 +263,15 @@ public class Company extends UpdateAggregateRoot implements Parent {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       @Nullable String telephone,
       @Nullable String fax,
       @Nullable String email,
@@ -269,13 +286,14 @@ public class Company extends UpdateAggregateRoot implements Parent {
       @Nullable LocalDate establishedDate,
       long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     apply(
+        code,
         name,
         shortName,
         parentId,
-        level,
+        parentPath,
         telephone,
         fax,
         email,
@@ -290,18 +308,18 @@ public class Company extends UpdateAggregateRoot implements Parent {
         establishedDate,
         currencyId,
         disabled,
-        sort,
+        sequence,
         remark);
   }
 
   /**
    * 重设层级路径（由层级编排逻辑调用）
    *
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    */
   @Override
-  public void changeLevel(@Nullable String level) {
-    this.level = level;
+  public void changeParentPath(@Nullable String parentPath) {
+    this.parentPath = parentPath;
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -309,10 +327,11 @@ public class Company extends UpdateAggregateRoot implements Parent {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
+   * @param code 公司代码
    * @param name 名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param telephone 电话号码（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
@@ -327,15 +346,16 @@ public class Company extends UpdateAggregateRoot implements Parent {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
-   * @throws DomainException 代码/名称/默认币别为空时抛出
+   * @throws DomainException 代码/名称为空、或默认币别为空时抛出
    */
   private void apply(
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       @Nullable String telephone,
       @Nullable String fax,
       @Nullable String email,
@@ -350,8 +370,12 @@ public class Company extends UpdateAggregateRoot implements Parent {
       @Nullable LocalDate establishedDate,
       long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
+    String trimmedCode = StringUtils.trimToNull(code);
+    if (trimmedCode == null) {
+      throw new DomainException("公司代码不能为空");
+    }
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("公司名称不能为空");
@@ -360,10 +384,11 @@ public class Company extends UpdateAggregateRoot implements Parent {
       throw new DomainException("公司默认币别不能为空");
     }
 
+    this.code = trimmedCode;
     this.name = trimmedName;
     this.shortName = shortName;
     this.parentId = parentId;
-    this.level = level;
+    this.parentPath = parentPath;
     this.telephone = telephone;
     this.fax = fax;
     this.email = email;
@@ -378,7 +403,7 @@ public class Company extends UpdateAggregateRoot implements Parent {
     this.establishedDate = establishedDate;
     this.currencyId = currencyId;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

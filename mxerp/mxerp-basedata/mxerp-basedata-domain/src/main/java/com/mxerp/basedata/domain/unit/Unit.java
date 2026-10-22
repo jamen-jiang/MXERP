@@ -21,16 +21,16 @@ import org.jspecify.annotations.Nullable;
  * 单位
  *
  * <p>单位属于某个 {@link UnitGroup}（量纲），组内只有一个「基准单位」（{@code isBase}），其余单位用
- * 一个 {@code factor} 表示它与基准的关系：**1 个基准单位 = factor 个本单位**（照 Odoo
- * {@code uom.uom.factor} 的定义）。米是「长度」组的基准时，厘米填 {@code 100}、公里填 {@code 0.001}；
- * 基准单位自己恒为 {@code 1}。换算只允许在组内做：米与厘米能换，米与公斤没有入口。
+ * 一个 {@code factor} 表示它与基准的关系：**1 个本单位 = factor 个基准单位**（照 Odoo {@code uom.uom.factor}
+ * 的定义：{@code 1 * <this unit> = <factor> * <reference unit>}）。米是「长度」组的基准时，公里填
+ * {@code 1000}、厘米填 {@code 0.01}；基准单位自己恒为 {@code 1}。换算只允许在组内做：米与厘米能换，
+ * 米与公斤没有入口。
  *
  * <p>{@code rounding} 是数量的落数步长（照 Odoo {@code uom.uom.rounding}）：算出来的数量必须是它的整数倍，
  * 不可再分的「件」填 {@code 1}，按 0.01kg 计量的填 {@code 0.01}。舍入方向不存主数据，
  * 统一按 Odoo 的默认值进位（{@code rounding_method='UP'}），所以这里没有精度小数位和舍入类型两个字段。
  *
- * <p>箱子、卷这种「一箱装 24 个、另一箱装 12 个」的按物料而异的换算不放进这里，见
- * {@link MaterialAlternateUnit}。
+ * <p>换算只在这个组里做，跨组（如长度↔重量）不做：照 Odoo 19，物料只按一个单位记账，长度和重量之间不设换算。
  */
 @NullMarked
 @Getter
@@ -42,7 +42,7 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Unit_GroupId", columnList = "GroupId"),
       @Index(name = "IX_Unit_Name", columnList = "Name"),
-      @Index(name = "IX_Unit_Sort", columnList = "Sort")
+      @Index(name = "IX_Unit_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
       // 注意：GroupId 的过滤唯一索引（基准单位只能一个）带 WHERE IsDeleted=0 AND IsBase=1，用 Flyway 创建
     })
@@ -68,7 +68,7 @@ public class Unit extends UpdateAggregateRoot {
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
-  /** 换算率：1 个组内基准单位 = factor 个本单位；基准单位恒为 1 */
+  /** 换算率：1 个本单位 = factor 个组内基准单位；基准单位恒为 1 */
   @Column(name = "Factor", nullable = false, precision = 28, scale = 12)
   private BigDecimal factor;
 
@@ -80,14 +80,14 @@ public class Unit extends UpdateAggregateRoot {
   @Column(name = "Rounding", nullable = false, precision = 28, scale = 12)
   private BigDecimal rounding;
 
+  /** 排序（可空） */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -101,11 +101,11 @@ public class Unit extends UpdateAggregateRoot {
    * @param groupId 所属单位组Id
    * @param code 代码
    * @param name 名称
-   * @param factor 换算率（1 基准 = factor 本单位）
+   * @param factor 换算率（1 本单位 = factor 基准单位）
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 代码或名称为空、换算率或步长不为正数、基准单位换算率不是 1 时抛出
    */
@@ -117,13 +117,13 @@ public class Unit extends UpdateAggregateRoot {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     if (groupId <= 0) {
       throw new DomainException("单位组不能为空");
     }
     this.groupId = groupId;
-    apply(code, name, factor, isBase, rounding, disabled, sort, remark);
+    apply(code, name, factor, isBase, rounding, disabled, sequence, remark);
   }
 
   /**
@@ -133,11 +133,11 @@ public class Unit extends UpdateAggregateRoot {
    *
    * @param code 代码
    * @param name 名称
-   * @param factor 换算率（1 基准 = factor 本单位）
+   * @param factor 换算率（1 本单位 = factor 基准单位）
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   void modify(
@@ -147,15 +147,15 @@ public class Unit extends UpdateAggregateRoot {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(code, name, factor, isBase, rounding, disabled, sort, remark);
+    apply(code, name, factor, isBase, rounding, disabled, sequence, remark);
   }
 
   /**
    * 换算成组内另一个单位
    *
-   * <p>算法照 Odoo {@code uom.uom._compute_quantity}：{@code 数量 ÷ 本单位换算率 × 目标单位换算率}，
+   * <p>算法：{@code 数量 × 本单位换算率 ÷ 目标单位换算率}（两个率都是"折成基准单位"，先折到基准再折出去），
    * 中间保留 12 位，最后按**目标单位**的步长落数。两组不同直接报错，不给「米换公斤」留口子。
    *
    * @param target 目标单位
@@ -173,8 +173,8 @@ public class Unit extends UpdateAggregateRoot {
     }
     BigDecimal amount =
         quantity
-            .divide(this.factor, CALC_SCALE, RoundingMode.HALF_UP)
-            .multiply(target.getFactor());
+            .multiply(this.factor)
+            .divide(target.getFactor(), CALC_SCALE, RoundingMode.HALF_UP);
     return target.roundQuantity(amount);
   }
 
@@ -184,8 +184,8 @@ public class Unit extends UpdateAggregateRoot {
    * <p>单据上的数量字段、跨组换算的结果都走这里，不要在调用方自己 {@code setScale}。
    * 方向固定进位（Odoo 的 {@code rounding_method='UP'} 默认值）。
    *
-   * <p>先把「数量 ÷ 步长」在 6 位小数上四舍五入再进位：换算率是小数，{@code 1件 = 1/12箱} 只能存成
-   * 0.083333333333，12 箱折回件会得到 144.0000000006，直接进位就成了 145。
+   * <p>先把「数量 ÷ 步长」在 6 位小数上四舍五入再进位：换算率是小数，{@code 3根 = 1公斤} 只能存成
+   * 0.333333333333，3 根折成公斤会得到 0.999999999999，直接进位就成了 1.01。
    *
    * @param quantity 数量
    * @return 落数后的数量
@@ -209,7 +209,7 @@ public class Unit extends UpdateAggregateRoot {
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 代码或名称为空、换算率或步长不为正数、基准单位换算率不是 1 时抛出
    */
@@ -220,7 +220,7 @@ public class Unit extends UpdateAggregateRoot {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
@@ -246,7 +246,7 @@ public class Unit extends UpdateAggregateRoot {
     this.isBase = isBase;
     this.rounding = rounding;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

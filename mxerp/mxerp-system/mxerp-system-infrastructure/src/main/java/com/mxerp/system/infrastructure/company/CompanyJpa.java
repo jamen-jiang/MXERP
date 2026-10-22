@@ -36,8 +36,28 @@ public interface CompanyJpa
         (root, query, cb) ->
             cb.or(
                 cb.equal(root.get("id"), id),
-                cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
+                cb.like(cb.concat(cb.concat("-", root.get("parentPath")), "-"), "%-" + id + "-%"));
     return findAll(spec);
+  }
+
+  /**
+   * 判断公司代码是否存在（可排除指定 Id）
+   *
+   * @param code 公司代码
+   * @param id 排除的Id（可空，null 表示不排除）
+   * @return true 表示已存在
+   */
+  default boolean existsByCodeExcludeId(String code, @Nullable Long id) {
+    Specification<Company> spec =
+        (root, query, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("code"), code));
+          if (id != null) {
+            predicates.add(cb.notEqual(root.get("id"), id));
+          }
+          return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    return exists(spec);
   }
 
   /**

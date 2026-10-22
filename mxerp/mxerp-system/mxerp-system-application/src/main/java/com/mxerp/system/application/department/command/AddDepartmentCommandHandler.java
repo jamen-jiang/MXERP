@@ -46,7 +46,7 @@ public class AddDepartmentCommandHandler {
             command.getParentId(),
             command.getName(),
             command.isDisabled(),
-            command.getSort(),
+            command.getSequence(),
             command.getRemark());
     departmentRepository.save(model);
     return model.getId();

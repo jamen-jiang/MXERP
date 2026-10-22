@@ -26,7 +26,7 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_AttributeValue_AttributeId", columnList = "AttributeId"),
       @Index(name = "IX_AttributeValue_Value", columnList = "Value"),
-      @Index(name = "IX_AttributeValue_Sort", columnList = "Sort")
+      @Index(name = "IX_AttributeValue_Sequence", columnList = "Sequence")
       // 注意：AttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class AttributeValue extends BaseDeleteEntity {
@@ -50,9 +50,9 @@ public class AttributeValue extends BaseDeleteEntity {
   private Boolean isDefault;
 
   /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /**
    * 构造器
@@ -60,16 +60,16 @@ public class AttributeValue extends BaseDeleteEntity {
    * @param value 属性值
    * @param label 属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  AttributeValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
+  AttributeValue(String value, String label, boolean isDefault, @Nullable Integer sequence) {
     String trimmedValue = StringUtils.trimToNull(value);
     if (trimmedValue == null) {
       throw new DomainException("属性值不能为空");
     }
     // value 是属性值的业务主键，仅在创建时确定，之后不可变
     this.value = trimmedValue;
-    apply(label, isDefault, sort);
+    apply(label, isDefault, sequence);
   }
 
   /**
@@ -77,10 +77,10 @@ public class AttributeValue extends BaseDeleteEntity {
    *
    * @param label 属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  void modify(String label, boolean isDefault, @Nullable Integer sort) {
-    apply(label, isDefault, sort);
+  void modify(String label, boolean isDefault, @Nullable Integer sequence) {
+    apply(label, isDefault, sequence);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -92,15 +92,15 @@ public class AttributeValue extends BaseDeleteEntity {
    *
    * @param label 属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  private void apply(String label, boolean isDefault, @Nullable Integer sort) {
+  private void apply(String label, boolean isDefault, @Nullable Integer sequence) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
       throw new DomainException("属性值标签不能为空");
     }
     this.label = trimmedLabel;
     this.isDefault = isDefault;
-    this.sort = sort;
+    this.sequence = sequence;
   }
 }

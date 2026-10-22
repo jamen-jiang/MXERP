@@ -26,10 +26,10 @@ public class BankAccountFactory {
    *
    * @param partyType 归属类型编码
    * @param partyId 归属主数据Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -39,10 +39,10 @@ public class BankAccountFactory {
   public BankAccount create(
       String partyType,
       long partyId,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -50,10 +50,10 @@ public class BankAccountFactory {
     return new BankAccount(
         partyType,
         partyId,
-        accountName,
         bankId,
         bankBranch,
         accountNumber,
+        accountName,
         currencyId,
         isDefault,
         disabled);

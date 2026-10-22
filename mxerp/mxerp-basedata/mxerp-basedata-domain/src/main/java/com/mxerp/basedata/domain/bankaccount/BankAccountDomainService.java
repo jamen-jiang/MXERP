@@ -54,10 +54,10 @@ public class BankAccountDomainService {
    *
    * @param partyType 归属类型编码
    * @param partyId 归属主数据Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -67,10 +67,10 @@ public class BankAccountDomainService {
   public BankAccount create(
       String partyType,
       long partyId,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -80,10 +80,10 @@ public class BankAccountDomainService {
     return bankAccountFactory.create(
         partyType,
         partyId,
-        accountName,
         bankId,
         bankBranch,
         accountNumber,
+        accountName,
         currencyId,
         isDefault,
         disabled);
@@ -94,10 +94,10 @@ public class BankAccountDomainService {
    *
    * @param partyType 归属类型编码
    * @param partyId 归属主数据Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -106,10 +106,10 @@ public class BankAccountDomainService {
   public BankAccount importGenerate(
       String partyType,
       long partyId,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -123,20 +123,20 @@ public class BankAccountDomainService {
           create(
               partyType,
               partyId,
-              accountName,
               bankId,
               bankBranch,
               accountNumber,
+              accountName,
               currencyId,
               isDefault,
               disabled);
     } else {
       modify(
           model,
-          accountName,
           bankId,
           bankBranch,
           accountNumber,
+          accountName,
           currencyId,
           isDefault,
           disabled);
@@ -149,10 +149,10 @@ public class BankAccountDomainService {
    * 修改银行账户
    *
    * @param id 银行账户Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -161,10 +161,10 @@ public class BankAccountDomainService {
    */
   public BankAccount modify(
       long id,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -172,7 +172,7 @@ public class BankAccountDomainService {
     if (model == null) {
       throw new DomainException("银行账户" + id + "不存在!");
     }
-    modify(model, accountName, bankId, bankBranch, accountNumber, currencyId, isDefault, disabled);
+    modify(model, bankId, bankBranch, accountNumber, accountName, currencyId, isDefault, disabled);
     return model;
   }
 
@@ -180,10 +180,10 @@ public class BankAccountDomainService {
    * 修改银行账户（使用已有聚合）
    *
    * @param model 银行账户聚合
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -191,10 +191,10 @@ public class BankAccountDomainService {
    */
   public void modify(
       BankAccount model,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -202,7 +202,7 @@ public class BankAccountDomainService {
     requireCurrency(currencyId);
     bankAccountFactory.checkUnique(
         model.getPartyType(), model.getPartyId(), accountNumber, isDefault, model.getId());
-    model.modify(accountName, bankId, bankBranch, accountNumber, currencyId, isDefault, disabled);
+    model.modify(bankId, bankBranch, accountNumber, accountName, currencyId, isDefault, disabled);
   }
 
   // ==================== 私有：校验 ====================

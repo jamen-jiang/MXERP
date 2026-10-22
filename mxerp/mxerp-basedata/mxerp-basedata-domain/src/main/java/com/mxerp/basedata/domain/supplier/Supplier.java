@@ -37,10 +37,14 @@ import org.jspecify.annotations.Nullable;
     name = "Supplier",
     indexes = {
       @Index(name = "IX_Supplier_Name", columnList = "Name"),
-      @Index(name = "IX_Supplier_GroupId", columnList = "SupplierGroupId")
+      @Index(name = "IX_Supplier_GroupId", columnList = "GroupId")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Supplier extends UpdateAggregateRoot {
+
+  /** 供应商分类Id */
+  @Column(name = "GroupId", nullable = false)
+  private Long groupId;
 
   /** 供应商代码 */
   @Nationalized
@@ -58,19 +62,38 @@ public class Supplier extends UpdateAggregateRoot {
   @Nullable
   private String shortName;
 
-  /** 供应商分类Id */
-  @Column(name = "SupplierGroupId", nullable = false)
-  private Long supplierGroupId;
-
-  /** 结算币别Id */
-  @Column(name = "CurrencyId", nullable = false)
-  private Long currencyId;
-
   /** 税务登记号（可空） */
   @Nationalized
   @Column(name = "TaxRegisterCode", length = 50)
   @Nullable
   private String taxRegisterCode;
+
+  /** 结算币别Id */
+  @Column(name = "CurrencyId", nullable = false)
+  private Long currencyId;
+
+  /** 税率Id（可空） */
+  @Column(name = "TaxRateId")
+  @Nullable
+  private Long taxRateId;
+
+  /** 电话号码（可空） */
+  @Nationalized
+  @Column(name = "Telephone", length = 50)
+  @Nullable
+  private String telephone;
+
+  /** 传真（可空） */
+  @Nationalized
+  @Column(name = "Fax", length = 20)
+  @Nullable
+  private String fax;
+
+  /** 邮箱（可空） */
+  @Nationalized
+  @Column(name = "Email", length = 200)
+  @Nullable
+  private String email;
 
   /** 国家（可空） */
   @Nationalized
@@ -108,29 +131,6 @@ public class Supplier extends UpdateAggregateRoot {
   @Nullable
   private String address;
 
-  /** 电话号码（可空） */
-  @Nationalized
-  @Column(name = "Telephone", length = 50)
-  @Nullable
-  private String telephone;
-
-  /** 传真（可空） */
-  @Nationalized
-  @Column(name = "Fax", length = 20)
-  @Nullable
-  private String fax;
-
-  /** 邮箱（可空） */
-  @Nationalized
-  @Column(name = "Email", length = 200)
-  @Nullable
-  private String email;
-
-  /** 税率Id（可空） */
-  @Column(name = "TaxRateId")
-  @Nullable
-  private Long taxRateId;
-
   /** 是否停用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
@@ -144,61 +144,61 @@ public class Supplier extends UpdateAggregateRoot {
   /**
    * 构造器
    *
+   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
-   * @param supplierGroupId 供应商分类Id
-   * @param currencyId 结算币别Id
    * @param taxRegisterCode 税务登记号（可空）
+   * @param currencyId 结算币别Id
+   * @param taxRateId 税率Id（可空）
+   * @param telephone 电话号码（可空）
+   * @param fax 传真（可空）
+   * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
    * @param city 城市（可空）
    * @param district 区县（可空）
    * @param zip 邮政编码（可空）
    * @param address 详细地址（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
-   * @param taxRateId 税率Id（可空）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
   Supplier(
+      long groupId,
       String code,
       String name,
       @Nullable String shortName,
-      long supplierGroupId,
-      long currencyId,
       @Nullable String taxRegisterCode,
+      long currencyId,
+      @Nullable Long taxRateId,
+      @Nullable String telephone,
+      @Nullable String fax,
+      @Nullable String email,
       @Nullable String country,
       @Nullable String province,
       @Nullable String city,
       @Nullable String district,
       @Nullable String zip,
       @Nullable String address,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
-      @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark) {
     apply(
+        groupId,
         code,
         name,
         shortName,
-        supplierGroupId,
-        currencyId,
         taxRegisterCode,
+        currencyId,
+        taxRateId,
+        telephone,
+        fax,
+        email,
         country,
         province,
         city,
         district,
         zip,
         address,
-        telephone,
-        fax,
-        email,
-        taxRateId,
         disabled,
         remark);
   }
@@ -206,61 +206,61 @@ public class Supplier extends UpdateAggregateRoot {
   /**
    * 修改供应商
    *
+   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
-   * @param supplierGroupId 供应商分类Id
-   * @param currencyId 结算币别Id
    * @param taxRegisterCode 税务登记号（可空）
+   * @param currencyId 结算币别Id
+   * @param taxRateId 税率Id（可空）
+   * @param telephone 电话号码（可空）
+   * @param fax 传真（可空）
+   * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
    * @param city 城市（可空）
    * @param district 区县（可空）
    * @param zip 邮政编码（可空）
    * @param address 详细地址（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
-   * @param taxRateId 税率Id（可空）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    */
   void modify(
+      long groupId,
       String code,
       String name,
       @Nullable String shortName,
-      long supplierGroupId,
-      long currencyId,
       @Nullable String taxRegisterCode,
+      long currencyId,
+      @Nullable Long taxRateId,
+      @Nullable String telephone,
+      @Nullable String fax,
+      @Nullable String email,
       @Nullable String country,
       @Nullable String province,
       @Nullable String city,
       @Nullable String district,
       @Nullable String zip,
       @Nullable String address,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
-      @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark) {
     apply(
+        groupId,
         code,
         name,
         shortName,
-        supplierGroupId,
-        currencyId,
         taxRegisterCode,
+        currencyId,
+        taxRateId,
+        telephone,
+        fax,
+        email,
         country,
         province,
         city,
         district,
         zip,
         address,
-        telephone,
-        fax,
-        email,
-        taxRateId,
         disabled,
         remark);
   }
@@ -273,43 +273,43 @@ public class Supplier extends UpdateAggregateRoot {
    * <p>供应商字段多，构造器与 {@link #modify} 若各写一遍极易漏改。这里把「去空格 → 非空校验 →
    * 赋值」收敛到一处，后续新增字段只需改这一个方法。
    *
+   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
-   * @param supplierGroupId 供应商分类Id
-   * @param currencyId 结算币别Id
    * @param taxRegisterCode 税务登记号（可空）
+   * @param currencyId 结算币别Id
+   * @param taxRateId 税率Id（可空）
+   * @param telephone 电话号码（可空）
+   * @param fax 传真（可空）
+   * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
    * @param city 城市（可空）
    * @param district 区县（可空）
    * @param zip 邮政编码（可空）
    * @param address 详细地址（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
-   * @param taxRateId 税率Id（可空）
    * @param disabled 是否停用
    * @param remark 备注（可空）
    * @throws DomainException 代码或名称为空、结算币别为空时抛出
    */
   private void apply(
+      long groupId,
       String code,
       String name,
       @Nullable String shortName,
-      long supplierGroupId,
-      long currencyId,
       @Nullable String taxRegisterCode,
+      long currencyId,
+      @Nullable Long taxRateId,
+      @Nullable String telephone,
+      @Nullable String fax,
+      @Nullable String email,
       @Nullable String country,
       @Nullable String province,
       @Nullable String city,
       @Nullable String district,
       @Nullable String zip,
       @Nullable String address,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
-      @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
@@ -323,26 +323,26 @@ public class Supplier extends UpdateAggregateRoot {
     if (currencyId <= 0) {
       throw new DomainException("结算币别不能为空");
     }
-    if (supplierGroupId <= 0) {
+    if (groupId <= 0) {
       throw new DomainException("供应商分类不能为空");
     }
 
+    this.groupId = groupId;
     this.code = trimmedCode;
     this.name = trimmedName;
     this.shortName = shortName;
-    this.supplierGroupId = supplierGroupId;
-    this.currencyId = currencyId;
     this.taxRegisterCode = StringUtils.trimToNull(taxRegisterCode);
+    this.currencyId = currencyId;
+    this.taxRateId = taxRateId;
+    this.telephone = telephone;
+    this.fax = fax;
+    this.email = email;
     this.country = country;
     this.province = province;
     this.city = city;
     this.district = district;
     this.zip = zip;
     this.address = address;
-    this.telephone = telephone;
-    this.fax = fax;
-    this.email = email;
-    this.taxRateId = taxRateId;
     this.disabled = disabled;
     this.remark = remark;
   }

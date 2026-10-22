@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
  * @param fixedIndexInTab 固定在页签中的序号（可空）
  * @param isMultiTab 是否支持多个tab页签
  * @param isHide 是否隐藏
- * @param sort 排序（可空）
+ * @param sequence 排序（可空）
  */
 @NullMarked
 @Schema(description = "路由元数据响应")
@@ -27,7 +27,7 @@ public record MetaResponse(
     @Schema(description = "固定页签序号") @Nullable Integer fixedIndexInTab,
     @Schema(description = "是否多页签", requiredMode = Schema.RequiredMode.REQUIRED) Boolean isMultiTab,
     @Schema(description = "是否隐藏", requiredMode = Schema.RequiredMode.REQUIRED) Boolean isHide,
-    @Schema(description = "排序") @Nullable Integer sort) {
+    @Schema(description = "排序") @Nullable Integer sequence) {
 
   /** 是否缓存（别名） */
   @JsonProperty("keepAlive")
@@ -51,6 +51,6 @@ public record MetaResponse(
   @JsonProperty("order")
   @Nullable
   public Integer order() {
-    return sort;
+    return sequence;
   }
 }

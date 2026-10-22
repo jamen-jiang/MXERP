@@ -40,12 +40,6 @@ import org.jspecify.annotations.Nullable;
     })
 public class Department extends UpdateAggregateRoot implements Parent {
 
-  /** 组织机构级别字符串（可空） */
-  @Nationalized
-  @Column(name = "Level")
-  @Nullable
-  private String level;
-
   /** 公司Id */
   @Column(name = "CompanyId", nullable = false)
   private Long companyId;
@@ -55,19 +49,25 @@ public class Department extends UpdateAggregateRoot implements Parent {
   @Nullable
   private Long parentId;
 
+  /** 父级路径（可空，形如 "1-3-5"） */
+  @Nationalized
+  @Column(name = "ParentPath")
+  @Nullable
+  private String parentPath;
+
   /** 名称 */
   @Nationalized
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
+  /** 排序（可空） */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -78,55 +78,55 @@ public class Department extends UpdateAggregateRoot implements Parent {
   /**
    * 构造器
    *
-   * @param level 级别字符串（可空）
+   * @param parentPath 父级路径（可空）
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public Department(
-      @Nullable String level,
+      @Nullable String parentPath,
       long companyId,
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(level, companyId, parentId, name, disabled, sort, remark);
+    apply(parentPath, companyId, parentId, name, disabled, sequence, remark);
   }
 
   /**
    * 修改部门
    *
-   * @param level 级别字符串（可空）
+   * @param parentPath 父级路径（可空）
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
-      @Nullable String level,
+      @Nullable String parentPath,
       long companyId,
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(level, companyId, parentId, name, disabled, sort, remark);
+    apply(parentPath, companyId, parentId, name, disabled, sequence, remark);
   }
 
   /**
    * 设置层级
    *
-   * @param level 层级字符串
+   * @param parentPath 父级路径
    */
   @Override
-  public void changeLevel(@Nullable String level) {
-    this.level = level;
+  public void changeParentPath(@Nullable String parentPath) {
+    this.parentPath = parentPath;
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -134,33 +134,33 @@ public class Department extends UpdateAggregateRoot implements Parent {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * @param level 级别字符串（可空）
+   * @param parentPath 父级路径（可空）
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 名称为空时抛出
    */
   private void apply(
-      @Nullable String level,
+      @Nullable String parentPath,
       long companyId,
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("部门名称不能为空");
     }
-    this.level = StringUtils.trimToNull(level);
+    this.parentPath = StringUtils.trimToNull(parentPath);
     this.companyId = companyId;
     this.parentId = parentId;
     this.name = trimmedName;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

@@ -41,7 +41,7 @@ public class AppDomainService {
    * @param fixedIndexInTab 固定页签序号（可空）
    * @param isMultiTab 是否多页签
    * @param isHide 是否隐藏
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 需要持久化的聚合列表（自身 + 受影响的子孙）
    * @throws DomainException 应用不存在时抛出
    */
@@ -61,14 +61,14 @@ public class AppDomainService {
       @Nullable Integer fixedIndexInTab,
       boolean isMultiTab,
       boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     App model = appRepository.get(id);
     if (model == null) {
       throw new DomainException("应用不存在!");
     }
     model.modify(
         parentId,
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "父应用"),
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "父应用"),
         name,
         path,
         component,
@@ -82,9 +82,9 @@ public class AppDomainService {
         fixedIndexInTab,
         isMultiTab,
         isHide,
-        sort);
+        sequence);
     List<App> list = new ArrayList<>();
-    setChildrenLevel(model, list);
+    setChildrenParentPath(model, list);
     list.addFirst(model);
     return list;
   }
@@ -120,14 +120,14 @@ public class AppDomainService {
    * @param model 应用
    * @param list 子应用收集列表
    */
-  private void setChildrenLevel(App model, List<App> list) {
+  private void setChildrenParentPath(App model, List<App> list) {
     if (model.getId() == 0) {
       return;
     }
     List<App> children = appRepository.getByParentId(model.getId());
-    HierarchyUtils.resetChildrenLevel(model, children);
+    HierarchyUtils.resetChildrenParentPath(model, children);
     for (App child : children) {
-      setChildrenLevel(child, list);
+      setChildrenParentPath(child, list);
       list.add(child);
     }
   }

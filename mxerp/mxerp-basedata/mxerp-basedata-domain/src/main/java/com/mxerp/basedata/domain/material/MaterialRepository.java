@@ -43,4 +43,15 @@ public interface MaterialRepository extends Repository<Material> {
   default boolean isExistByCodeExcludeId(String code) {
     return this.isExistByCodeExcludeId(code, null);
   }
+
+  /**
+   * 判断这批分类下面是否挂着物料
+   *
+   * <p>删除分类会连带删掉它整棵子树，应用层删之前要拿这一批Id来回查：物料还挂着就不能删。这个引用只有物料侧数得出来，
+   * 分类聚合自己不知道下面有多少物料。
+   *
+   * @param categoryIds 分类Id集合（一个分类连同子孙）
+   * @return true 表示至少有一个分类挂着物料
+   */
+  boolean isExistByCategoryIds(List<Long> categoryIds);
 }

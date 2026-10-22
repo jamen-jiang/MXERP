@@ -28,7 +28,7 @@ public class DepartmentFactory {
    * @param parentId 父Id（可空）
    * @param name 部门名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 部门聚合
    * @throws DomainException 同级部门名称已存在时抛出
@@ -39,19 +39,19 @@ public class DepartmentFactory {
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验同级部门名称唯一
     if (departmentRepository.isExistByNameAndParentIdExcludeId(name, parentId)) {
       throw new DomainException("同级部门名称" + name + "已存在!");
     }
     return new Department(
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "父部门"),
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "父部门"),
         companyId,
         parentId,
         name,
         disabled,
-        sort,
+        sequence,
         remark);
   }
 

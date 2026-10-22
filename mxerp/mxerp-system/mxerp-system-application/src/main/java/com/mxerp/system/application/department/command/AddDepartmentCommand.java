@@ -32,7 +32,7 @@ public class AddDepartmentCommand extends Command {
   /** 排序（可空） */
   @Schema(description = "排序")
   @Nullable
-  private final Integer sort;
+  private final Integer sequence;
 
   /** 备注（可空） */
   @Schema(description = "备注")
@@ -46,7 +46,7 @@ public class AddDepartmentCommand extends Command {
    * @param parentId 父Id（可空）
    * @param name 组织机构名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public AddDepartmentCommand(
@@ -54,13 +54,13 @@ public class AddDepartmentCommand extends Command {
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     this.companyId = companyId;
     this.parentId = parentId;
     this.name = name;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

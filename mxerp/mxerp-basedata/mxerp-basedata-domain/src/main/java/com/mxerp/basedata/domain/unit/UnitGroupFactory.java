@@ -26,17 +26,17 @@ public class UnitGroupFactory {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 单位组聚合
    * @throws DomainException 单位组代码已存在时抛出
    */
   public UnitGroup create(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
     // 校验单位组代码唯一
     if (unitGroupRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("单位组代码" + code + "已存在!");
     }
-    return new UnitGroup(code, name, disabled, sort, remark);
+    return new UnitGroup(code, name, disabled, sequence, remark);
   }
 }

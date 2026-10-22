@@ -41,7 +41,7 @@ public interface AppJpa extends JpaRepository<App, Long>, JpaSpecificationExecut
         (root, query, cb) ->
             cb.or(
                 cb.equal(root.get("id"), id),
-                cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
+                cb.like(cb.concat(cb.concat("-", root.get("parentPath")), "-"), "%-" + id + "-%"));
     return findAll(spec);
   }
 }

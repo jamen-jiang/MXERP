@@ -46,7 +46,7 @@ public class PostFactory {
         name,
         departmentId,
         parentId,
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "上级岗位"),
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "上级岗位"),
         disabled,
         remark);
   }

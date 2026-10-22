@@ -39,7 +39,7 @@ public class AppFactory {
    * @param fixedIndexInTab 固定页签序号（可空）
    * @param isMultiTab 是否多页签
    * @param isHide 是否隐藏
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 应用聚合
    * @throws DomainException 父应用不存在时抛出
    */
@@ -59,11 +59,11 @@ public class AppFactory {
       @Nullable Integer fixedIndexInTab,
       boolean isMultiTab,
       boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     return new App(
         type,
         parentId,
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "父应用"),
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "父应用"),
         name,
         path,
         component,
@@ -77,7 +77,7 @@ public class AppFactory {
         fixedIndexInTab,
         isMultiTab,
         isHide,
-        sort);
+        sequence);
   }
 
   /**

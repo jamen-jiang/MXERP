@@ -18,6 +18,14 @@ public interface SupplierGroupRepository extends Repository<SupplierGroup> {
   @Nullable SupplierGroup getByCode(String code);
 
   /**
+   * 查询指定供应商分类及其所有子孙分类（包含自身）
+   *
+   * @param id 供应商分类Id
+   * @return 供应商分类及其子孙列表
+   */
+  List<SupplierGroup> getWithChildren(long id);
+
+  /**
    * 按上级分类查询子分类
    *
    * @param parentId 上级分类Id

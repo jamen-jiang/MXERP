@@ -47,6 +47,7 @@ public class ModifyCompanyCommandHandler {
     List<Company> models =
         companyDomainService.modify(
             command.getId(),
+            command.getCode(),
             command.getName(),
             command.getShortName(),
             command.getParentId(),
@@ -64,7 +65,7 @@ public class ModifyCompanyCommandHandler {
             command.getEstablishedDate(),
             command.getCurrencyId() == null ? 0L : command.getCurrencyId(),
             command.isDisabled(),
-            command.getSort(),
+            command.getSequence(),
             command.getRemark());
 
     // 2. 保存自身与受影响的子孙（层级路径可能被重排）

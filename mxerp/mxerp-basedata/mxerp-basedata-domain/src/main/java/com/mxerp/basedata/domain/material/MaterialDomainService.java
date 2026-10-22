@@ -5,6 +5,7 @@ import com.mxerp.basedata.domain.unit.UnitRepository;
 import com.mxerp.basedata.domain.variant.Variant;
 import com.mxerp.basedata.domain.variant.VariantRepository;
 import com.mxerp.shared.domain.exception.DomainException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.NullMarked;
@@ -65,14 +66,18 @@ public class MaterialDomainService {
    * 创建物料
    *
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attributes 属性值（可空，为 null 表示不改动）
@@ -82,21 +87,25 @@ public class MaterialDomainService {
    */
   public Material create(
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable Map<String, Object> attributes,
       @Nullable List<Long> attachmentIds) {
     // 1. 分类存在性
     validateCategory(categoryId);
-    validateUnits(unitId, purchaseUnitId);
+    validateUnit(unitId);
     // 2. 代码唯一性
     if (materialRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("物料代码" + code + "已存在!");
@@ -107,14 +116,18 @@ public class MaterialDomainService {
     Material material =
         new Material(
             categoryId,
-            procurementType,
-            brandId,
+            type,
             code,
             name,
             description,
+            barcode,
+            salesPrice,
+            cost,
             unitId,
-            purchaseUnitId,
-            taxRateId,
+            isPurchaseable,
+            isSaleable,
+            purchaseTaxRateId,
+            salesTaxRateId,
             disabled,
             remark,
             attachmentIds);
@@ -128,14 +141,18 @@ public class MaterialDomainService {
    * 导入生成物料（存在则修改，不存在则新建）
    *
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attributes 属性值（可空，为 null 表示不改动）
@@ -144,14 +161,18 @@ public class MaterialDomainService {
    */
   public Material importGenerate(
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable Map<String, Object> attributes) {
@@ -161,14 +182,18 @@ public class MaterialDomainService {
       model =
           create(
               categoryId,
-              procurementType,
-              brandId,
+              type,
               code,
               name,
               description,
+              barcode,
+              salesPrice,
+              cost,
               unitId,
-              purchaseUnitId,
-              taxRateId,
+              isPurchaseable,
+              isSaleable,
+              purchaseTaxRateId,
+              salesTaxRateId,
               disabled,
               remark,
               attributes,
@@ -177,14 +202,18 @@ public class MaterialDomainService {
       modify(
           model,
           categoryId,
-          procurementType,
-          brandId,
+          type,
           code,
           name,
           description,
+          barcode,
+          salesPrice,
+          cost,
           unitId,
-          purchaseUnitId,
-          taxRateId,
+          isPurchaseable,
+          isSaleable,
+          purchaseTaxRateId,
+          salesTaxRateId,
           disabled,
           remark,
           attributes,
@@ -198,14 +227,18 @@ public class MaterialDomainService {
    *
    * @param id 物料Id
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attributes 属性值（可空，为 null 表示不改动）
@@ -216,14 +249,18 @@ public class MaterialDomainService {
   public Material modify(
       long id,
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable Map<String, Object> attributes,
@@ -237,14 +274,18 @@ public class MaterialDomainService {
     modify(
         model,
         categoryId,
-        procurementType,
-        brandId,
+        type,
         code,
         name,
         description,
+        barcode,
+        salesPrice,
+        cost,
         unitId,
-        purchaseUnitId,
-        taxRateId,
+        isPurchaseable,
+        isSaleable,
+        purchaseTaxRateId,
+        salesTaxRateId,
         disabled,
         remark,
         attributes,
@@ -259,14 +300,18 @@ public class MaterialDomainService {
    *
    * @param material 物料聚合
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attributes 属性值（可空，为 null 表示不改动）
@@ -276,21 +321,25 @@ public class MaterialDomainService {
   public void modify(
       Material material,
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable Map<String, Object> attributes,
       @Nullable List<Long> attachmentIds) {
     // 1. 分类存在性
     validateCategory(categoryId);
-    validateUnits(unitId, purchaseUnitId);
+    validateUnit(unitId);
     // 2. 代码唯一性（排除自身）
     if (materialRepository.isExistByCodeExcludeId(code, material.getId())) {
       throw new DomainException("物料代码" + code + "已存在!");
@@ -303,14 +352,18 @@ public class MaterialDomainService {
     // 5. 修改主字段
     material.modify(
         categoryId,
-        procurementType,
-        brandId,
+        type,
         code,
         name,
         description,
+        barcode,
+        salesPrice,
+        cost,
         unitId,
-        purchaseUnitId,
-        taxRateId,
+        isPurchaseable,
+        isSaleable,
+        purchaseTaxRateId,
+        salesTaxRateId,
         disabled,
         remark,
         attachmentIds);
@@ -327,25 +380,17 @@ public class MaterialDomainService {
   // ==================== 私有：校验 ====================
 
   /**
-   * 校验单位存在
+   * 校验基本单位存在
    *
-   * <p>采购单位可以空（表示和基本单位一样），也可以跨组：钢管按根买、按公斤管库存是真实业务，
-   * 跨组换算由物料替代单位负责，见
-   * {@code com.mxerp.basedata.domain.unit.MaterialAlternateUnit}。
+   * <p>采购单位不在物料上校验了：按什么单位进货随供应商变，那一列挪到了物料供应商卡，见
+   * {@code com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}。
    *
    * @param unitId 基本单位Id
-   * @param purchaseUnitId 采购单位Id（可空）
    * @throws DomainException 单位不存在时抛出
    */
-  private void validateUnits(long unitId, @Nullable Long purchaseUnitId) {
+  private void validateUnit(long unitId) {
     if (unitRepository.get(unitId) == null) {
       throw new DomainException("单位" + unitId + "不存在!");
-    }
-    if (purchaseUnitId == null) {
-      return;
-    }
-    if (unitRepository.get(purchaseUnitId) == null) {
-      throw new DomainException("采购单位" + purchaseUnitId + "不存在!");
     }
   }
 

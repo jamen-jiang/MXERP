@@ -8,8 +8,8 @@ import org.jspecify.annotations.Nullable;
  *
  * @param expression 表达式
  * @param errorMessage 错误提示
- * @param sort 排序（可空）
+ * @param sequence 排序（可空）
  */
 @NullMarked
 public record SpecAttributeValidateRuleData(
-    String expression, String errorMessage, @Nullable Integer sort) {}
+    String expression, String errorMessage, @Nullable Integer sequence) {}

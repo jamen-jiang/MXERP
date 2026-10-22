@@ -51,6 +51,7 @@ public class AddCompanyCommandHandler {
     // 1. 创建公司聚合（默认币别必填，为空时由领域层报错）
     Company model =
         companyFactory.create(
+            command.getCode(),
             command.getName(),
             command.getShortName(),
             command.getParentId(),
@@ -68,7 +69,7 @@ public class AddCompanyCommandHandler {
             command.getEstablishedDate(),
             command.getCurrencyId() == null ? 0L : command.getCurrencyId(),
             command.isDisabled(),
-            command.getSort(),
+            command.getSequence(),
             command.getRemark());
 
     // 2. 保存

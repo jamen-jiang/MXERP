@@ -29,6 +29,7 @@ public class CompanyDomainService {
    * 修改公司（含层级编排）
    *
    * @param id 公司Id
+   * @param code 公司代码
    * @param name 名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
@@ -46,13 +47,14 @@ public class CompanyDomainService {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 需要持久化的聚合列表（自身 + 受影响的子孙）
-   * @throws DomainException 同级公司名称已存在、公司不存在、或上级公司是自己/自己的子孙时抛出
+   * @throws DomainException 公司代码已存在、同级公司名称已存在、公司不存在、或上级公司是自己/自己的子孙时抛出
    */
   public List<Company> modify(
       long id,
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
@@ -70,9 +72,12 @@ public class CompanyDomainService {
       @Nullable LocalDate establishedDate,
       long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    // 校验同级公司名称唯一（排除自身）
+    // 校验代码全司唯一（排除自身）、同级公司名称唯一（排除自身）
+    if (companyRepository.isExistByCodeExcludeId(code, id)) {
+      throw new DomainException("公司代码" + code + "已存在!");
+    }
     if (companyRepository.isExistByNameAndParentIdExcludeId(name, parentId, id)) {
       throw new DomainException("同级公司名称" + name + "已存在!");
     }
@@ -83,10 +88,11 @@ public class CompanyDomainService {
     Company parent = getParent(parentId);
     validateParent(model, parentId, parent);
     model.modify(
+        code,
         name,
         shortName,
         parentId,
-        HierarchyUtils.resolveLevel(parentId, parent, "上级公司"),
+        HierarchyUtils.resolveParentPath(parentId, parent, "上级公司"),
         telephone,
         fax,
         email,
@@ -101,10 +107,10 @@ public class CompanyDomainService {
         establishedDate,
         currencyId,
         disabled,
-        sort,
+        sequence,
         remark);
     List<Company> list = new ArrayList<>();
-    setChildrenLevel(model, list);
+    setChildrenParentPath(model, list);
     list.addFirst(model);
     return list;
   }
@@ -166,14 +172,14 @@ public class CompanyDomainService {
    * @param model 公司
    * @param list 下级公司收集列表
    */
-  private void setChildrenLevel(Company model, List<Company> list) {
+  private void setChildrenParentPath(Company model, List<Company> list) {
     if (model.getId() == 0) {
       return;
     }
     List<Company> children = companyRepository.getListByParentId(model.getId());
-    HierarchyUtils.resetChildrenLevel(model, children);
+    HierarchyUtils.resetChildrenParentPath(model, children);
     for (Company child : children) {
-      setChildrenLevel(child, list);
+      setChildrenParentPath(child, list);
       list.add(child);
     }
   }

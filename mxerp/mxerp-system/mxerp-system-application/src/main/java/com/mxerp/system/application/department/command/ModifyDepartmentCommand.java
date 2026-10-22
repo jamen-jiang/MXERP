@@ -23,7 +23,7 @@ public class ModifyDepartmentCommand extends AddDepartmentCommand {
    * @param parentId 父Id（可空）
    * @param name 组织机构名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public ModifyDepartmentCommand(
@@ -32,9 +32,9 @@ public class ModifyDepartmentCommand extends AddDepartmentCommand {
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    super(companyId, parentId, name, disabled, sort, remark);
+    super(companyId, parentId, name, disabled, sequence, remark);
     this.id = id;
   }
 }

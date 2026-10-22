@@ -40,11 +40,11 @@ public class UnitDomainService {
    * @param groupId 所属单位组Id
    * @param code 单位代码
    * @param name 单位名称
-   * @param factor 换算率（1 基准 = factor 本单位）
+   * @param factor 换算率（1 本单位 = factor 基准单位）
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 单位聚合
    */
@@ -56,7 +56,7 @@ public class UnitDomainService {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 按代码查单位
     Unit model = unitRepository.getByCode(code);
@@ -66,9 +66,9 @@ public class UnitDomainService {
       requireGroup(groupId);
       model =
           unitFactory.create(
-              groupId, code, name, factor, isBase, rounding, disabled, sort, remark);
+              groupId, code, name, factor, isBase, rounding, disabled, sequence, remark);
     } else {
-      modify(model, code, name, factor, isBase, rounding, disabled, sort, remark);
+      modify(model, code, name, factor, isBase, rounding, disabled, sequence, remark);
     }
 
     return model;
@@ -80,11 +80,11 @@ public class UnitDomainService {
    * @param id 单位Id
    * @param code 单位代码
    * @param name 单位名称
-   * @param factor 换算率（1 基准 = factor 本单位）
+   * @param factor 换算率（1 本单位 = factor 基准单位）
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 单位聚合
    * @throws DomainException 单位不存在时抛出
@@ -97,13 +97,13 @@ public class UnitDomainService {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     Unit model = unitRepository.get(id);
     if (model == null) {
       throw new DomainException("单位" + id + "不存在!");
     }
-    modify(model, code, name, factor, isBase, rounding, disabled, sort, remark);
+    modify(model, code, name, factor, isBase, rounding, disabled, sequence, remark);
     return model;
   }
 
@@ -115,11 +115,11 @@ public class UnitDomainService {
    * @param model 单位
    * @param code 单位代码
    * @param name 单位名称
-   * @param factor 换算率（1 基准 = factor 本单位）
+   * @param factor 换算率（1 本单位 = factor 基准单位）
    * @param isBase 是否组内基准单位
    * @param rounding 数量落数步长
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
@@ -130,7 +130,7 @@ public class UnitDomainService {
       boolean isBase,
       BigDecimal rounding,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验单位代码唯一
     if (unitRepository.isExistByCodeExcludeId(code, model.getId())) {
@@ -141,7 +141,7 @@ public class UnitDomainService {
         && unitRepository.isExistByGroupIdAndIsBaseExcludeId(model.getGroupId(), model.getId())) {
       throw new DomainException("该单位组已经有基准单位了，换算率要相对它来填");
     }
-    model.modify(code, name, factor, isBase, rounding, disabled, sort, remark);
+    model.modify(code, name, factor, isBase, rounding, disabled, sequence, remark);
   }
 
   // ==================== 私有：校验 ====================

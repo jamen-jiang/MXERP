@@ -46,4 +46,14 @@ public interface SpecAttributeRepository extends Repository<SpecAttribute> {
   default boolean isExistByCategoryIdAndCodeExcludeId(long categoryId, String code) {
     return isExistByCategoryIdAndCodeExcludeId(categoryId, code, null);
   }
+
+  /**
+   * 判断这批分类下面是否配着规格属性
+   *
+   * <p>与物料同一道删除保护：分类被删掉后这些规格属性就成了没有归属的定义，所以应用层删分类前要一起回查这一批Id。
+   *
+   * @param categoryIds 分类Id集合（一个分类连同子孙）
+   * @return true 表示至少有一个分类配着规格属性
+   */
+  boolean isExistByCategoryIds(List<Long> categoryIds);
 }

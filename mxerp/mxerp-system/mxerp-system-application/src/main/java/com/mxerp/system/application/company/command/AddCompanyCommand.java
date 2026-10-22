@@ -13,6 +13,10 @@ import org.jspecify.annotations.Nullable;
 @Schema(description = "添加公司命令")
 public class AddCompanyCommand extends Command {
 
+  /** 公司代码 */
+  @Schema(description = "公司代码", requiredMode = Schema.RequiredMode.REQUIRED)
+  private final String code;
+
   /** 公司名称 */
   @Schema(description = "公司名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private final String name;
@@ -98,7 +102,7 @@ public class AddCompanyCommand extends Command {
   /** 排序（可空） */
   @Schema(description = "排序")
   @Nullable
-  private final Integer sort;
+  private final Integer sequence;
 
   /** 备注（可空） */
   @Schema(description = "备注")
@@ -108,6 +112,7 @@ public class AddCompanyCommand extends Command {
   /**
    * 构造器
    *
+   * @param code 公司代码
    * @param name 公司名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
@@ -125,10 +130,11 @@ public class AddCompanyCommand extends Command {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public AddCompanyCommand(
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
@@ -146,8 +152,9 @@ public class AddCompanyCommand extends Command {
       @Nullable LocalDate establishedDate,
       Long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
+    this.code = code;
     this.name = name;
     this.shortName = shortName;
     this.parentId = parentId;
@@ -165,7 +172,7 @@ public class AddCompanyCommand extends Command {
     this.establishedDate = establishedDate;
     this.currencyId = currencyId;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

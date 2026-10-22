@@ -18,6 +18,16 @@ public class DepartmentResponse extends BaseResponse {
   @Schema(description = "部门Id", requiredMode = Schema.RequiredMode.REQUIRED)
   private Long id;
 
+  /** 父Id（可空） */
+  @Schema(description = "父Id")
+  @Nullable
+  private Long parentId;
+
+  /** 父级路径（可空，形如 "1-3-5"） */
+  @Schema(description = "父级路径")
+  @Nullable
+  private String parentPath;
+
   /** 公司Id */
   @Schema(description = "公司Id", requiredMode = Schema.RequiredMode.REQUIRED)
   private Long companyId;
@@ -25,16 +35,6 @@ public class DepartmentResponse extends BaseResponse {
   /** 公司名称 */
   @Schema(description = "公司名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String companyName = "";
-
-  /** 部门级别字符串（可空） */
-  @Schema(description = "部门级别字符串")
-  @Nullable
-  private String level;
-
-  /** 父Id（可空） */
-  @Schema(description = "父Id")
-  @Nullable
-  private Long parentId;
 
   /** 父级部门（可空） */
   @Schema(description = "父级部门名称")
@@ -52,7 +52,7 @@ public class DepartmentResponse extends BaseResponse {
   /** 排序（可空） */
   @Schema(description = "排序")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /** 备注（可空） */
   @Schema(description = "备注")

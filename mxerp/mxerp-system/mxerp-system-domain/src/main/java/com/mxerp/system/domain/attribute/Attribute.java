@@ -57,7 +57,7 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_Attribute_EntityType", columnList = "EntityType"),
       @Index(name = "IX_Attribute_Code", columnList = "Code"),
       @Index(name = "IX_Attribute_Label", columnList = "Label"),
-      @Index(name = "IX_Attribute_Sort", columnList = "Sort")
+      @Index(name = "IX_Attribute_Sequence", columnList = "Sequence")
       // 注意：EntityType + Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Attribute extends UpdateAggregateRoot {
@@ -102,9 +102,9 @@ public class Attribute extends UpdateAggregateRoot {
   private Boolean isFilter;
 
   /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /** 备注（可空） */
   @Nationalized
@@ -158,7 +158,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @param dataType 数据类型
    * @param isRequired 是否必填
    * @param isFilter 是否作为筛选项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   Attribute(
@@ -169,7 +169,7 @@ public class Attribute extends UpdateAggregateRoot {
       String dataType,
       boolean isRequired,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedEntityType = StringUtils.trimToNull(entityType);
     if (trimmedEntityType == null) {
@@ -188,7 +188,7 @@ public class Attribute extends UpdateAggregateRoot {
     this.dataType = dataType;
 
     // 可变字段交给 apply 统一处理
-    apply(label, inputType, isRequired, isFilter, sort, remark);
+    apply(label, inputType, isRequired, isFilter, sequence, remark);
   }
 
   /**
@@ -200,7 +200,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @param inputType 输入类型
    * @param isRequired 是否必填
    * @param isFilter 是否作为筛选项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
@@ -208,9 +208,9 @@ public class Attribute extends UpdateAggregateRoot {
       String inputType,
       boolean isRequired,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(label, inputType, isRequired, isFilter, sort, remark);
+    apply(label, inputType, isRequired, isFilter, sequence, remark);
   }
 
   /**
@@ -219,14 +219,14 @@ public class Attribute extends UpdateAggregateRoot {
    * @param value 属性值
    * @param label 属性值标签
    * @param isDefault 是否默认项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 属性值在该属性下已存在时抛出
    */
-  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sort) {
+  public void addValue(String value, String label, boolean isDefault, @Nullable Integer sequence) {
     if (isExistValue(value)) {
       throw new DomainException("属性" + this.label + ":属性值" + value + " 已存在!");
     }
-    attributeValues.add(new AttributeValue(value, label, isDefault, sort));
+    attributeValues.add(new AttributeValue(value, label, isDefault, sequence));
   }
 
   /**
@@ -237,15 +237,15 @@ public class Attribute extends UpdateAggregateRoot {
    * @param valueId 属性值Id
    * @param label 属性值标签
    * @param isDefault 是否默认项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 属性值不存在时抛出
    */
-  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sort) {
+  public void modifyValue(long valueId, String label, boolean isDefault, @Nullable Integer sequence) {
     AttributeValue attributeValue = findValue(valueId);
     if (attributeValue == null) {
       throw new DomainException("属性" + this.label + ":属性值不存在!");
     }
-    attributeValue.modify(label, isDefault, sort);
+    attributeValue.modify(label, isDefault, sequence);
   }
 
   /**
@@ -268,14 +268,14 @@ public class Attribute extends UpdateAggregateRoot {
    *
    * @param expression 校验表达式
    * @param errorMessage 校验失败提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 相同表达式已存在时抛出
    */
-  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sort) {
+  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sequence) {
     if (isExistValidateRule(expression)) {
       throw new DomainException("属性" + this.label + ":校验规则已存在!");
     }
-    attributeValidateRules.add(new AttributeValidateRule(expression, errorMessage, sort));
+    attributeValidateRules.add(new AttributeValidateRule(expression, errorMessage, sequence));
   }
 
   /**
@@ -284,16 +284,16 @@ public class Attribute extends UpdateAggregateRoot {
    * @param validateRuleId 校验规则Id
    * @param expression 校验表达式
    * @param errorMessage 校验失败提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 校验规则不存在时抛出
    */
   public void modifyValidateRule(
-      long validateRuleId, String expression, String errorMessage, @Nullable Integer sort) {
+      long validateRuleId, String expression, String errorMessage, @Nullable Integer sequence) {
     AttributeValidateRule validateRule = findValidateRule(validateRuleId);
     if (validateRule == null) {
       throw new DomainException("属性" + this.label + ":校验规则不存在!");
     }
-    validateRule.modify(expression, errorMessage, sort);
+    validateRule.modify(expression, errorMessage, sequence);
   }
 
   /**
@@ -372,7 +372,7 @@ public class Attribute extends UpdateAggregateRoot {
    * @param inputType 输入类型
    * @param isRequired 是否必填
    * @param isFilter 是否作为筛选项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   private void apply(
@@ -380,7 +380,7 @@ public class Attribute extends UpdateAggregateRoot {
       String inputType,
       boolean isRequired,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
@@ -392,7 +392,7 @@ public class Attribute extends UpdateAggregateRoot {
     this.inputType = inputType;
     this.isRequired = isRequired;
     this.isFilter = isFilter;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 

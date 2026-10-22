@@ -43,7 +43,7 @@ public class ModifyDepartmentCommandHandler {
   @Transactional
   @DistributedLock(prefix = EntityConst.DEPARTMENT, value = "#command.id")
   public void handle(ModifyDepartmentCommand command) {
-    // 1. 通过领域服务修改部门（内部算 level + 递归子部门）
+    // 1. 通过领域服务修改部门（内部算 parentPath + 递归子部门）
     List<Department> list =
         departmentDomainService.modify(
             command.getId(),
@@ -51,10 +51,10 @@ public class ModifyDepartmentCommandHandler {
             command.getParentId(),
             command.getName(),
             command.isDisabled(),
-            command.getSort(),
+            command.getSequence(),
             command.getRemark());
 
-    // 2. 保存主部门与所有子孙（level 被更新）
+    // 2. 保存主部门与所有子孙（parentPath 被更新）
     for (Department item : list) {
       departmentRepository.save(item);
     }

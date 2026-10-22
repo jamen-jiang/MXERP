@@ -40,25 +40,4 @@ public interface VariantRepository extends Repository<Variant> {
    * @return true：存在
    */
   boolean isExistByCode(String code);
-
-  /**
-   * 判断 OPC 是否存在（排除指定 Id，用于修改时排除自身）
-   *
-   * @param materialId MaterialId
-   * @param opc OPC
-   * @param id 排除的 SKU Id
-   * @return true：存在
-   */
-  boolean isExistByMaterialIdAndOpcExcludeId(long materialId, String opc, @Nullable Long id);
-
-  /**
-   * 判断 OPC 是否存在
-   *
-   * @param materialId MaterialId
-   * @param opc OPC
-   * @return true：存在
-   */
-  default boolean isExistByMaterialIdAndOpcExcludeId(long materialId, String opc) {
-    return this.isExistByMaterialIdAndOpcExcludeId(materialId, opc, null);
-  }
 }

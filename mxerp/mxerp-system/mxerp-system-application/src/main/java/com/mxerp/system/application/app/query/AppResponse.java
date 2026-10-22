@@ -27,10 +27,10 @@ public class AppResponse extends BaseResponse {
   @Nullable
   private Long parentId;
 
-  /** 应用级别（可空） */
-  @Schema(description = "应用级别")
+  /** 父级路径（可空，形如 "1-3-5"） */
+  @Schema(description = "父级路径")
   @Nullable
-  private String level;
+  private String parentPath;
 
   /** 名称（可空） */
   @Schema(description = "名称")

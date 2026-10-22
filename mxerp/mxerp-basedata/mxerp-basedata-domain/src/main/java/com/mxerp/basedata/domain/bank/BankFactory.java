@@ -26,17 +26,17 @@ public class BankFactory {
    * @param code 银行代码
    * @param name 银行名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 银行聚合
    * @throws DomainException 银行代码已存在时抛出
    */
   public Bank create(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
     // 校验银行代码唯一
     if (bankRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("银行代码" + code + "已存在!");
     }
-    return new Bank(code, name, disabled, sort, remark);
+    return new Bank(code, name, disabled, sequence, remark);
   }
 }

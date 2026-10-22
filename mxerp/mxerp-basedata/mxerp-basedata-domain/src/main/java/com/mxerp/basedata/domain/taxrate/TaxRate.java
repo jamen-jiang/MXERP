@@ -41,7 +41,7 @@ import org.jspecify.annotations.Nullable;
     name = "TaxRate",
     indexes = {
       @Index(name = "IX_TaxRate_Name", columnList = "Name"),
-      @Index(name = "IX_TaxRate_Sort", columnList = "Sort")
+      @Index(name = "IX_TaxRate_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class TaxRate extends UpdateAggregateRoot {
@@ -60,14 +60,14 @@ public class TaxRate extends UpdateAggregateRoot {
   @Column(name = "Rate", nullable = false, precision = 18, scale = 2)
   private BigDecimal rate;
 
+  /** 排序（可空） */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -82,7 +82,7 @@ public class TaxRate extends UpdateAggregateRoot {
    * @param name 名称
    * @param rate 税率值（百分比，13.00 = 13%）
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   TaxRate(
@@ -90,9 +90,9 @@ public class TaxRate extends UpdateAggregateRoot {
       String name,
       BigDecimal rate,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(code, name, rate, disabled, sort, remark);
+    apply(code, name, rate, disabled, sequence, remark);
   }
 
   /**
@@ -102,7 +102,7 @@ public class TaxRate extends UpdateAggregateRoot {
    * @param name 名称
    * @param rate 税率值（百分比，13.00 = 13%）
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   void modify(
@@ -110,9 +110,9 @@ public class TaxRate extends UpdateAggregateRoot {
       String name,
       BigDecimal rate,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(code, name, rate, disabled, sort, remark);
+    apply(code, name, rate, disabled, sequence, remark);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -126,7 +126,7 @@ public class TaxRate extends UpdateAggregateRoot {
    * @param name 名称
    * @param rate 税率值（百分比，13.00 = 13%）
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   private void apply(
@@ -134,7 +134,7 @@ public class TaxRate extends UpdateAggregateRoot {
       String name,
       BigDecimal rate,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
@@ -148,7 +148,7 @@ public class TaxRate extends UpdateAggregateRoot {
     this.name = trimmedName;
     this.rate = rate;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

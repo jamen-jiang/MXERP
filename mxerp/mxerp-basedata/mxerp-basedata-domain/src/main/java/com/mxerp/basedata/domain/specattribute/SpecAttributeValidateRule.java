@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
       @Index(
           name = "IX_SpecAttributeValidateRule_SpecAttributeId",
           columnList = "SpecAttributeId"),
-      @Index(name = "IX_SpecAttributeValidateRule_Sort", columnList = "Sort")
+      @Index(name = "IX_SpecAttributeValidateRule_Sequence", columnList = "Sequence")
     })
 public class SpecAttributeValidateRule extends BaseDeleteEntity {
 
@@ -46,20 +46,20 @@ public class SpecAttributeValidateRule extends BaseDeleteEntity {
   private String errorMessage;
 
   /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /**
    * 构造器
    *
    * @param expression 表达式
    * @param errorMessage 错误提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   SpecAttributeValidateRule(
-      String expression, String errorMessage, @Nullable Integer sort) {
-    apply(expression, errorMessage, sort);
+      String expression, String errorMessage, @Nullable Integer sequence) {
+    apply(expression, errorMessage, sequence);
   }
 
   /**
@@ -67,10 +67,10 @@ public class SpecAttributeValidateRule extends BaseDeleteEntity {
    *
    * @param expression 表达式
    * @param errorMessage 错误提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  void modify(String expression, String errorMessage, @Nullable Integer sort) {
-    apply(expression, errorMessage, sort);
+  void modify(String expression, String errorMessage, @Nullable Integer sequence) {
+    apply(expression, errorMessage, sequence);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -82,9 +82,9 @@ public class SpecAttributeValidateRule extends BaseDeleteEntity {
    *
    * @param expression 表达式
    * @param errorMessage 错误提示
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  private void apply(String expression, String errorMessage, @Nullable Integer sort) {
+  private void apply(String expression, String errorMessage, @Nullable Integer sequence) {
     String trimmedExpression = StringUtils.trimToNull(expression);
     String trimmedErrorMessage = StringUtils.trimToNull(errorMessage);
     if (trimmedExpression == null) {
@@ -95,6 +95,6 @@ public class SpecAttributeValidateRule extends BaseDeleteEntity {
     }
     this.expression = trimmedExpression;
     this.errorMessage = trimmedErrorMessage;
-    this.sort = sort;
+    this.sequence = sequence;
   }
 }

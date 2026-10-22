@@ -1,7 +1,8 @@
-package com.mxerp.basedata.domain.purchaseprice;
+package com.mxerp.basedata.domain.materialsupplier;
 
 import com.mxerp.basedata.domain.material.MaterialRepository;
 import com.mxerp.basedata.domain.supplier.SupplierRepository;
+import com.mxerp.basedata.domain.unit.UnitRepository;
 import com.mxerp.basedata.domain.variant.Variant;
 import com.mxerp.basedata.domain.variant.VariantRepository;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -14,19 +15,19 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 采购价格领域服务，负责跨聚合编排
+ * 物料供应商领域服务，负责跨聚合编排
  *
  * <p>这里没有 {@code importGenerate}：同一供应商同一物料的报价天生有多张卡，按业务键查不到唯一一条，
  * 批量导入只能走「新建一张卡」。
  */
 @NullMarked
-public class PurchasePriceDomainService {
+public class MaterialSupplierDomainService {
 
-  /** 采购价格工厂 */
-  private final PurchasePriceFactory purchasePriceFactory;
+  /** 物料供应商工厂 */
+  private final MaterialSupplierFactory materialSupplierFactory;
 
-  /** 采购价格仓储 */
-  private final PurchasePriceRepository purchasePriceRepository;
+  /** 物料供应商仓储 */
+  private final MaterialSupplierRepository materialSupplierRepository;
 
   /** 供应商仓储 */
   private final SupplierRepository supplierRepository;
@@ -37,89 +38,126 @@ public class PurchasePriceDomainService {
   /** SKU 仓储 */
   private final VariantRepository variantRepository;
 
+  /** 单位仓储：报价单位必须存在 */
+  private final UnitRepository unitRepository;
+
   /**
    * 构造器注入
    *
-   * @param purchasePriceFactory 采购价格工厂
-   * @param purchasePriceRepository 采购价格仓储
+   * @param materialSupplierFactory 物料供应商工厂
+   * @param materialSupplierRepository 物料供应商仓储
    * @param supplierRepository 供应商仓储
    * @param materialRepository 物料仓储
    * @param variantRepository SKU 仓储
+   * @param unitRepository 单位仓储
    */
-  public PurchasePriceDomainService(
-      PurchasePriceFactory purchasePriceFactory,
-      PurchasePriceRepository purchasePriceRepository,
+  public MaterialSupplierDomainService(
+      MaterialSupplierFactory materialSupplierFactory,
+      MaterialSupplierRepository materialSupplierRepository,
       SupplierRepository supplierRepository,
       MaterialRepository materialRepository,
-      VariantRepository variantRepository) {
-    this.purchasePriceFactory = purchasePriceFactory;
-    this.purchasePriceRepository = purchasePriceRepository;
+      VariantRepository variantRepository,
+      UnitRepository unitRepository) {
+    this.materialSupplierFactory = materialSupplierFactory;
+    this.materialSupplierRepository = materialSupplierRepository;
     this.supplierRepository = supplierRepository;
     this.materialRepository = materialRepository;
     this.variantRepository = variantRepository;
+    this.unitRepository = unitRepository;
   }
 
   /**
-   * 新建价格卡
+   * 新建供应商卡
    *
    * <p>新卡在生效点接替同键的旧卡：旧卡的失效时间收口到新卡生效点，其它区间交叠的直接拒绝。
    *
-   * @param supplierId 供应商Id
    * @param materialId 物料系列Id
    * @param variantId SKU Id（可空，个别度数的特别价）
+   * @param supplierId 供应商Id
+   * @param supplierProductCode 供应商产品代码（可空）
+   * @param supplierProductName 供应商产品名称（可空）
    * @param price 采购价格
+   * @param discount 折扣（%，可空）
    * @param currencyId 币种Id
+   * @param unitId 单位Id（可空，空表示按物料基本单位报价）
    * @param moq 起订量（可空）
+   * @param leadTime 货期（天，可空）
    * @param effectiveFrom 生效时间
    * @param effectiveTo 失效时间（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
-   * @return 价格卡聚合
+   * @return 供应商卡聚合
    * @throws DomainException 供应商、物料、SKU 不存在、SKU 不属于该物料、或生效区间重叠时抛出
    */
-  public PurchasePrice create(
-      long supplierId,
+  public MaterialSupplier create(
       long materialId,
       @Nullable Long variantId,
+      long supplierId,
+      @Nullable String supplierProductCode,
+      @Nullable String supplierProductName,
       BigDecimal price,
+      @Nullable BigDecimal discount,
       long currencyId,
+      @Nullable Long unitId,
       @Nullable BigDecimal moq,
+      @Nullable Integer leadTime,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     validateReferences(supplierId, materialId, variantId);
+    if (unitId != null && unitRepository.get(unitId) == null) {
+      throw new DomainException("单位" + unitId + "不存在!");
+    }
     handOver(supplierId, materialId, variantId, effectiveFrom, effectiveTo);
-    return purchasePriceFactory.create(
-        supplierId,
+    return materialSupplierFactory.create(
         materialId,
         variantId,
+        supplierId,
+        supplierProductCode,
+        supplierProductName,
         price,
+        discount,
         currencyId,
+        unitId,
         moq,
+        leadTime,
         effectiveFrom,
         effectiveTo,
+        sequence,
         remark);
   }
 
   /**
-   * 修改价格卡
+   * 修改供应商卡
    *
    * <p>供应商、物料、SKU 与价格不可改；改有效期时，同键的其它卡不许与新区间重叠。
    *
-   * @param id 价格卡Id
+   * @param id 供应商卡Id
+   * @param supplierProductCode 供应商产品代码（可空）
+   * @param supplierProductName 供应商产品名称（可空）
+   * @param discount 折扣（%，可空）
    * @param moq 起订量（可空）
+   * @param leadTime 货期（天，可空）
    * @param effectiveFrom 生效时间
    * @param effectiveTo 失效时间（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
-   * @return 价格卡聚合
-   * @throws DomainException 价格卡不存在、或生效区间与同键的其它卡重叠时抛出
+   * @return 供应商卡聚合
+   * @throws DomainException 供应商卡不存在、或生效区间与同键的其它卡重叠时抛出
    */
-  public PurchasePrice modify(
+  public MaterialSupplier modify(
       long id,
+      @Nullable String supplierProductCode,
+      @Nullable String supplierProductName,
+      @Nullable BigDecimal discount,
       @Nullable BigDecimal moq,
+      @Nullable Integer leadTime,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    PurchasePrice model = getExist(id);
+    MaterialSupplier model = getExist(id);
     checkNoOverlap(
         model.getSupplierId(),
         model.getMaterialId(),
@@ -127,7 +165,16 @@ public class PurchasePriceDomainService {
         effectiveFrom,
         effectiveTo,
         id);
-    model.modify(moq, effectiveFrom, effectiveTo, remark);
+    model.modify(
+        supplierProductCode,
+        supplierProductName,
+        discount,
+        moq,
+        leadTime,
+        effectiveFrom,
+        effectiveTo,
+        sequence,
+        remark);
     return model;
   }
 
@@ -149,12 +196,12 @@ public class PurchasePriceDomainService {
       @Nullable Long variantId,
       LocalDateTime from,
       @Nullable LocalDateTime to) {
-    List<PurchasePrice> cards =
-        purchasePriceRepository.getListBySupplierIdAndMaterialIdAndVariantId(
+    List<MaterialSupplier> cards =
+        materialSupplierRepository.getListBySupplierIdAndMaterialIdAndVariantId(
             supplierId, materialId, variantId);
 
-    List<PurchasePrice> predecessors = new ArrayList<>();
-    for (PurchasePrice card : cards) {
+    List<MaterialSupplier> predecessors = new ArrayList<>();
+    for (MaterialSupplier card : cards) {
       if (card.getEffectiveFrom().isBefore(from) && card.covers(from)) {
         predecessors.add(card);
         continue;
@@ -164,7 +211,7 @@ public class PurchasePriceDomainService {
       }
     }
 
-    for (PurchasePrice predecessor : predecessors) {
+    for (MaterialSupplier predecessor : predecessors) {
       predecessor.closeAt(from);
     }
   }
@@ -177,7 +224,7 @@ public class PurchasePriceDomainService {
    * @param variantId SKU Id（可空）
    * @param from 生效时间
    * @param to 失效时间（可空）
-   * @param excludeId 排除的价格卡Id
+   * @param excludeId 排除的供应商卡Id
    * @throws DomainException 区间重叠时抛出
    */
   private void checkNoOverlap(
@@ -187,12 +234,12 @@ public class PurchasePriceDomainService {
       LocalDateTime from,
       @Nullable LocalDateTime to,
       long excludeId) {
-    List<PurchasePrice> cards =
-        purchasePriceRepository.getListBySupplierIdAndMaterialIdAndVariantId(
+    List<MaterialSupplier> cards =
+        materialSupplierRepository.getListBySupplierIdAndMaterialIdAndVariantId(
             supplierId, materialId, variantId);
-    for (PurchasePrice card : cards) {
+    for (MaterialSupplier card : cards) {
       if (!Objects.equals(card.getId(), excludeId) && card.overlaps(from, to)) {
-        throw new DomainException("该价格卡的有效期与同一供应商同一物料的其它价格重叠!");
+        throw new DomainException("该供应商卡的有效期与同一供应商同一物料的其它价格重叠!");
       }
     }
   }
@@ -224,16 +271,16 @@ public class PurchasePriceDomainService {
   }
 
   /**
-   * 取价格卡，不存在则抛异常
+   * 取供应商卡，不存在则抛异常
    *
-   * @param id 价格卡Id
-   * @return 价格卡聚合
-   * @throws DomainException 价格卡不存在时抛出
+   * @param id 供应商卡Id
+   * @return 供应商卡聚合
+   * @throws DomainException 供应商卡不存在时抛出
    */
-  private PurchasePrice getExist(long id) {
-    PurchasePrice model = purchasePriceRepository.get(id);
+  private MaterialSupplier getExist(long id) {
+    MaterialSupplier model = materialSupplierRepository.get(id);
     if (model == null) {
-      throw new DomainException("价格卡" + id + "不存在!");
+      throw new DomainException("供应商卡" + id + "不存在!");
     }
     return model;
   }

@@ -25,6 +25,7 @@ public class CompanyFactory {
   /**
    * 创建公司
    *
+   * @param code 公司代码
    * @param name 公司名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
@@ -42,12 +43,13 @@ public class CompanyFactory {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 公司聚合
-   * @throws DomainException 同级公司名称已存在、或上级公司不存在时抛出
+   * @throws DomainException 公司代码已存在、同级公司名称已存在、或上级公司不存在时抛出
    */
   public Company create(
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
@@ -65,17 +67,21 @@ public class CompanyFactory {
       @Nullable LocalDate establishedDate,
       long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    // 校验同级公司名称唯一
+    // 校验代码全司唯一、同级公司名称唯一
+    if (companyRepository.isExistByCodeExcludeId(code)) {
+      throw new DomainException("公司代码" + code + "已存在!");
+    }
     if (companyRepository.isExistByNameAndParentIdExcludeId(name, parentId)) {
       throw new DomainException("同级公司名称" + name + "已存在!");
     }
     return new Company(
+        code,
         name,
         shortName,
         parentId,
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "上级公司"),
+        HierarchyUtils.resolveParentPath(parentId, getParent(parentId), "上级公司"),
         telephone,
         fax,
         email,
@@ -90,7 +96,7 @@ public class CompanyFactory {
         establishedDate,
         currencyId,
         disabled,
-        sort,
+        sequence,
         remark);
   }
 

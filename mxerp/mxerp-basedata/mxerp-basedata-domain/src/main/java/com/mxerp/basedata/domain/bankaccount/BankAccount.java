@@ -52,11 +52,6 @@ public class BankAccount extends UpdateAggregateRoot {
   @Column(name = "PartyId", nullable = false)
   private Long partyId;
 
-  /** 账户名称（户名） */
-  @Nationalized
-  @Column(name = "AccountName", nullable = false, length = 100)
-  private String accountName;
-
   /** 开户银行Id */
   @Column(name = "BankId", nullable = false)
   private Long bankId;
@@ -71,6 +66,11 @@ public class BankAccount extends UpdateAggregateRoot {
   @Nationalized
   @Column(name = "AccountNumber", nullable = false, length = 50)
   private String accountNumber;
+
+  /** 账户名称（户名） */
+  @Nationalized
+  @Column(name = "AccountName", nullable = false, length = 100)
+  private String accountName;
 
   /** 账户币种Id（可空，空表示与本位币相同） */
   @Column(name = "CurrencyId")
@@ -90,10 +90,10 @@ public class BankAccount extends UpdateAggregateRoot {
    *
    * @param partyType 归属类型编码
    * @param partyId 归属主数据Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -101,15 +101,15 @@ public class BankAccount extends UpdateAggregateRoot {
   BankAccount(
       String partyType,
       long partyId,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
     apply(
-        partyType, partyId, accountName, bankId, bankBranch, accountNumber, currencyId, isDefault,
+        partyType, partyId, bankId, bankBranch, accountNumber, accountName, currencyId, isDefault,
         disabled);
   }
 
@@ -118,24 +118,24 @@ public class BankAccount extends UpdateAggregateRoot {
    *
    * <p>归属（类型 + Id）是这一行的身份，不提供修改：账户要换到另一个供应商，就当新账户建。
    *
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
    */
   void modify(
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
     apply(
-        this.partyType, this.partyId, accountName, bankId, bankBranch, accountNumber, currencyId,
+        this.partyType, this.partyId, bankId, bankBranch, accountNumber, accountName, currencyId,
         isDefault, disabled);
   }
 
@@ -146,10 +146,10 @@ public class BankAccount extends UpdateAggregateRoot {
    *
    * @param partyType 归属类型编码
    * @param partyId 归属主数据Id
-   * @param accountName 账户名称（户名）
    * @param bankId 开户银行Id
    * @param bankBranch 开户支行（可空）
    * @param accountNumber 银行账号
+   * @param accountName 账户名称（户名）
    * @param currencyId 账户币种Id（可空）
    * @param isDefault 是否默认账户
    * @param disabled 是否禁用
@@ -158,10 +158,10 @@ public class BankAccount extends UpdateAggregateRoot {
   private void apply(
       String partyType,
       long partyId,
-      String accountName,
       long bankId,
       @Nullable String bankBranch,
       String accountNumber,
+      String accountName,
       @Nullable Long currencyId,
       boolean isDefault,
       boolean disabled) {
@@ -188,10 +188,10 @@ public class BankAccount extends UpdateAggregateRoot {
 
     this.partyType = partyType;
     this.partyId = partyId;
-    this.accountName = trimmedAccountName;
     this.bankId = bankId;
     this.bankBranch = StringUtils.trimToNull(bankBranch);
     this.accountNumber = trimmedAccountNumber;
+    this.accountName = trimmedAccountName;
     this.currencyId = currencyId;
     this.isDefault = isDefault;
     this.disabled = disabled;

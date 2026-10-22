@@ -35,7 +35,7 @@ import org.jspecify.annotations.Nullable;
     name = "Bank",
     indexes = {
       @Index(name = "IX_Bank_Name", columnList = "Name"),
-      @Index(name = "IX_Bank_Sort", columnList = "Sort")
+      @Index(name = "IX_Bank_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Bank extends UpdateAggregateRoot {
@@ -50,14 +50,14 @@ public class Bank extends UpdateAggregateRoot {
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
+  /** 排序（可空） */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -71,12 +71,12 @@ public class Bank extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   Bank(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
-    apply(code, name, disabled, sort, remark);
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
+    apply(code, name, disabled, sequence, remark);
   }
 
   /**
@@ -85,12 +85,12 @@ public class Bank extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   void modify(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
-    apply(code, name, disabled, sort, remark);
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
+    apply(code, name, disabled, sequence, remark);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -101,12 +101,12 @@ public class Bank extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 代码或名称为空时抛出
    */
   private void apply(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedCode == null) {
@@ -119,7 +119,7 @@ public class Bank extends UpdateAggregateRoot {
     this.code = trimmedCode;
     this.name = trimmedName;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

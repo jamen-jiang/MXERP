@@ -30,7 +30,7 @@ public class SpecAttributeFactory {
    * @param inputType 输入类型
    * @param dataType 数据类型
    * @param isFilter 是否用于筛选
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 规格属性聚合
    * @throws DomainException 同一分类下规格属性代码已存在时抛出
@@ -42,13 +42,13 @@ public class SpecAttributeFactory {
       String inputType,
       String dataType,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验同一分类下规格属性代码唯一
     if (specAttributeRepository.isExistByCategoryIdAndCodeExcludeId(categoryId, code)) {
       throw new DomainException("分类" + categoryId + "下规格属性代码" + code + "已存在!");
     }
     return new SpecAttribute(
-        categoryId, code, label, inputType, dataType, isFilter, sort, remark);
+        categoryId, code, label, inputType, dataType, isFilter, sequence, remark);
   }
 }

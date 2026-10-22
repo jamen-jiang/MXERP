@@ -38,14 +38,9 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_Post_Name", columnList = "Name"),
       @Index(name = "IX_Post_DepartmentId", columnList = "DepartmentId"),
       @Index(name = "IX_Post_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Post_Level", columnList = "Level")
+      @Index(name = "IX_Post_ParentPath", columnList = "ParentPath")
     })
 public class Post extends UpdateAggregateRoot implements Parent {
-
-  /** 岗位名称 */
-  @Nationalized
-  @Column(name = "Name", nullable = false, length = 50)
-  private String name;
 
   /** 部门Id */
   @Column(name = "DepartmentId", nullable = false)
@@ -56,11 +51,16 @@ public class Post extends UpdateAggregateRoot implements Parent {
   @Nullable
   private Long parentId;
 
-  /** 层级路径（可空，形如 "1,3,5"，由层级编排逻辑维护） */
+  /** 层级路径（可空，形如 "1-3-5"，由层级编排逻辑维护） */
   @Nationalized
-  @Column(name = "Level")
+  @Column(name = "ParentPath")
   @Nullable
-  private String level;
+  private String parentPath;
+
+  /** 岗位名称 */
+  @Nationalized
+  @Column(name = "Name", nullable = false, length = 50)
+  private String name;
 
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
@@ -78,7 +78,7 @@ public class Post extends UpdateAggregateRoot implements Parent {
    * @param name 岗位名称
    * @param departmentId 部门Id
    * @param parentId 上级岗位Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
@@ -86,10 +86,10 @@ public class Post extends UpdateAggregateRoot implements Parent {
       String name,
       long departmentId,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       boolean disabled,
       @Nullable String remark) {
-    apply(name, departmentId, parentId, level, disabled, remark);
+    apply(name, departmentId, parentId, parentPath, disabled, remark);
   }
 
   /**
@@ -98,7 +98,7 @@ public class Post extends UpdateAggregateRoot implements Parent {
    * @param name 岗位名称
    * @param departmentId 部门Id
    * @param parentId 上级岗位Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
@@ -106,20 +106,20 @@ public class Post extends UpdateAggregateRoot implements Parent {
       String name,
       long departmentId,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       boolean disabled,
       @Nullable String remark) {
-    apply(name, departmentId, parentId, level, disabled, remark);
+    apply(name, departmentId, parentId, parentPath, disabled, remark);
   }
 
   /**
    * 设置层级
    *
-   * @param level 层级字符串（可空）
+   * @param parentPath 父级路径（可空）
    */
   @Override
-  public void changeLevel(@Nullable String level) {
-    this.level = level;
+  public void changeParentPath(@Nullable String parentPath) {
+    this.parentPath = parentPath;
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -130,7 +130,7 @@ public class Post extends UpdateAggregateRoot implements Parent {
    * @param name 岗位名称
    * @param departmentId 部门Id
    * @param parentId 上级岗位Id（可空）
-   * @param level 层级路径（可空）
+   * @param parentPath 层级路径（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @throws DomainException 岗位名称为空时抛出
@@ -139,7 +139,7 @@ public class Post extends UpdateAggregateRoot implements Parent {
       String name,
       long departmentId,
       @Nullable Long parentId,
-      @Nullable String level,
+      @Nullable String parentPath,
       boolean disabled,
       @Nullable String remark) {
     String trimmedName = StringUtils.trimToNull(name);
@@ -149,7 +149,7 @@ public class Post extends UpdateAggregateRoot implements Parent {
     this.name = trimmedName;
     this.departmentId = departmentId;
     this.parentId = parentId;
-    this.level = StringUtils.trimToNull(level);
+    this.parentPath = StringUtils.trimToNull(parentPath);
     this.disabled = disabled;
     this.remark = remark;
   }

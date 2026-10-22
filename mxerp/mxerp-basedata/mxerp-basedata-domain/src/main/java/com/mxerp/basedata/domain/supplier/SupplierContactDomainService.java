@@ -42,7 +42,7 @@ public class SupplierContactDomainService {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 联系人聚合
    * @throws DomainException 供应商不存在、或同一供应商下姓名重复时抛出
    */
@@ -53,9 +53,9 @@ public class SupplierContactDomainService {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     requireSupplier(supplierId);
-    return supplierContactFactory.create(supplierId, name, telephone, mobile, fax, email, sort);
+    return supplierContactFactory.create(supplierId, name, telephone, mobile, fax, email, sequence);
   }
 
   /**
@@ -67,7 +67,7 @@ public class SupplierContactDomainService {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 联系人聚合
    */
   public SupplierContact importGenerate(
@@ -77,16 +77,16 @@ public class SupplierContactDomainService {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     // 按供应商 + 姓名查联系人
     SupplierContact model =
         supplierContactRepository.getBySupplierIdAndName(supplierId, name);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = create(supplierId, name, telephone, mobile, fax, email, sort);
+      model = create(supplierId, name, telephone, mobile, fax, email, sequence);
     } else {
-      modify(model, name, telephone, mobile, fax, email, sort);
+      modify(model, name, telephone, mobile, fax, email, sequence);
     }
 
     return model;
@@ -101,7 +101,7 @@ public class SupplierContactDomainService {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @return 联系人聚合
    * @throws DomainException 联系人不存在时抛出
    */
@@ -112,12 +112,12 @@ public class SupplierContactDomainService {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     SupplierContact model = supplierContactRepository.get(id);
     if (model == null) {
       throw new DomainException("联系人" + id + "不存在!");
     }
-    modify(model, name, telephone, mobile, fax, email, sort);
+    modify(model, name, telephone, mobile, fax, email, sequence);
     return model;
   }
 
@@ -130,7 +130,7 @@ public class SupplierContactDomainService {
    * @param mobile 移动电话（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @throws DomainException 同一供应商下姓名重复时抛出
    */
   public void modify(
@@ -140,9 +140,9 @@ public class SupplierContactDomainService {
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     supplierContactFactory.checkUnique(model.getSupplierId(), name, model.getId());
-    model.modify(name, telephone, mobile, fax, email, sort);
+    model.modify(name, telephone, mobile, fax, email, sequence);
   }
 
   // ==================== 私有：校验 ====================

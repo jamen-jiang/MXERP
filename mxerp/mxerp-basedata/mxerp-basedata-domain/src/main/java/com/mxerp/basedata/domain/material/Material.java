@@ -11,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,13 +28,27 @@ import org.jspecify.annotations.Nullable;
 /**
  * 物料
  *
- * <p>这里只放「物料是什么」：分类、代码、名称、单位。采购价、币种、起订量不在这里——那是「供应商 × 物料」
- * 这一层的事，一个物料可以有多个供应商和多个报价，钉在物料上只能留下最新一个值，历史价当场丢失。见
- * {@code com.mxerp.basedata.domain.purchaseprice.PurchasePrice}。
+ * <p>这里只放「物料是什么」：分类、代码、名称、基本单位。采购价、采购单位、币种、起订量不在这里——那是
+ * 「供应商 × 物料」这一层的事，一个物料可以有多个供应商和多个报价，钉在物料上只能留下最新一个值，历史价当场丢失。见
+ * {@code com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}。按什么单位进货本来就随供应商变
+ * （这家按卷、那家按米），Odoo 19 也把采购单位从产品表挪到了供应商价格表。
  *
- * <p>{@code categoryId} 与 {@code procurementType} 是两个正交维度：前者说「归哪一类、挂哪组规格属性」，
- * 后者说「自制还是外购」。SAP 用 {@code MARA-MATKL} 与 {@code MARC-BESKZ} 两个字段分开表达，
- * 不能合并成一个「物料类型」枚举——同分类的东西既可能自制也可能外购。
+ * <p>{@code categoryId} 说「归哪一类、挂哪组规格属性」，跟「这张料怎么来、要不要管库存」是两回事，不能并成一个枚举——
+ * 同一分类下的东西完全可以既自制又外购。
+ *
+ * <p>后一件事按 Odoo 产品表的形状存：一个物料类型（库存料、消耗品、服务，对应它的 {@code detailed_type}，
+ * 要不要管库存就分在这三档里，不单开一个"是否维护库存"的布尔）加两个"能不能"（允许采购 {@code purchase_ok}、
+ * 允许销售 {@code sale_ok}）。自制还是外购<em>不在这里落列</em>：Odoo 用产品上的路线（采购、制造、分包）表达，
+ * 我们对应「有没有工艺路线」和「有没有采购价格」，两个都成立就是既买又做。整件委外照 Odoo 也是路线的事；
+ * 单道工序外发另说，在路线的工序行上。固定资产照 Odoo 不落物料表——资产是会计侧从账单行生成的，
+ * 办公用品、劳保、滤芯这类登记成消耗品就够了。
+ *
+ * <p>税率成对存：进项给采购单据取默认值、销项给销售单据取默认值，两家国产 ERP 都是两条——用友存货档案上的
+ * 「销项税率%」与「进项税率%」，金蝶 K/3 物料上一个税率加星辰商品资料上的进项/销项两列；Odoo 也是客户税与供应商税
+ * 两个字段，SAP 在销售视图和采购视图各维护一个税分类。一条税率列说不清指的是买还是卖：外购树脂粉进项 13%、
+ * 卖镜片销项 13%、找外协镀膜进项可能 6%。两列都只是<em>默认值</em>，单据行上照别家一样可以再改；存的是税率Id
+ * 而不是百分比数字，税率从 13% 调整成 11% 时改一处，不必批量批改几百条物料。列名用采购/销售而不是 input/output，
+ * 是为了不跟「输入/输出」混。供应商上那条税率不跟着拆：供应商只出现在采购方向，本来就是进项。
  *
  * <p>物料上填的属性值放通用赋值表 {@code AttributeAssignment}（{@code EntityType = 'Material'}），不存 JSON
  * 列：一行一个值才能按代码查、按值排序，也能让同一代码有多个值（比如颜色）。定义在 {@code Attribute}，
@@ -61,15 +76,10 @@ public class Material extends UpdateAggregateRoot {
   @Column(name = "CategoryId", nullable = false)
   private Long categoryId;
 
-  /** 取得方式：自制、外购、两者皆可 */
+  /** 物料类型：库存料、消耗品、服务，见 {@link MaterialTypeEnum} */
   @Nationalized
-  @Column(name = "ProcurementType", nullable = false, length = 50)
-  private String procurementType;
-
-  /** 品牌Id（可空） */
-  @Column(name = "BrandId")
-  @Nullable
-  private Long brandId;
+  @Column(name = "Type", nullable = false, length = 50)
+  private String type;
 
   /** 物料代码 */
   @Nationalized
@@ -87,19 +97,43 @@ public class Material extends UpdateAggregateRoot {
   @Nullable
   private String description;
 
+  /** 条码（可空）：扫码出入库用，照 Odoo 的 barcode */
+  @Nationalized
+  @Column(name = "Barcode", length = 100)
+  @Nullable
+  private String barcode;
+
+  /** 销售价（可空）：销售单据取用的默认价，照 Odoo 的 list_price */
+  @Column(name = "SalesPrice", precision = 18, scale = 2)
+  @Nullable
+  private BigDecimal salesPrice;
+
+  /** 成本（可空）：照 Odoo 的 standard_price */
+  @Column(name = "Cost", precision = 18, scale = 2)
+  @Nullable
+  private BigDecimal cost;
+
   /** 基本单位Id */
   @Column(name = "UnitId", nullable = false)
   private Long unitId;
 
-  /** 采购单位Id（可空，空表示与基本单位相同） */
-  @Column(name = "PurchaseUnitId")
-  @Nullable
-  private Long purchaseUnitId;
+  /** 是否允许采购 */
+  @Column(name = "IsPurchaseable", nullable = false)
+  private Boolean isPurchaseable = true;
 
-  /** 税率Id（可空） */
-  @Column(name = "TaxRateId")
+  /** 是否允许销售 */
+  @Column(name = "IsSaleable", nullable = false)
+  private Boolean isSaleable = true;
+
+  /** 进项税率Id（可空）：采购单据取用的默认税率 */
+  @Column(name = "PurchaseTaxRateId")
   @Nullable
-  private Long taxRateId;
+  private Long purchaseTaxRateId;
+
+  /** 销项税率Id（可空）：销售单据取用的默认税率 */
+  @Column(name = "SalesTaxRateId")
+  @Nullable
+  private Long salesTaxRateId;
 
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
@@ -195,41 +229,53 @@ public class Material extends UpdateAggregateRoot {
    * 构造器
    *
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 基本单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attachmentIds 附件Id集合（可空）
    */
   Material(
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable List<Long> attachmentIds) {
     apply(
         categoryId,
-        procurementType,
-        brandId,
+        type,
         code,
         name,
         description,
+        barcode,
+        salesPrice,
+        cost,
         unitId,
-        purchaseUnitId,
-        taxRateId,
+        isPurchaseable,
+        isSaleable,
+        purchaseTaxRateId,
+        salesTaxRateId,
         disabled,
         remark);
     addDomainEvent(new MaterialSavedEvent(this, attachmentIds));
@@ -239,40 +285,53 @@ public class Material extends UpdateAggregateRoot {
    * 修改
    *
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 单位Id
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @param attachmentIds 附件Id集合（可空）
    */
   void modify(
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark,
       @Nullable List<Long> attachmentIds) {
     apply(
         categoryId,
-        procurementType,
-        brandId,
+        type,
         code,
         name,
         description,
+        barcode,
+        salesPrice,
+        cost,
         unitId,
-        purchaseUnitId,
-        taxRateId,
+        isPurchaseable,
+        isSaleable,
+        purchaseTaxRateId,
+        salesTaxRateId,
         disabled,
         remark);
     addDomainEvent(new MaterialSavedEvent(this, attachmentIds));
@@ -293,43 +352,61 @@ public class Material extends UpdateAggregateRoot {
    * <p>把「去空格 → 校验 → 赋值」收敛到一处，避免构造器和 {@link #modify} 各写一遍导致规则漂移。
    *
    * @param categoryId 所属分类Id
-   * @param procurementType 取得方式
-   * @param brandId 品牌Id（可空）
+   * @param type 物料类型
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
+   * @param barcode 条码（可空）
+   * @param salesPrice 销售价（可空）
+   * @param cost 成本（可空）
    * @param unitId 基本单位Id
-   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
-   * @param taxRateId 税率Id（可空）
+   * @param isPurchaseable 是否允许采购
+   * @param isSaleable 是否允许销售
+   * @param purchaseTaxRateId 进项税率Id（可空）
+   * @param salesTaxRateId 销项税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
   private void apply(
       long categoryId,
-      String procurementType,
-      @Nullable Long brandId,
+      String type,
       String code,
       String name,
       @Nullable String description,
+      @Nullable String barcode,
+      @Nullable BigDecimal salesPrice,
+      @Nullable BigDecimal cost,
       long unitId,
-      @Nullable Long purchaseUnitId,
-      @Nullable Long taxRateId,
+      boolean isPurchaseable,
+      boolean isSaleable,
+      @Nullable Long purchaseTaxRateId,
+      @Nullable Long salesTaxRateId,
       boolean disabled,
       @Nullable String remark) {
     if (categoryId <= 0) {
       throw new DomainException("物料分类不能为空");
     }
-    validateProcurementType(procurementType);
+    validateType(type);
+    if (salesPrice != null && salesPrice.signum() < 0) {
+      throw new DomainException("销售价不能为负数");
+    }
+    if (cost != null && cost.signum() < 0) {
+      throw new DomainException("成本不能为负数");
+    }
 
     this.categoryId = categoryId;
-    this.procurementType = procurementType;
-    this.brandId = brandId;
+    this.type = type;
     this.code = code;
     this.name = name;
     this.description = description;
+    this.barcode = barcode;
+    this.salesPrice = salesPrice;
+    this.cost = cost;
     this.unitId = unitId;
-    this.purchaseUnitId = purchaseUnitId;
-    this.taxRateId = taxRateId;
+    this.isPurchaseable = isPurchaseable;
+    this.isSaleable = isSaleable;
+    this.purchaseTaxRateId = purchaseTaxRateId;
+    this.salesTaxRateId = salesTaxRateId;
     this.disabled = disabled;
     this.remark = remark;
   }
@@ -337,14 +414,16 @@ public class Material extends UpdateAggregateRoot {
   // ==================== 私有：校验 ====================
 
   /**
-   * 校验取得方式
+   * 校验物料类型
    *
-   * @param procurementType 取得方式代码
-   * @throws DomainException 不在 {@link ProcurementTypeEnum} 范围内时抛出
+   * <p>管不管库存不再单独设开关，所以这里只有一件事：类型必须是 {@link MaterialTypeEnum} 里的一个值。
+   *
+   * @param type 物料类型
+   * @throws DomainException 类型不在枚举内时抛出
    */
-  private void validateProcurementType(String procurementType) {
-    if (EnumUtils.fromCode(ProcurementTypeEnum.class, procurementType) == null) {
-      throw new DomainException("取得方式" + procurementType + "有误!");
+  private void validateType(String type) {
+    if (EnumUtils.fromCode(MaterialTypeEnum.class, type) == null) {
+      throw new DomainException("物料类型" + type + "有误!");
     }
   }
 }

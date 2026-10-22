@@ -32,20 +32,20 @@ public class UnitGroupDomainService {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 单位组聚合
    */
   public UnitGroup importGenerate(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
     // 按代码查单位组
     UnitGroup model = unitGroupRepository.getByCode(code);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = unitGroupFactory.create(code, name, disabled, sort, remark);
+      model = unitGroupFactory.create(code, name, disabled, sequence, remark);
     } else {
-      modify(model, code, name, disabled, sort, remark);
+      modify(model, code, name, disabled, sequence, remark);
     }
 
     return model;
@@ -58,7 +58,7 @@ public class UnitGroupDomainService {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 单位组聚合
    * @throws DomainException 单位组不存在时抛出
@@ -68,13 +68,13 @@ public class UnitGroupDomainService {
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     UnitGroup model = unitGroupRepository.get(id);
     if (model == null) {
       throw new DomainException("单位组" + id + "不存在!");
     }
-    modify(model, code, name, disabled, sort, remark);
+    modify(model, code, name, disabled, sequence, remark);
     return model;
   }
 
@@ -85,7 +85,7 @@ public class UnitGroupDomainService {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 代码与其它单位组冲突时抛出
    */
@@ -94,11 +94,11 @@ public class UnitGroupDomainService {
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     if (unitGroupRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("单位组代码" + code + "已存在!");
     }
-    model.modify(code, name, disabled, sort, remark);
+    model.modify(code, name, disabled, sequence, remark);
   }
 }

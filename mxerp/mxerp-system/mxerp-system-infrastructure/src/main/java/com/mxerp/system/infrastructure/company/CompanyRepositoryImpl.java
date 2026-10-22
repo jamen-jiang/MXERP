@@ -73,6 +73,18 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   /**
+   * 判断公司代码是否已存在（可排除指定Id）
+   *
+   * @param code 公司代码
+   * @param id 排除的公司Id（可空）
+   * @return true 表示已存在
+   */
+  @Override
+  public boolean isExistByCodeExcludeId(String code, @Nullable Long id) {
+    return jpa.existsByCodeExcludeId(code, id);
+  }
+
+  /**
    * 判断同一上级下公司名称是否已存在（可排除指定Id）
    *
    * @param name 公司名称

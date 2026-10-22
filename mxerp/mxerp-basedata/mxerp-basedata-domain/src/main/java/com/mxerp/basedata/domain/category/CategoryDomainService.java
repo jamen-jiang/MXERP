@@ -41,20 +41,22 @@ public class CategoryDomainService {
    * @param parentId 父分类Id（可空）
    * @param code 分类代码
    * @param name 分类名称
+   * @param isLeaf 是否末级
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 分类聚合
-   * @throws DomainException 分类代码或同级名称已存在、父分类不存在时抛出
+   * @throws DomainException 分类代码或同级名称已存在、父分类不存在、或父分类是末级分类时抛出
    */
   public Category create(
       @Nullable Long parentId,
       String code,
       String name,
+      boolean isLeaf,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    return categoryFactory.create(parentId, code, name, disabled, sort, remark);
+    return categoryFactory.create(parentId, code, name, isLeaf, disabled, sequence, remark);
   }
 
   /**
@@ -64,20 +66,23 @@ public class CategoryDomainService {
    * @param parentId 父分类Id（可空）
    * @param code 分类代码
    * @param name 分类名称
+   * @param isLeaf 是否末级
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 需要持久化的聚合列表（自身 + 受影响的子孙）
    * @throws DomainException 分类代码或同级名称已存在、分类不存在时抛出
-   * @throws DomainException 把分类挂到自己或自己的子孙下面时抛出
+   * @throws DomainException 把分类挂到自己或自己的子孙下面、父分类是末级分类时抛出
+   * @throws DomainException 这一类下面还有子分类、却想改成末级时抛出
    */
   public List<Category> modify(
       long id,
       @Nullable Long parentId,
       String code,
       String name,
+      boolean isLeaf,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     Category model = getExist(id);
     // 校验分类代码唯一（排除自身）
@@ -89,18 +94,45 @@ public class CategoryDomainService {
       throw new DomainException("同级分类名称" + name + "已存在!");
     }
     validateParent(model, parentId);
+    Category parent = getParent(parentId);
+    if (parent != null && parent.getIsLeaf()) {
+      throw new DomainException("末级分类" + parent.getName() + "下面不能建子分类!");
+    }
+    // 末级是物料的落点：下面挂着子分类的不能改成末级，否则两批物料会混在同一个汇总数里
+    if (!isLeaf && !categoryRepository.getListByParentId(model.getId()).isEmpty()) {
+      throw new DomainException("分类" + model.getName() + "下面还有子分类，不能改成末级!");
+    }
     model.modify(
-        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "父分类"),
+        HierarchyUtils.resolveParentPath(parentId, parent, "父分类"),
         parentId,
         code,
         name,
+        isLeaf,
         disabled,
-        sort,
+        sequence,
         remark);
     List<Category> list = new ArrayList<>();
-    setChildrenLevel(model, list);
+    setChildrenParentPath(model, list);
     list.addFirst(model);
     return list;
+  }
+
+  /**
+   * 校验这个分类能挂物料：必须存在且是末级
+   *
+   * <p>物料建档与修改都要过这一关，跨聚合的引用校验归应用层，但"这一类能不能落物料"是分类自己的规则，
+   * 所以留在这里，由应用层在保存物料前调用。
+   *
+   * @param categoryId 分类Id
+   * @return 分类聚合
+   * @throws DomainException 分类不存在、或不是末级分类时抛出
+   */
+  public Category ensureLeaf(long categoryId) {
+    Category model = getExist(categoryId);
+    if (!model.getIsLeaf()) {
+      throw new DomainException("分类" + model.getName() + "是分组节点，物料只能挂在末级分类下!");
+    }
+    return model;
   }
 
   /**
@@ -177,14 +209,14 @@ public class CategoryDomainService {
    * @param model 分类
    * @param list 子孙收集列表
    */
-  private void setChildrenLevel(Category model, List<Category> list) {
+  private void setChildrenParentPath(Category model, List<Category> list) {
     if (model.getId() == 0) {
       return;
     }
     List<Category> children = categoryRepository.getListByParentId(model.getId());
-    HierarchyUtils.resetChildrenLevel(model, children);
+    HierarchyUtils.resetChildrenParentPath(model, children);
     for (Category child : children) {
-      setChildrenLevel(child, list);
+      setChildrenParentPath(child, list);
       list.add(child);
     }
   }

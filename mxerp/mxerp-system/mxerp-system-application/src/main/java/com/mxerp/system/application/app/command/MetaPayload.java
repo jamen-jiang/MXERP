@@ -46,7 +46,7 @@ public class MetaPayload {
   /** 排序（可空） */
   @Schema(description = "排序")
   @Nullable
-  private final Integer sort;
+  private final Integer sequence;
 
   /**
    * 构造器
@@ -58,7 +58,7 @@ public class MetaPayload {
    * @param fixedIndexInTab 固定页签序号（可空）
    * @param isMultiTab 是否多页签
    * @param isHide 是否隐藏
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   public MetaPayload(
       String title,
@@ -68,7 +68,7 @@ public class MetaPayload {
       @Nullable Integer fixedIndexInTab,
       @Nullable Boolean isMultiTab,
       @Nullable Boolean isHide,
-      @Nullable Integer sort) {
+      @Nullable Integer sequence) {
     this.title = title;
     this.i18nKey = i18nKey;
     this.icon = icon;
@@ -76,6 +76,6 @@ public class MetaPayload {
     this.fixedIndexInTab = fixedIndexInTab;
     this.isMultiTab = Objects.requireNonNullElse(isMultiTab, false);
     this.isHide = Objects.requireNonNullElse(isHide, false);
-    this.sort = sort;
+    this.sequence = sequence;
   }
 }

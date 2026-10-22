@@ -19,15 +19,6 @@ public class CompanyResponse extends BaseResponse {
   @Schema(description = "公司Id", requiredMode = Schema.RequiredMode.REQUIRED)
   private Long id;
 
-  /** 公司名称 */
-  @Schema(description = "公司名称", requiredMode = Schema.RequiredMode.REQUIRED)
-  private String name = "";
-
-  /** 简称（可空） */
-  @Schema(description = "简称")
-  @Nullable
-  private String shortName;
-
   /** 上级公司Id（可空） */
   @Schema(description = "上级公司Id")
   @Nullable
@@ -36,7 +27,20 @@ public class CompanyResponse extends BaseResponse {
   /** 层级路径（可空） */
   @Schema(description = "层级路径")
   @Nullable
-  private String level;
+  private String parentPath;
+
+  /** 公司代码 */
+  @Schema(description = "公司代码", requiredMode = Schema.RequiredMode.REQUIRED)
+  private String code = "";
+
+  /** 公司名称 */
+  @Schema(description = "公司名称", requiredMode = Schema.RequiredMode.REQUIRED)
+  private String name = "";
+
+  /** 简称（可空） */
+  @Schema(description = "简称")
+  @Nullable
+  private String shortName;
 
   /** 电话号码（可空） */
   @Schema(description = "电话号码")
@@ -109,7 +113,7 @@ public class CompanyResponse extends BaseResponse {
   /** 排序（可空） */
   @Schema(description = "排序")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /** 备注（可空） */
   @Schema(description = "备注")

@@ -18,6 +18,16 @@ public class PostResponse extends BaseResponse {
   @Schema(description = "岗位Id", requiredMode = Schema.RequiredMode.REQUIRED)
   private Long id;
 
+  /** 上级岗位Id（可空） */
+  @Schema(description = "上级岗位Id")
+  @Nullable
+  private Long parentId;
+
+  /** 层级路径（可空） */
+  @Schema(description = "层级路径")
+  @Nullable
+  private String parentPath;
+
   /** 岗位名称 */
   @Schema(description = "岗位名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String name = "";
@@ -37,16 +47,6 @@ public class PostResponse extends BaseResponse {
   /** 部门名称 */
   @Schema(description = "部门名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String departmentName = "";
-
-  /** 上级岗位Id（可空） */
-  @Schema(description = "上级岗位Id")
-  @Nullable
-  private Long parentId;
-
-  /** 层级路径（可空） */
-  @Schema(description = "层级路径")
-  @Nullable
-  private String level;
 
   /** 是否禁用 */
   @Schema(description = "是否禁用", requiredMode = Schema.RequiredMode.REQUIRED)

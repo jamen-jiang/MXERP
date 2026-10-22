@@ -20,6 +20,7 @@ public class ModifyCompanyCommand extends AddCompanyCommand {
    * 构造器
    *
    * @param id 公司Id
+   * @param code 公司代码
    * @param name 公司名称
    * @param shortName 简称（可空）
    * @param parentId 上级公司Id（可空）
@@ -37,11 +38,12 @@ public class ModifyCompanyCommand extends AddCompanyCommand {
    * @param establishedDate 成立日期（可空）
    * @param currencyId 默认币别Id
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public ModifyCompanyCommand(
       long id,
+      String code,
       String name,
       @Nullable String shortName,
       @Nullable Long parentId,
@@ -59,9 +61,10 @@ public class ModifyCompanyCommand extends AddCompanyCommand {
       @Nullable LocalDate establishedDate,
       Long currencyId,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     super(
+        code,
         name,
         shortName,
         parentId,
@@ -79,7 +82,7 @@ public class ModifyCompanyCommand extends AddCompanyCommand {
         establishedDate,
         currencyId,
         disabled,
-        sort,
+        sequence,
         remark);
     this.id = id;
   }

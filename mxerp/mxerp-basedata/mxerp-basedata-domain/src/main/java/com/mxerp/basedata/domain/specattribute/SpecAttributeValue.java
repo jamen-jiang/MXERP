@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
           name = "IX_SpecAttributeValue_SpecAttributeId",
           columnList = "SpecAttributeId"),
       @Index(name = "IX_SpecAttributeValue_Value", columnList = "Value"),
-      @Index(name = "IX_SpecAttributeValue_Sort", columnList = "Sort")
+      @Index(name = "IX_SpecAttributeValue_Sequence", columnList = "Sequence")
       // 注意：SpecAttributeId + Value 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class SpecAttributeValue extends BaseDeleteEntity {
@@ -52,9 +52,9 @@ public class SpecAttributeValue extends BaseDeleteEntity {
   private Boolean isDefault;
 
 /** 排序（可空） */
-  @Column(name = "Sort")
+  @Column(name = "Sequence")
   @Nullable
-  private Integer sort;
+  private Integer sequence;
 
   /**
    * 构造器
@@ -62,17 +62,17 @@ public class SpecAttributeValue extends BaseDeleteEntity {
    * @param value 规格属性值
    * @param label 规格属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
   SpecAttributeValue(
-      String value, String label, boolean isDefault, @Nullable Integer sort) {
+      String value, String label, boolean isDefault, @Nullable Integer sequence) {
     String trimmedValue = StringUtils.trimToNull(value);
     if (trimmedValue == null) {
       throw new DomainException("规格属性值不能为空");
     }
     // value 是规格属性值的业务主键，仅在创建时确定，之后不可变
     this.value = trimmedValue;
-    apply(label, isDefault, sort);
+    apply(label, isDefault, sequence);
   }
 
   /**
@@ -80,10 +80,10 @@ public class SpecAttributeValue extends BaseDeleteEntity {
    *
    * @param label 规格属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  void modify(String label, boolean isDefault, @Nullable Integer sort) {
-    apply(label, isDefault, sort);
+  void modify(String label, boolean isDefault, @Nullable Integer sequence) {
+    apply(label, isDefault, sequence);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -95,16 +95,16 @@ public class SpecAttributeValue extends BaseDeleteEntity {
    *
    * @param label 规格属性值标签
    * @param isDefault 是否默认
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    */
-  private void apply(String label, boolean isDefault, @Nullable Integer sort) {
+  private void apply(String label, boolean isDefault, @Nullable Integer sequence) {
     String trimmedLabel = StringUtils.trimToNull(label);
     if (trimmedLabel == null) {
       throw new DomainException("规格属性值标签不能为空");
     }
     this.label = trimmedLabel;
     this.isDefault = isDefault;
-    this.sort = sort;
+    this.sequence = sequence;
   }
 
   /** 设置为默认项 */

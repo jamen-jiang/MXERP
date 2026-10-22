@@ -32,7 +32,7 @@ public class DepartmentDomainService {
    * @param parentId 父Id（可空）
    * @param name 部门名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 需要持久化的聚合列表（自身 + 受影响的子孙）
    * @throws DomainException 同级部门名称已存在时抛出
@@ -45,7 +45,7 @@ public class DepartmentDomainService {
       @Nullable Long parentId,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验同级部门名称唯一（排除自身）
     if (departmentRepository.isExistByNameAndParentIdExcludeId(name, parentId, id)) {
@@ -58,15 +58,15 @@ public class DepartmentDomainService {
     Department parent = getParent(parentId);
     validateParent(model, companyId, parentId, parent);
     model.modify(
-        HierarchyUtils.resolveLevel(parentId, parent, "父部门"),
+        HierarchyUtils.resolveParentPath(parentId, parent, "父部门"),
         companyId,
         parentId,
         name,
         disabled,
-        sort,
+        sequence,
         remark);
     List<Department> list = new ArrayList<>();
-    setChildrenLevel(model, list);
+    setChildrenParentPath(model, list);
     list.addFirst(model);
     return list;
   }
@@ -134,14 +134,14 @@ public class DepartmentDomainService {
    * @param model 部门
    * @param list 子部门收集列表
    */
-  private void setChildrenLevel(Department model, List<Department> list) {
+  private void setChildrenParentPath(Department model, List<Department> list) {
     if (model.getId() == 0) {
       return;
     }
     List<Department> children = departmentRepository.getListByParentId(model.getId());
-    HierarchyUtils.resetChildrenLevel(model, children);
+    HierarchyUtils.resetChildrenParentPath(model, children);
     for (Department child : children) {
-      setChildrenLevel(child, list);
+      setChildrenParentPath(child, list);
       list.add(child);
     }
   }

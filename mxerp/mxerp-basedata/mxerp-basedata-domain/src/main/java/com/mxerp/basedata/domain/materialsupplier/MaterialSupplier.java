@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.purchaseprice;
+package com.mxerp.basedata.domain.materialsupplier;
 
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -17,7 +17,12 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 采购价格（某个供应商在一段时间里卖某个物料多少钱）
+ * 物料供应商（某个供应商在一段时间里，按什么价格、什么单位，供某个物料）
+ *
+ * <p>命名对着 ERPNext 物料底下的 {@code Item Supplier}（物料供应商）与 Odoo 的
+ * {@code product_supplierinfo}（供应商价格表）：一行说清「这个物料跟这个供应商之间怎么买卖」——报价、币种、
+ * 采购单位、起订量、有效期，外加供应商产品代码/名称、货期、折扣。Odoo 上还剩排序（{@code sequence}）与
+ * 公司（{@code company_id}）没做：我们不做多公司，排序等有列表界面再补。
  *
  * <p>价格默认挂在物料系列上：供应商通常按毛坯/系列报价，同一系列几百个度数价格一样。
  * {@code variantId} 可空——个别度数有特别价时才填；取价时先用 SKU 那张，没有再回落到系列价。
@@ -29,6 +34,10 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>没有状态列：当前价 = 生效时间已到、失效时间未到的那张。新卡生效时，同键的旧卡在交接点收口；
  * 要提前作废，把失效时间改到当天。
+ *
+ * <p>采购单位也挂在这一层（{@code unitId}，可空即按物料基本单位）而不是物料上：按什么单位进货本来就随
+ * 供应商变——这家按卷报、那家按米报，价格与起订量都得跟着这个单位走。Odoo 19 也是把采购单位从产品表挪到了
+ * 供应商价格表（{@code product_supplierinfo}）这条线。
  */
 @NullMarked
 @Getter
@@ -36,20 +45,16 @@ import org.jspecify.annotations.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-    name = "PurchasePrice",
+    name = "MaterialSupplier",
     indexes = {
-      @Index(name = "IX_PurchasePrice_SupplierId", columnList = "SupplierId"),
-      @Index(name = "IX_PurchasePrice_MaterialId", columnList = "MaterialId"),
-      @Index(name = "IX_PurchasePrice_VariantId", columnList = "VariantId"),
-      @Index(name = "IX_PurchasePrice_EffectiveFrom", columnList = "EffectiveFrom")
+      @Index(name = "IX_MaterialSupplier_SupplierId", columnList = "SupplierId"),
+      @Index(name = "IX_MaterialSupplier_MaterialId", columnList = "MaterialId"),
+      @Index(name = "IX_MaterialSupplier_VariantId", columnList = "VariantId"),
+      @Index(name = "IX_MaterialSupplier_EffectiveFrom", columnList = "EffectiveFrom")
       // 注意：SupplierId + MaterialId + VariantId + EffectiveFrom 的过滤唯一索引带 WHERE
       // IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
-public class PurchasePrice extends UpdateAggregateRoot {
-
-  /** 供应商Id（不可变：换供应商就是另一张卡） */
-  @Column(name = "SupplierId", nullable = false)
-  private Long supplierId;
+public class MaterialSupplier extends UpdateAggregateRoot {
 
   /** 物料系列Id（不可变）：价格默认挂在这一层，同系列的所有度数共用 */
   @Column(name = "MaterialId", nullable = false)
@@ -60,18 +65,49 @@ public class PurchasePrice extends UpdateAggregateRoot {
   @Nullable
   private Long variantId;
 
+  /** 供应商Id（不可变：换供应商就是另一张卡） */
+  @Column(name = "SupplierId", nullable = false)
+  private Long supplierId;
+
+  /** 供应商产品代码（可空）：对方对这个物料的编号，对账用，照 Odoo 的 Vendor Product Code */
+  @Nationalized
+  @Column(name = "SupplierProductCode", length = 100)
+  @Nullable
+  private String supplierProductCode;
+
+  /** 供应商产品名称（可空）：对方对这个物料的叫法，照 Odoo 的 Vendor Product Name */
+  @Nationalized
+  @Column(name = "SupplierProductName", length = 200)
+  @Nullable
+  private String supplierProductName;
+
   /** 采购价格（不可变：改价请新建一张卡，覆盖历史价等于销毁追溯依据） */
   @Column(name = "Price", nullable = false, precision = 18, scale = 2)
   private BigDecimal price;
+
+  /** 折扣（%，可空，空即无折扣） */
+  @Column(name = "Discount", precision = 18, scale = 2)
+  @Nullable
+  private BigDecimal discount;
 
   /** 币种Id（跟价走） */
   @Column(name = "CurrencyId", nullable = false)
   private Long currencyId;
 
+  /** 单位Id（可空，空表示按物料基本单位报价）：这家供应商按哪个单位报价，价格与起订量都以此单位计 */
+  @Column(name = "UnitId")
+  @Nullable
+  private Long unitId;
+
   /** 起订量（可空，这个供应商谈下来的量） */
   @Column(name = "Moq", precision = 18, scale = 2)
   @Nullable
   private BigDecimal moq;
+
+  /** 货期（天，可空）：下单到到货要几天，照 Odoo 的 Lead Time */
+  @Column(name = "LeadTime")
+  @Nullable
+  private Integer leadTime;
 
   /** 生效时间 */
   @Column(name = "EffectiveFrom", nullable = false)
@@ -82,6 +118,11 @@ public class PurchasePrice extends UpdateAggregateRoot {
   @Nullable
   private LocalDateTime effectiveTo;
 
+  /** 排序（可空）：列表里谁先谁后，照 Odoo 的 sequence */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
@@ -91,52 +132,93 @@ public class PurchasePrice extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param supplierId 供应商Id
    * @param materialId 物料系列Id
    * @param variantId SKU Id（可空，个别度数的特别价）
+   * @param supplierId 供应商Id
+   * @param supplierProductCode 供应商产品代码（可空）
+   * @param supplierProductName 供应商产品名称（可空）
    * @param price 采购价格
+   * @param discount 折扣（%，可空）
    * @param currencyId 币种Id
+   * @param unitId 单位Id（可空，空表示按物料基本单位报价）
    * @param moq 起订量（可空）
+   * @param leadTime 货期（天，可空）
    * @param effectiveFrom 生效时间
    * @param effectiveTo 失效时间（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
-  PurchasePrice(
-      long supplierId,
+  MaterialSupplier(
       long materialId,
       @Nullable Long variantId,
+      long supplierId,
+      @Nullable String supplierProductCode,
+      @Nullable String supplierProductName,
       BigDecimal price,
+      @Nullable BigDecimal discount,
       long currencyId,
+      @Nullable Long unitId,
       @Nullable BigDecimal moq,
+      @Nullable Integer leadTime,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    this.supplierId = supplierId;
     this.materialId = materialId;
     this.variantId = variantId;
+    this.supplierId = supplierId;
     this.price = validatePrice(price);
     this.currencyId = currencyId;
+    this.unitId = unitId;
 
-    apply(moq, effectiveFrom, effectiveTo, remark);
+    apply(
+        supplierProductCode,
+        supplierProductName,
+        discount,
+        moq,
+        leadTime,
+        effectiveFrom,
+        effectiveTo,
+        sequence,
+        remark);
   }
 
   /**
-   * 修改价格卡
+   * 修改供应商卡
    *
-   * <p>供应商、物料、SKU 与价格是卡的身份，创建后不改；能改的只有起订量、有效期和备注。
-   * 调价请新建一张卡，覆盖历史价等于销毁追溯依据。
+   * <p>供应商、物料、SKU、价格、币种与采购单位是卡的身份，创建后不改；能改的是供应商产品代码/名称、折扣、
+   * 起订量、货期、有效期和备注。调价请新建一张卡，覆盖历史价等于销毁追溯依据。
    *
+   * @param supplierProductCode 供应商产品代码（可空）
+   * @param supplierProductName 供应商产品名称（可空）
+   * @param discount 折扣（%，可空）
    * @param moq 起订量（可空）
+   * @param leadTime 货期（天，可空）
    * @param effectiveFrom 生效时间
    * @param effectiveTo 失效时间（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   void modify(
+      @Nullable String supplierProductCode,
+      @Nullable String supplierProductName,
+      @Nullable BigDecimal discount,
       @Nullable BigDecimal moq,
+      @Nullable Integer leadTime,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(moq, effectiveFrom, effectiveTo, remark);
+    apply(
+        supplierProductCode,
+        supplierProductName,
+        discount,
+        moq,
+        leadTime,
+        effectiveFrom,
+        effectiveTo,
+        sequence,
+        remark);
   }
 
   /**
@@ -184,16 +266,26 @@ public class PurchasePrice extends UpdateAggregateRoot {
   /**
    * 统一的可变字段赋值入口（构造器与修改共用）
    *
+   * @param supplierProductCode 供应商产品代码（可空）
+   * @param supplierProductName 供应商产品名称（可空）
+   * @param discount 折扣（%，可空）
    * @param moq 起订量（可空）
+   * @param leadTime 货期（天，可空）
    * @param effectiveFrom 生效时间
    * @param effectiveTo 失效时间（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
-   * @throws DomainException 失效时间不晚于生效时间、或起订量为负时抛出
+   * @throws DomainException 失效时间不晚于生效时间、起订量/货期为负、或折扣超出 0~100 时抛出
    */
   private void apply(
+      @Nullable String supplierProductCode,
+      @Nullable String supplierProductName,
+      @Nullable BigDecimal discount,
       @Nullable BigDecimal moq,
+      @Nullable Integer leadTime,
       LocalDateTime effectiveFrom,
       @Nullable LocalDateTime effectiveTo,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     if (effectiveTo != null && !effectiveTo.isAfter(effectiveFrom)) {
       throw new DomainException("失效时间必须晚于生效时间");
@@ -201,10 +293,22 @@ public class PurchasePrice extends UpdateAggregateRoot {
     if (moq != null && moq.signum() < 0) {
       throw new DomainException("起订量不能为负数");
     }
+    if (leadTime != null && leadTime < 0) {
+      throw new DomainException("货期不能为负数");
+    }
+    if (discount != null
+        && (discount.signum() < 0 || discount.compareTo(BigDecimal.valueOf(100)) > 0)) {
+      throw new DomainException("折扣必须在 0 到 100 之间");
+    }
 
+    this.supplierProductCode = supplierProductCode;
+    this.supplierProductName = supplierProductName;
+    this.discount = discount;
     this.moq = moq;
+    this.leadTime = leadTime;
     this.effectiveFrom = effectiveFrom;
     this.effectiveTo = effectiveTo;
+    this.sequence = sequence;
     this.remark = remark;
   }
 

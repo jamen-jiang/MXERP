@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * 计量单位组（同一个物理量纲下的一组单位）
  *
  * <p>换算只允许在组内做：组里挑一个「基准单位」，其余单位用 {@code Unit.factor} 表示
- * 「1 个基准单位 = factor 个本单位」。这样「米 ↔ 厘米」能换，「米 ↔ 公斤」根本没有入口——
+ * 「1 个本单位 = factor 个基准单位」。这样「米 ↔ 厘米」能换，「米 ↔ 公斤」根本没有入口——
  * Odoo 的 {@code uom.category} 是同一套规矩（"only convert when both units belong to the same
  * category"，且一个类别只能有一个 reference 单位），金蝶的「计量单位组」、用友的「计量单位组」也是这么分的；
  * SAP 把量纲放在单位表 {@code T006} 的维度字段上，换算则挂在物料上（{@code MARM}）。
@@ -36,7 +36,7 @@ import org.jspecify.annotations.Nullable;
     name = "UnitGroup",
     indexes = {
       @Index(name = "IX_UnitGroup_Name", columnList = "Name"),
-      @Index(name = "IX_UnitGroup_Sort", columnList = "Sort")
+      @Index(name = "IX_UnitGroup_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class UnitGroup extends UpdateAggregateRoot {
@@ -51,14 +51,14 @@ public class UnitGroup extends UpdateAggregateRoot {
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
+  /** 排序（可空） */
+  @Column(name = "Sequence")
+  @Nullable
+  private Integer sequence;
+
   /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
-
-  /** 排序（可空） */
-  @Column(name = "Sort")
-  @Nullable
-  private Integer sort;
 
   /** 备注（可空） */
   @Nationalized
@@ -72,16 +72,16 @@ public class UnitGroup extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   UnitGroup(
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(code, name, disabled, sort, remark);
+    apply(code, name, disabled, sequence, remark);
   }
 
   /**
@@ -90,16 +90,16 @@ public class UnitGroup extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   void modify(
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(code, name, disabled, sort, remark);
+    apply(code, name, disabled, sequence, remark);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -110,7 +110,7 @@ public class UnitGroup extends UpdateAggregateRoot {
    * @param code 代码
    * @param name 名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @throws DomainException 代码或名称为空时抛出
    */
@@ -118,7 +118,7 @@ public class UnitGroup extends UpdateAggregateRoot {
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);
@@ -132,7 +132,7 @@ public class UnitGroup extends UpdateAggregateRoot {
     this.code = trimmedCode;
     this.name = trimmedName;
     this.disabled = disabled;
-    this.sort = sort;
+    this.sequence = sequence;
     this.remark = remark;
   }
 }

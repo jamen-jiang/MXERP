@@ -31,20 +31,20 @@ public class BankDomainService {
    * @param code 银行代码
    * @param name 银行名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 银行聚合
    */
   public Bank importGenerate(
-      String code, String name, boolean disabled, @Nullable Integer sort, @Nullable String remark) {
+      String code, String name, boolean disabled, @Nullable Integer sequence, @Nullable String remark) {
     // 按代码查银行
     Bank model = bankRepository.getByCode(code);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = bankFactory.create(code, name, disabled, sort, remark);
+      model = bankFactory.create(code, name, disabled, sequence, remark);
     } else {
-      modify(model, code, name, disabled, sort, remark);
+      modify(model, code, name, disabled, sequence, remark);
     }
 
     return model;
@@ -57,7 +57,7 @@ public class BankDomainService {
    * @param code 银行代码
    * @param name 银行名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 银行聚合
    * @throws DomainException 银行不存在时抛出
@@ -67,13 +67,13 @@ public class BankDomainService {
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     Bank model = bankRepository.get(id);
     if (model == null) {
       throw new DomainException("银行" + id + "不存在!");
     }
-    modify(model, code, name, disabled, sort, remark);
+    modify(model, code, name, disabled, sequence, remark);
     return model;
   }
 
@@ -84,7 +84,7 @@ public class BankDomainService {
    * @param code 银行代码
    * @param name 银行名称
    * @param disabled 是否禁用
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
@@ -92,12 +92,12 @@ public class BankDomainService {
       String code,
       String name,
       boolean disabled,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验银行代码唯一
     if (bankRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("银行代码" + code + "已存在!");
     }
-    model.modify(code, name, disabled, sort, remark);
+    model.modify(code, name, disabled, sequence, remark);
   }
 }

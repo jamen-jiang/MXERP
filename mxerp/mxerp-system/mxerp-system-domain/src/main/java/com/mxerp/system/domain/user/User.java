@@ -50,17 +50,17 @@ public class User extends UpdateAggregateRoot {
   @Column(name = "UserName", nullable = false, length = 50)
   private String userName;
 
-  /** 邮箱（可空） */
-  @Nationalized
-  @Column(name = "Email", length = 200)
-  @Nullable
-  private String email;
-
   /** 手机号（可空） */
   @Nationalized
   @Column(name = "Mobile", length = 20)
   @Nullable
   private String mobile;
+
+  /** 邮箱（可空） */
+  @Nationalized
+  @Column(name = "Email", length = 200)
+  @Nullable
+  private String email;
 
   /** 密码 */
   @Nationalized

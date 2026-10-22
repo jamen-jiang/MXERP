@@ -30,7 +30,7 @@ public class AttributeFactory {
    * @param dataType 数据类型
    * @param isRequired 是否必填
    * @param isFilter 是否作为筛选项
-   * @param sort 排序（可空）
+   * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 属性聚合
    * @throws DomainException 同一持有者类型下属性代码已存在时抛出
@@ -43,13 +43,13 @@ public class AttributeFactory {
       String dataType,
       boolean isRequired,
       boolean isFilter,
-      @Nullable Integer sort,
+      @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验同一持有者类型下属性代码唯一
     if (attributeRepository.isExistByEntityTypeAndCodeExcludeId(entityType, code)) {
       throw new DomainException(entityType + "下属性代码" + code + "已存在!");
     }
     return new Attribute(
-        entityType, code, label, inputType, dataType, isRequired, isFilter, sort, remark);
+        entityType, code, label, inputType, dataType, isRequired, isFilter, sequence, remark);
   }
 }

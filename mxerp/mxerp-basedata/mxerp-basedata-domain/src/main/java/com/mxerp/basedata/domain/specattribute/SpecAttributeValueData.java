@@ -9,8 +9,8 @@ import org.jspecify.annotations.Nullable;
  * @param value 规格属性值
  * @param label 规格属性值标签
  * @param isDefault 是否默认
- * @param sort 排序（可空）
+ * @param sequence 排序（可空）
  */
 @NullMarked
 public record SpecAttributeValueData(
-    String value, String label, Boolean isDefault, @Nullable Integer sort) {}
+    String value, String label, Boolean isDefault, @Nullable Integer sequence) {}
