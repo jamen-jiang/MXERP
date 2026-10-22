@@ -87,9 +87,14 @@ public class Material extends UpdateAggregateRoot {
   @Nullable
   private String description;
 
-  /** 单位Id */
+  /** 基本单位Id */
   @Column(name = "UnitId", nullable = false)
   private Long unitId;
+
+  /** 采购单位Id（可空，空表示与基本单位相同） */
+  @Column(name = "PurchaseUnitId")
+  @Nullable
+  private Long purchaseUnitId;
 
   /** 税率Id（可空） */
   @Column(name = "TaxRateId")
@@ -100,7 +105,7 @@ public class Material extends UpdateAggregateRoot {
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled = false;
 
-/** 备注（可空） */
+  /** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
   @Nullable
@@ -195,7 +200,8 @@ public class Material extends UpdateAggregateRoot {
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
-   * @param unitId 单位Id
+   * @param unitId 基本单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -209,6 +215,7 @@ public class Material extends UpdateAggregateRoot {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -221,6 +228,7 @@ public class Material extends UpdateAggregateRoot {
         name,
         description,
         unitId,
+        purchaseUnitId,
         taxRateId,
         disabled,
         remark);
@@ -250,6 +258,7 @@ public class Material extends UpdateAggregateRoot {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -262,6 +271,7 @@ public class Material extends UpdateAggregateRoot {
         name,
         description,
         unitId,
+        purchaseUnitId,
         taxRateId,
         disabled,
         remark);
@@ -288,7 +298,8 @@ public class Material extends UpdateAggregateRoot {
    * @param code 物料代码
    * @param name 物料名称
    * @param description 物料描述（可空）
-   * @param unitId 单位Id
+   * @param unitId 基本单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -301,6 +312,7 @@ public class Material extends UpdateAggregateRoot {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark) {
@@ -316,6 +328,7 @@ public class Material extends UpdateAggregateRoot {
     this.name = name;
     this.description = description;
     this.unitId = unitId;
+    this.purchaseUnitId = purchaseUnitId;
     this.taxRateId = taxRateId;
     this.disabled = disabled;
     this.remark = remark;

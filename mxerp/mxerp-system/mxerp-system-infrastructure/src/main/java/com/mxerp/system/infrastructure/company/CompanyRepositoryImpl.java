@@ -37,18 +37,6 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   /**
-   * 按公司代码查询
-   *
-   * @param code 公司代码
-   * @return 公司，不存在返回 null
-   */
-  @Override
-  @Nullable
-  public Company getByCode(String code) {
-    return jpa.findByCode(code).orElse(null);
-  }
-
-  /**
    * 按Id列表批量查询公司
    *
    * @param ids 公司Id列表
@@ -63,15 +51,39 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   /**
-   * 判断公司代码是否已存在（可排除指定Id）
+   * 查询指定公司及其所有子孙公司（含自身）
    *
-   * @param code 公司代码
+   * @param id 公司Id
+   * @return 公司及其子孙列表
+   */
+  @Override
+  public List<Company> getWithChildren(long id) {
+    return jpa.findWithChildren(id);
+  }
+
+  /**
+   * 查询指定上级下的所有直接下级公司
+   *
+   * @param parentId 上级公司Id
+   * @return 下级公司列表
+   */
+  @Override
+  public List<Company> getListByParentId(long parentId) {
+    return jpa.findByParentId(parentId);
+  }
+
+  /**
+   * 判断同一上级下公司名称是否已存在（可排除指定Id）
+   *
+   * @param name 公司名称
+   * @param parentId 上级公司Id（可空）
    * @param id 排除的公司Id（可空）
    * @return true 表示已存在
    */
   @Override
-  public boolean isExistByCodeExcludeId(String code, @Nullable Long id) {
-    return jpa.existsByCodeExcludeId(code, id);
+  public boolean isExistByNameAndParentIdExcludeId(
+      String name, @Nullable Long parentId, @Nullable Long id) {
+    return jpa.existsByNameAndParentIdExcludeId(name, parentId, id);
   }
 
   /**

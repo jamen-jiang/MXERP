@@ -10,14 +10,6 @@ import org.jspecify.annotations.Nullable;
 public interface CompanyRepository extends Repository<Company> {
 
   /**
-   * 根据代码查询公司
-   *
-   * @param code 公司代码
-   * @return 公司实体（可空），不存在返回 null
-   */
-  @Nullable Company getByCode(String code);
-
-  /**
    * 根据Id列表批量查询公司
    *
    * @param ids 公司Id列表
@@ -26,21 +18,40 @@ public interface CompanyRepository extends Repository<Company> {
   List<Company> getListByIds(List<Long> ids);
 
   /**
-   * 判断代码是否已存在
+   * 查询自身及所有子孙公司（含自身）
    *
-   * @param code 公司代码
+   * @param id 公司Id
+   * @return 公司列表（含自身）
+   */
+  List<Company> getWithChildren(long id);
+
+  /**
+   * 按上级公司查询直接下级
+   *
+   * @param parentId 上级公司Id
+   * @return 公司列表
+   */
+  List<Company> getListByParentId(long parentId);
+
+  /**
+   * 判断同一上级下公司名称是否已存在
+   *
+   * @param name 公司名称
+   * @param parentId 上级公司Id（可空，null 表示顶级）
    * @param id 排除的Id（用于更新时校验，可为空）
    * @return 是否存在
    */
-  boolean isExistByCodeExcludeId(String code, @Nullable Long id);
+  boolean isExistByNameAndParentIdExcludeId(
+      String name, @Nullable Long parentId, @Nullable Long id);
 
   /**
-   * 判断代码是否已存在（新增时校验，无需排除Id）
+   * 判断同一上级下公司名称是否已存在（新增时校验）
    *
-   * @param code 公司代码
+   * @param name 公司名称
+   * @param parentId 上级公司Id（可空，null 表示顶级）
    * @return 是否存在
    */
-  default boolean isExistByCodeExcludeId(String code) {
-    return isExistByCodeExcludeId(code, null);
+  default boolean isExistByNameAndParentIdExcludeId(String name, @Nullable Long parentId) {
+    return isExistByNameAndParentIdExcludeId(name, parentId, null);
   }
 }

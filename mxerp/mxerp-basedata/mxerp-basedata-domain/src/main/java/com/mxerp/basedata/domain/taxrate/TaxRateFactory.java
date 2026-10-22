@@ -27,17 +27,23 @@ public class TaxRateFactory {
    * @param code 代码
    * @param name 名称
    * @param rate 税率值
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
    * @param remark 备注（可空）
    * @return 税率聚合
    * @throws DomainException 税率代码已存在时抛出
    */
   public TaxRate create(
-      String code, String name, BigDecimal rate, @Nullable Integer sort, @Nullable String remark) {
+      String code,
+      String name,
+      BigDecimal rate,
+      boolean disabled,
+      @Nullable Integer sort,
+      @Nullable String remark) {
     // 校验税率代码唯一
     if (taxRateRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("税率代码" + code + "已存在!");
     }
-    return new TaxRate(code, name, rate, sort, remark);
+    return new TaxRate(code, name, rate, disabled, sort, remark);
   }
 }

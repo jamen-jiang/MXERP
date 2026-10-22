@@ -25,7 +25,7 @@ public interface ProductionReceiptRepository extends Repository<ProductionReceip
    * @param workOrderId 工单Id
    * @return 入库单列表
    */
-  List<ProductionReceipt> getListByWorkOrderId(Long workOrderId);
+  List<ProductionReceipt> getListByWorkOrderId(long workOrderId);
 
   /**
    * 判断单号是否存在

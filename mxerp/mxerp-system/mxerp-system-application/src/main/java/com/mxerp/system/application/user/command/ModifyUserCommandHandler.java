@@ -48,9 +48,10 @@ public class ModifyUserCommandHandler {
             command.getName(),
             command.getUserName(),
             command.getEmail(),
+            command.getMobile(),
             command.getPassword(),
+            command.isDisabled(),
             command.getRemark(),
-            command.getPostIds(),
             command.getRoleIds());
     userRepository.save(model);
   }

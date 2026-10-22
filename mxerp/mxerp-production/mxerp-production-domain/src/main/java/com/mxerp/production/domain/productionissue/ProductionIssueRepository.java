@@ -25,7 +25,7 @@ public interface ProductionIssueRepository extends Repository<ProductionIssue> {
    * @param workOrderId 工单Id
    * @return 生产领料单列表
    */
-  List<ProductionIssue> getListByWorkOrderId(Long workOrderId);
+  List<ProductionIssue> getListByWorkOrderId(long workOrderId);
 
   /**
    * 判断单号是否存在

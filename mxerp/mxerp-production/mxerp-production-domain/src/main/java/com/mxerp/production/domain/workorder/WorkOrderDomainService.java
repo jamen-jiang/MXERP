@@ -103,10 +103,10 @@ public class WorkOrderDomainService {
    * @return 工单聚合
    */
   public WorkOrder create(
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
@@ -153,10 +153,10 @@ public class WorkOrderDomainService {
    */
   public WorkOrder modify(
       long id,
-      Long materialId,
-      Long variantId,
+      long materialId,
+      long variantId,
       BigDecimal quantity,
-      Long unitId,
+      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,

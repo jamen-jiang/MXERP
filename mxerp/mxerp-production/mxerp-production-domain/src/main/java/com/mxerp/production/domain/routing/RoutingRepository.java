@@ -33,7 +33,7 @@ public interface RoutingRepository extends Repository<Routing> {
    * @param materialId 物料系列Id
    * @return 工艺路线列表
    */
-  List<Routing> getListByMaterialId(Long materialId);
+  List<Routing> getListByMaterialId(long materialId);
 
   /**
    * 取物料在指定时点生效的主路线
@@ -42,7 +42,7 @@ public interface RoutingRepository extends Repository<Routing> {
    * @param moment 判定时点
    * @return 生效的主路线（可空），没有则返回 null
    */
-  @Nullable Routing getEffectivePrimaryByMaterialIdAt(Long materialId, LocalDateTime moment);
+  @Nullable Routing getEffectivePrimaryByMaterialIdAt(long materialId, LocalDateTime moment);
 
   /**
    * 判断代码 + 版本是否存在

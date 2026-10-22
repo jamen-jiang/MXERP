@@ -1,7 +1,7 @@
 package com.mxerp.system.domain.post;
 
 import com.mxerp.shared.domain.exception.DomainException;
-import java.util.List;
+import com.mxerp.shared.domain.util.HierarchyUtils;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -26,18 +26,39 @@ public class PostFactory {
    *
    * @param name 岗位名称
    * @param departmentId 部门Id
-   * @param rankId 职级Id
+   * @param parentId 上级岗位Id（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param roleIds 角色Id列表（可空）
    * @return 岗位聚合
-   * @throws DomainException 岗位名称已存在时抛出
+   * @throws DomainException 岗位名称已存在、或上级岗位不存在时抛出
    */
   public Post create(
-      String name, long departmentId, long rankId, @Nullable String remark, List<Long> roleIds) {
+      String name,
+      long departmentId,
+      @Nullable Long parentId,
+      boolean disabled,
+      @Nullable String remark) {
     // 校验岗位名称唯一
     if (postRepository.isExistByNameExcludeId(name)) {
       throw new DomainException("岗位" + name + "已存在!");
     }
-    return new Post(name, departmentId, rankId, remark, roleIds);
+    return new Post(
+        name,
+        departmentId,
+        parentId,
+        HierarchyUtils.resolveLevel(parentId, getParent(parentId), "上级岗位"),
+        disabled,
+        remark);
+  }
+
+  /**
+   * 查询上级岗位
+   *
+   * @param parentId 上级岗位Id（可空）
+   * @return 上级岗位，无父Id或不存在时返回 null（可空）
+   */
+  @Nullable
+  private Post getParent(@Nullable Long parentId) {
+    return parentId == null ? null : postRepository.get(parentId);
   }
 }

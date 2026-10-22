@@ -4,7 +4,6 @@ import com.mxerp.system.domain.department.Department;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -20,40 +19,12 @@ public interface DepartmentJpa
     extends JpaRepository<Department, Long>, JpaSpecificationExecutor<Department> {
 
   /**
-   * 按代码查询
-   *
-   * @param code 部门代码
-   * @return 部门
-   */
-  Optional<Department> findByCode(String code);
-
-  /**
    * 查询指定父级下的所有直接子部门
    *
    * @param parentId 父Id
    * @return 部门列表
    */
   List<Department> findByParentId(long parentId);
-
-  /**
-   * 判断部门编码是否存在（可排除指定 Id）
-   *
-   * @param code 部门编码
-   * @param id 排除的ID（可空，null 表示不排除）
-   * @return true 表示已存在
-   */
-  default boolean existsByCodeExcludeId(String code, @Nullable Long id) {
-    Specification<Department> spec =
-        (root, query, cb) -> {
-          List<Predicate> predicates = new ArrayList<>();
-          predicates.add(cb.equal(root.get("code"), code));
-          if (id != null) {
-            predicates.add(cb.notEqual(root.get("id"), id));
-          }
-          return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    return exists(spec);
-  }
 
   /**
    * 判断同一父级下名称是否存在（可排除指定 Id）

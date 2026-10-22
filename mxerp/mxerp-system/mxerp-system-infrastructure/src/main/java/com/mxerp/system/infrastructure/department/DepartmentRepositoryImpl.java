@@ -37,18 +37,6 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   }
 
   /**
-   * 按编码查询部门
-   *
-   * @param code 部门编码
-   * @return 部门，不存在返回 null
-   */
-  @Override
-  @Nullable
-  public Department getByCode(String code) {
-    return jpa.findByCode(code).orElse(null);
-  }
-
-  /**
    * 查询指定部门及其所有子部门（含自身）
    *
    * @param id 部门Id
@@ -68,18 +56,6 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   @Override
   public List<Department> getListByParentId(long parentId) {
     return jpa.findByParentId(parentId);
-  }
-
-  /**
-   * 判断编码是否已存在（可排除自身）
-   *
-   * @param code 部门编码
-   * @param id 排除的部门Id（可空）
-   * @return 是否存在
-   */
-  @Override
-  public boolean isExistByCodeExcludeId(String code, @Nullable Long id) {
-    return jpa.existsByCodeExcludeId(code, id);
   }
 
   /**

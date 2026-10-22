@@ -27,6 +27,22 @@ public interface PostRepository extends Repository<Post> {
   List<Post> getListByDepartmentIds(Collection<Long> departmentIds);
 
   /**
+   * 查询自身及所有子孙岗位（含自身）
+   *
+   * @param id 岗位Id
+   * @return 岗位列表（含自身）
+   */
+  List<Post> getWithChildren(long id);
+
+  /**
+   * 按上级岗位查询直接下级
+   *
+   * @param parentId 上级岗位Id
+   * @return 岗位列表
+   */
+  List<Post> getListByParentId(long parentId);
+
+  /**
    * 判断岗位名称是否存在
    *
    * @param name 岗位名称

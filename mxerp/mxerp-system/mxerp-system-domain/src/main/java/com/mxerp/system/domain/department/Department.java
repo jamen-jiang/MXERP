@@ -16,7 +16,16 @@ import org.hibernate.annotations.Nationalized;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 部门 */
+/**
+ * 部门
+ *
+ * <p>字段只保留组织结构信息：Odoo 的 {@code hr.department}（name、company_id、parent_id、parent_path）、
+ * ERPNext 的 {@code Department}（department_name、parent_department、company、disabled、lft/rgt）、
+ * 金蝶「部门」（编码、名称、上级部门、创建组织、部门属性）都只有这些——**没有一家在部门上存地址或电话**，
+ * 联系信息属于公司或员工/岗位。
+ *
+ * <p>负责人（Odoo {@code manager_id}）与成员（{@code member_ids}）等员工主数据建立后再加。
+ */
 @NullMarked
 @Getter
 @Setter(AccessLevel.PROTECTED)
@@ -27,7 +36,6 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Department_CompanyId", columnList = "CompanyId"),
       @Index(name = "IX_Department_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Department_Code", columnList = "Code"),
       @Index(name = "IX_Department_Name", columnList = "Name")
     })
 public class Department extends UpdateAggregateRoot implements Parent {
@@ -47,44 +55,19 @@ public class Department extends UpdateAggregateRoot implements Parent {
   @Nullable
   private Long parentId;
 
-  /** 代码 */
-  @Nationalized
-  @Column(name = "Code", nullable = false, length = 50)
-  private String code;
-
   /** 名称 */
   @Nationalized
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
-  /** 电话号码（可空） */
-  @Nationalized
-  @Column(name = "Telephone", length = 50)
-  @Nullable
-  private String telephone;
-
-  /** 传真（可空） */
-  @Nationalized
-  @Column(name = "Fax", length = 50)
-  @Nullable
-  private String fax;
-
-  /** 邮箱（可空） */
-  @Nationalized
-  @Column(name = "Email", length = 200)
-  @Nullable
-  private String email;
+  /** 是否禁用 */
+  @Column(name = "Disabled", nullable = false)
+  private Boolean disabled = false;
 
   /** 排序（可空） */
   @Column(name = "Sort")
   @Nullable
   private Integer sort;
-
-  /** 地址（可空） */
-  @Nationalized
-  @Column(name = "Address", length = 800)
-  @Nullable
-  private String address;
 
   /** 备注（可空） */
   @Nationalized
@@ -98,46 +81,20 @@ public class Department extends UpdateAggregateRoot implements Parent {
    * @param level 级别字符串（可空）
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
-   * @param code 代码
    * @param name 名称
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
-   * @param address 地址（可空）
    * @param remark 备注（可空）
    */
   public Department(
       @Nullable String level,
       long companyId,
       @Nullable Long parentId,
-      String code,
       String name,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
+      boolean disabled,
       @Nullable Integer sort,
-      @Nullable String address,
       @Nullable String remark) {
-    String trimmedCode = StringUtils.trimToNull(code);
-    String trimmedName = StringUtils.trimToNull(name);
-    if (trimmedCode == null) {
-      throw new DomainException("部门代码不能为空");
-    }
-    if (trimmedName == null) {
-      throw new DomainException("部门名称不能为空");
-    }
-    this.level = StringUtils.trimToNull(level);
-    this.companyId = companyId;
-    this.parentId = parentId;
-    this.code = trimmedCode;
-    this.name = trimmedName;
-    this.telephone = telephone;
-    this.fax = fax;
-    this.email = email;
-    this.sort = sort;
-    this.address = address;
-    this.remark = remark;
+    apply(level, companyId, parentId, name, disabled, sort, remark);
   }
 
   /**
@@ -146,46 +103,20 @@ public class Department extends UpdateAggregateRoot implements Parent {
    * @param level 级别字符串（可空）
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
-   * @param code 代码
    * @param name 名称
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
-   * @param address 地址（可空）
    * @param remark 备注（可空）
    */
   public void modify(
       @Nullable String level,
       long companyId,
       @Nullable Long parentId,
-      String code,
       String name,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
+      boolean disabled,
       @Nullable Integer sort,
-      @Nullable String address,
       @Nullable String remark) {
-    String trimmedCode = StringUtils.trimToNull(code);
-    String trimmedName = StringUtils.trimToNull(name);
-    if (trimmedCode == null) {
-      throw new DomainException("部门代码不能为空");
-    }
-    if (trimmedName == null) {
-      throw new DomainException("部门名称不能为空");
-    }
-    this.level = StringUtils.trimToNull(level);
-    this.companyId = companyId;
-    this.parentId = parentId;
-    this.code = trimmedCode;
-    this.name = trimmedName;
-    this.telephone = telephone;
-    this.fax = fax;
-    this.email = email;
-    this.sort = sort;
-    this.address = address;
-    this.remark = remark;
+    apply(level, companyId, parentId, name, disabled, sort, remark);
   }
 
   /**
@@ -196,5 +127,40 @@ public class Department extends UpdateAggregateRoot implements Parent {
   @Override
   public void changeLevel(@Nullable String level) {
     this.level = level;
+  }
+
+  // ==================== 私有：校验与赋值 ====================
+
+  /**
+   * 统一的校验与赋值入口（构造器与修改共用）
+   *
+   * @param level 级别字符串（可空）
+   * @param companyId 公司Id
+   * @param parentId 父Id（可空）
+   * @param name 名称
+   * @param disabled 是否禁用
+   * @param sort 排序（可空）
+   * @param remark 备注（可空）
+   * @throws DomainException 名称为空时抛出
+   */
+  private void apply(
+      @Nullable String level,
+      long companyId,
+      @Nullable Long parentId,
+      String name,
+      boolean disabled,
+      @Nullable Integer sort,
+      @Nullable String remark) {
+    String trimmedName = StringUtils.trimToNull(name);
+    if (trimmedName == null) {
+      throw new DomainException("部门名称不能为空");
+    }
+    this.level = StringUtils.trimToNull(level);
+    this.companyId = companyId;
+    this.parentId = parentId;
+    this.name = trimmedName;
+    this.disabled = disabled;
+    this.sort = sort;
+    this.remark = remark;
   }
 }

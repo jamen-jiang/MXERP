@@ -44,9 +44,10 @@ public class AddUserCommandHandler {
             command.getName(),
             command.getUserName(),
             command.getEmail(),
+            command.getMobile(),
             command.getPassword(),
+            command.isDisabled(),
             command.getRemark(),
-            command.getPostIds(),
             command.getRoleIds());
     userRepository.save(model);
     return model.getId();

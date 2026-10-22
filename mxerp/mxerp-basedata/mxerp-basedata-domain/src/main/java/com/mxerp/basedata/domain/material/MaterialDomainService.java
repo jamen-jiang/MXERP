@@ -1,6 +1,7 @@
 package com.mxerp.basedata.domain.material;
 
 import com.mxerp.basedata.domain.category.CategoryRepository;
+import com.mxerp.basedata.domain.unit.UnitRepository;
 import com.mxerp.basedata.domain.variant.Variant;
 import com.mxerp.basedata.domain.variant.VariantRepository;
 import com.mxerp.shared.domain.exception.DomainException;
@@ -32,6 +33,9 @@ public class MaterialDomainService {
   /** 规格仓储：物料代码变了要级联重算规格编码 */
   private final VariantRepository variantRepository;
 
+  /** 单位仓储：采购单位必须和基本单位同组才能换算 */
+  private final UnitRepository unitRepository;
+
   // 属性仓储随属性挂载停用
   // /** 属性仓储 */
   // private final AttributeRepository attributeRepository;
@@ -46,10 +50,12 @@ public class MaterialDomainService {
   public MaterialDomainService(
       MaterialRepository materialRepository,
       CategoryRepository categoryRepository,
-      VariantRepository variantRepository) {
+      VariantRepository variantRepository,
+      UnitRepository unitRepository) {
     this.materialRepository = materialRepository;
     this.categoryRepository = categoryRepository;
     this.variantRepository = variantRepository;
+    this.unitRepository = unitRepository;
     // this.attributeRepository = attributeRepository;
   }
 
@@ -65,6 +71,7 @@ public class MaterialDomainService {
    * @param name 物料名称
    * @param description 物料描述（可空）
    * @param unitId 单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -81,6 +88,7 @@ public class MaterialDomainService {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -88,6 +96,7 @@ public class MaterialDomainService {
       @Nullable List<Long> attachmentIds) {
     // 1. 分类存在性
     validateCategory(categoryId);
+    validateUnits(unitId, purchaseUnitId);
     // 2. 代码唯一性
     if (materialRepository.isExistByCodeExcludeId(code)) {
       throw new DomainException("物料代码" + code + "已存在!");
@@ -104,6 +113,7 @@ public class MaterialDomainService {
             name,
             description,
             unitId,
+            purchaseUnitId,
             taxRateId,
             disabled,
             remark,
@@ -124,6 +134,7 @@ public class MaterialDomainService {
    * @param name 物料名称
    * @param description 物料描述（可空）
    * @param unitId 单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -139,6 +150,7 @@ public class MaterialDomainService {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -155,6 +167,7 @@ public class MaterialDomainService {
               name,
               description,
               unitId,
+              purchaseUnitId,
               taxRateId,
               disabled,
               remark,
@@ -170,6 +183,7 @@ public class MaterialDomainService {
           name,
           description,
           unitId,
+          purchaseUnitId,
           taxRateId,
           disabled,
           remark,
@@ -190,6 +204,7 @@ public class MaterialDomainService {
    * @param name 物料名称
    * @param description 物料描述（可空）
    * @param unitId 单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -207,6 +222,7 @@ public class MaterialDomainService {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -227,6 +243,7 @@ public class MaterialDomainService {
         name,
         description,
         unitId,
+        purchaseUnitId,
         taxRateId,
         disabled,
         remark,
@@ -248,6 +265,7 @@ public class MaterialDomainService {
    * @param name 物料名称
    * @param description 物料描述（可空）
    * @param unitId 单位Id
+   * @param purchaseUnitId 采购单位Id（可空，空表示与基本单位相同）
    * @param taxRateId 税率Id（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -264,6 +282,7 @@ public class MaterialDomainService {
       String name,
       @Nullable String description,
       long unitId,
+      @Nullable Long purchaseUnitId,
       @Nullable Long taxRateId,
       boolean disabled,
       @Nullable String remark,
@@ -271,6 +290,7 @@ public class MaterialDomainService {
       @Nullable List<Long> attachmentIds) {
     // 1. 分类存在性
     validateCategory(categoryId);
+    validateUnits(unitId, purchaseUnitId);
     // 2. 代码唯一性（排除自身）
     if (materialRepository.isExistByCodeExcludeId(code, material.getId())) {
       throw new DomainException("物料代码" + code + "已存在!");
@@ -289,6 +309,7 @@ public class MaterialDomainService {
         name,
         description,
         unitId,
+        purchaseUnitId,
         taxRateId,
         disabled,
         remark,
@@ -304,6 +325,29 @@ public class MaterialDomainService {
   }
 
   // ==================== 私有：校验 ====================
+
+  /**
+   * 校验单位存在
+   *
+   * <p>采购单位可以空（表示和基本单位一样），也可以跨组：钢管按根买、按公斤管库存是真实业务，
+   * 跨组换算由物料替代单位负责，见
+   * {@code com.mxerp.basedata.domain.unit.MaterialAlternateUnit}。
+   *
+   * @param unitId 基本单位Id
+   * @param purchaseUnitId 采购单位Id（可空）
+   * @throws DomainException 单位不存在时抛出
+   */
+  private void validateUnits(long unitId, @Nullable Long purchaseUnitId) {
+    if (unitRepository.get(unitId) == null) {
+      throw new DomainException("单位" + unitId + "不存在!");
+    }
+    if (purchaseUnitId == null) {
+      return;
+    }
+    if (unitRepository.get(purchaseUnitId) == null) {
+      throw new DomainException("采购单位" + purchaseUnitId + "不存在!");
+    }
+  }
 
   /**
    * 校验分类存在

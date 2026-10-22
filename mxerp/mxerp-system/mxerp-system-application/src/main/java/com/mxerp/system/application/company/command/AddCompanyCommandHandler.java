@@ -48,18 +48,26 @@ public class AddCompanyCommandHandler {
   @CommandHandler
   @Transactional
   public Long handle(AddCompanyCommand command) {
-    // 1. 创建公司聚合
+    // 1. 创建公司聚合（默认币别必填，为空时由领域层报错）
     Company model =
         companyFactory.create(
-            command.getCode(),
             command.getName(),
+            command.getShortName(),
+            command.getParentId(),
             command.getTelephone(),
             command.getFax(),
             command.getEmail(),
-            command.getAreaCode(),
-            command.getPostCode(),
+            command.getCountry(),
+            command.getProvince(),
+            command.getCity(),
+            command.getDistrict(),
+            command.getZip(),
             command.getAddress(),
-            command.getBillingAddress(),
+            command.getTaxRegisterCode(),
+            command.getRegistryCode(),
+            command.getEstablishedDate(),
+            command.getCurrencyId() == null ? 0L : command.getCurrencyId(),
+            command.isDisabled(),
             command.getSort(),
             command.getRemark());
 

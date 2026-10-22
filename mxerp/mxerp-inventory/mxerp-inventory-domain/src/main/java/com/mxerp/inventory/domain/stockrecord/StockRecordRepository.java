@@ -27,7 +27,7 @@ public interface StockRecordRepository extends Repository<StockRecord> {
    * @param sourceId 来源单据Id
    * @return 库存记录列表
    */
-  List<StockRecord> getListBySource(String sourceType, Long sourceId);
+  List<StockRecord> getListBySource(String sourceType, long sourceId);
 
   /**
    * 取冲某张单的全部红字单
@@ -38,5 +38,5 @@ public interface StockRecordRepository extends Repository<StockRecord> {
    * @param reversalOfRecordId 被冲的原单Id
    * @return 红字单列表，还没冲过时为空列表
    */
-  List<StockRecord> getListByReversalOfRecordId(Long reversalOfRecordId);
+  List<StockRecord> getListByReversalOfRecordId(long reversalOfRecordId);
 }

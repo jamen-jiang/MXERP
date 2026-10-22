@@ -1,7 +1,6 @@
 package com.mxerp.system.application.post.command;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -22,18 +21,18 @@ public class ModifyPostCommand extends AddPostCommand {
    * @param id 岗位Id
    * @param name 岗位名称
    * @param departmentId 组织机构Id
-   * @param rankId 职级Id
+   * @param parentId 上级岗位Id（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param roleIds 角色Id列表（可空）
    */
   public ModifyPostCommand(
       long id,
       String name,
       long departmentId,
-      long rankId,
-      @Nullable String remark,
-      @Nullable List<Long> roleIds) {
-    super(name, departmentId, rankId, remark, roleIds);
+      @Nullable Long parentId,
+      boolean disabled,
+      @Nullable String remark) {
+    super(name, departmentId, parentId, disabled, remark);
     this.id = id;
   }
 }

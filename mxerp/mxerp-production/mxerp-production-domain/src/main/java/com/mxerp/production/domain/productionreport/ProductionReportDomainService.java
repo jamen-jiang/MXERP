@@ -136,7 +136,7 @@ public class ProductionReportDomainService {
    * @param workOrderId 工单Id
    * @return 未作废的报工单列表
    */
-  public List<ProductionReport> getEffectiveByWorkOrderId(Long workOrderId) {
+  public List<ProductionReport> getEffectiveByWorkOrderId(long workOrderId) {
     return productionReportRepository.getListByWorkOrderId(workOrderId).stream()
         .filter(ProductionReport::isEffective)
         .toList();

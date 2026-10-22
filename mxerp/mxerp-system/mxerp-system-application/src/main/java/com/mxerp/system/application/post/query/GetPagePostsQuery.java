@@ -30,8 +30,8 @@ public class GetPagePostsQuery extends PageRequest implements Query {
   @Nullable
   private Long departmentId;
 
-  /** 职级Id（可空） */
-  @Schema(description = "职级Id")
+  /** 上级岗位Id（可空） */
+  @Schema(description = "上级岗位Id")
   @Nullable
-  private Long rankId;
+  private Long parentId;
 }

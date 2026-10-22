@@ -21,28 +21,20 @@ public class ModifyDepartmentCommand extends AddDepartmentCommand {
    * @param id 部门Id
    * @param companyId 公司Id
    * @param parentId 父Id（可空）
-   * @param code 组织机构代码
    * @param name 组织机构名称
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
-   * @param email 邮箱（可空）
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
-   * @param address 地址（可空）
    * @param remark 备注（可空）
    */
   public ModifyDepartmentCommand(
       long id,
       long companyId,
       @Nullable Long parentId,
-      String code,
       String name,
-      @Nullable String telephone,
-      @Nullable String fax,
-      @Nullable String email,
+      boolean disabled,
       @Nullable Integer sort,
-      @Nullable String address,
       @Nullable String remark) {
-    super(companyId, parentId, code, name, telephone, fax, email, sort, address, remark);
+    super(companyId, parentId, name, disabled, sort, remark);
     this.id = id;
   }
 }

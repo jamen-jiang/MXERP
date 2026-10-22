@@ -17,7 +17,7 @@ public interface BomRepository extends Repository<Bom> {
    * @param version 版本号
    * @return BOM（可空），不存在返回 null
    */
-  @Nullable Bom getByVariantIdAndVersion(Long variantId, String version);
+  @Nullable Bom getByVariantIdAndVersion(long variantId, String version);
 
   /**
    * 按父件SKU查询全部版本
@@ -25,7 +25,7 @@ public interface BomRepository extends Repository<Bom> {
    * @param variantId 父件SKU
    * @return BOM 列表
    */
-  List<Bom> getListByVariantId(Long variantId);
+  List<Bom> getListByVariantId(long variantId);
 
   /**
    * 取父件在指定时点生效的 BOM 版本
@@ -37,7 +37,7 @@ public interface BomRepository extends Repository<Bom> {
    * @param moment 判定时点
    * @return BOM（可空），该时点没有生效版本时返回 null
    */
-  @Nullable Bom getEffectiveByVariantIdAt(Long variantId, LocalDateTime moment);
+  @Nullable Bom getEffectiveByVariantIdAt(long variantId, LocalDateTime moment);
 
   /**
    * 判断父件SKU + 版本是否存在

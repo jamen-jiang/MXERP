@@ -16,7 +16,7 @@ public interface SpecAttributeRepository extends Repository<SpecAttribute> {
    * @param code 规格属性代码
    * @return 规格属性（可空），不存在返回 null
    */
-  @Nullable SpecAttribute getByCategoryIdAndCode(Long categoryId, String code);
+  @Nullable SpecAttribute getByCategoryIdAndCode(long categoryId, String code);
 
   /**
    * 按分类查询列表
@@ -24,7 +24,7 @@ public interface SpecAttributeRepository extends Repository<SpecAttribute> {
    * @param categoryId 所属分类Id
    * @return 规格属性列表
    */
-  List<SpecAttribute> getListByCategoryId(Long categoryId);
+  List<SpecAttribute> getListByCategoryId(long categoryId);
 
   /**
    * 判断规格属性代码在分类下是否已存在

@@ -49,13 +49,9 @@ public class ModifyDepartmentCommandHandler {
             command.getId(),
             command.getCompanyId(),
             command.getParentId(),
-            command.getCode(),
             command.getName(),
-            command.getTelephone(),
-            command.getFax(),
-            command.getEmail(),
+            command.isDisabled(),
             command.getSort(),
-            command.getAddress(),
             command.getRemark());
 
     // 2. 保存主部门与所有子孙（level 被更新）

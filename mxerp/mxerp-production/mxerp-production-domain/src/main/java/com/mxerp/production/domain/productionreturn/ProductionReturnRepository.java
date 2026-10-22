@@ -25,7 +25,7 @@ public interface ProductionReturnRepository extends Repository<ProductionReturn>
    * @param workOrderId 工单Id
    * @return 生产退料单列表
    */
-  List<ProductionReturn> getListByWorkOrderId(Long workOrderId);
+  List<ProductionReturn> getListByWorkOrderId(long workOrderId);
 
   /**
    * 判断单号是否存在

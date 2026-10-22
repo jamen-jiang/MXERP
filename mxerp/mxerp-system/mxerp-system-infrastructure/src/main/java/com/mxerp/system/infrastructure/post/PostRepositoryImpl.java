@@ -64,6 +64,28 @@ public class PostRepositoryImpl implements PostRepository {
   }
 
   /**
+   * 查询指定岗位及其所有子孙岗位（含自身）
+   *
+   * @param id 岗位Id
+   * @return 岗位及其子孙列表
+   */
+  @Override
+  public List<Post> getWithChildren(long id) {
+    return jpa.findWithChildren(id);
+  }
+
+  /**
+   * 查询指定上级下的所有直接下级岗位
+   *
+   * @param parentId 上级岗位Id
+   * @return 下级岗位列表
+   */
+  @Override
+  public List<Post> getListByParentId(long parentId) {
+    return jpa.findByParentId(parentId);
+  }
+
+  /**
    * 判断岗位名称是否已存在（可排除自身）
    *
    * @param name 岗位名称

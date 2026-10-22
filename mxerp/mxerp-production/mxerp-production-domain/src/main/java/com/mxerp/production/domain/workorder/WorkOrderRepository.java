@@ -27,7 +27,7 @@ public interface WorkOrderRepository extends Repository<WorkOrder> {
    * @param sourceId 来源单据Id
    * @return 工单列表
    */
-  List<WorkOrder> getListBySource(String sourceType, Long sourceId);
+  List<WorkOrder> getListBySource(String sourceType, long sourceId);
 
   /**
    * 按产出SKU查询工单
@@ -35,7 +35,7 @@ public interface WorkOrderRepository extends Repository<WorkOrder> {
    * @param variantId 产出SKU
    * @return 工单列表
    */
-  List<WorkOrder> getListByVariantId(Long variantId);
+  List<WorkOrder> getListByVariantId(long variantId);
 
   /**
    * 判断单号是否存在

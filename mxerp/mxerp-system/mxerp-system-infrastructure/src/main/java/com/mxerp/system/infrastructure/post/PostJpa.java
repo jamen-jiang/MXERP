@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,13 +35,27 @@ public interface PostJpa extends JpaRepository<Post, Long>, JpaSpecificationExec
   List<Post> findByDepartmentIdIn(Collection<Long> departmentIds);
 
   /**
-   * 按部门Id集合 + 职级Id集合查岗位
+   * 查询指定上级下的所有直接下级岗位
    *
-   * @param departmentIds 部门Id集合
-   * @param rankIds 职级Id集合
+   * @param parentId 上级岗位Id
    * @return 岗位列表
    */
-  List<Post> findByDepartmentIdInAndRankIdIn(Set<Long> departmentIds, Set<Long> rankIds);
+  List<Post> findByParentId(long parentId);
+
+  /**
+   * 查询指定岗位及其所有子孙岗位（包含自身）
+   *
+   * @param id 岗位Id
+   * @return 岗位及其子孙列表
+   */
+  default List<Post> findWithChildren(long id) {
+    Specification<Post> spec =
+        (root, query, cb) ->
+            cb.or(
+                cb.equal(root.get("id"), id),
+                cb.like(cb.concat(cb.concat(",", root.get("level")), ","), "%," + id + ",%"));
+    return findAll(spec);
+  }
 
   /**
    * 判断岗位名称是否已存在（可排除指定Id）

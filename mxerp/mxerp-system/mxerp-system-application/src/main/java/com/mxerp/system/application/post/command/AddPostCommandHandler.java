@@ -43,9 +43,9 @@ public class AddPostCommandHandler {
         postFactory.create(
             command.getName(),
             command.getDepartmentId(),
-            command.getRankId(),
-            command.getRemark(),
-            command.getRoleIds());
+            command.getParentId(),
+            command.isDisabled(),
+            command.getRemark());
     postRepository.save(model);
     return model.getId();
   }

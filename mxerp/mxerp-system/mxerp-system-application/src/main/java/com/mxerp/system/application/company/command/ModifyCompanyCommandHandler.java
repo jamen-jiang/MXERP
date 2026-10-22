@@ -5,6 +5,7 @@ import com.mxerp.shared.application.port.lock.DistributedLock;
 import com.mxerp.system.domain.company.Company;
 import com.mxerp.system.domain.company.CompanyDomainService;
 import com.mxerp.system.domain.company.CompanyRepository;
+import java.util.List;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
@@ -42,23 +43,33 @@ public class ModifyCompanyCommandHandler {
   @Transactional
   @DistributedLock(prefix = EntityConst.COMPANY, value = "#command.id")
   public void handle(ModifyCompanyCommand command) {
-    // 1. 通过领域服务修改公司（内部校验代码唯一 + 存在性）
-    Company model =
+    // 1. 通过领域服务修改公司（内部校验代码唯一 + 上级公司 + 层级编排）
+    List<Company> models =
         companyDomainService.modify(
             command.getId(),
-            command.getCode(),
             command.getName(),
+            command.getShortName(),
+            command.getParentId(),
             command.getTelephone(),
             command.getFax(),
             command.getEmail(),
-            command.getAreaCode(),
-            command.getPostCode(),
+            command.getCountry(),
+            command.getProvince(),
+            command.getCity(),
+            command.getDistrict(),
+            command.getZip(),
             command.getAddress(),
-            command.getBillingAddress(),
+            command.getTaxRegisterCode(),
+            command.getRegistryCode(),
+            command.getEstablishedDate(),
+            command.getCurrencyId() == null ? 0L : command.getCurrencyId(),
+            command.isDisabled(),
             command.getSort(),
             command.getRemark());
 
-    // 2. 保存
-    companyRepository.save(model);
+    // 2. 保存自身与受影响的子孙（层级路径可能被重排）
+    for (Company model : models) {
+      companyRepository.save(model);
+    }
   }
 }

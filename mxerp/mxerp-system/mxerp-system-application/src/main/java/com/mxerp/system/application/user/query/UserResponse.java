@@ -1,7 +1,6 @@
 package com.mxerp.system.application.user.query;
 
 import com.mxerp.shared.application.response.BaseResponse;
-import com.mxerp.system.application.post.query.PostResponse;
 import com.mxerp.system.application.role.query.RoleResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
@@ -36,6 +35,15 @@ public class UserResponse extends BaseResponse {
   @Nullable
   private String email;
 
+  /** 手机号（可空） */
+  @Schema(description = "手机号")
+  @Nullable
+  private String mobile;
+
+  /** 是否禁用 */
+  @Schema(description = "是否禁用", requiredMode = Schema.RequiredMode.REQUIRED)
+  private boolean disabled;
+
   /** 密码 */
   @Schema(description = "密码", requiredMode = Schema.RequiredMode.REQUIRED)
   private String password = "";
@@ -48,40 +56,6 @@ public class UserResponse extends BaseResponse {
   /** 角色列表 */
   @Schema(description = "角色列表", requiredMode = Schema.RequiredMode.REQUIRED)
   private List<RoleResponse> roles = new ArrayList<>();
-
-  /** 岗位列表 */
-  @Schema(description = "岗位列表", requiredMode = Schema.RequiredMode.REQUIRED)
-  private List<PostResponse> posts = new ArrayList<>();
-
-  /**
-   * 获取公司Id列表
-   *
-   * @return 公司Id列表
-   */
-  @Schema(description = "公司Id列表", requiredMode = Schema.RequiredMode.REQUIRED)
-  public List<Long> getCompanyIds() {
-    return posts.stream().map(PostResponse::getCompanyId).toList();
-  }
-
-  /**
-   * 获取部门Id列表
-   *
-   * @return 部门Id列表
-   */
-  @Schema(description = "部门Id列表", requiredMode = Schema.RequiredMode.REQUIRED)
-  public List<Long> getDepartmentIds() {
-    return posts.stream().map(PostResponse::getDepartmentId).toList();
-  }
-
-  /**
-   * 获取岗位Id列表
-   *
-   * @return 岗位Id列表
-   */
-  @Schema(description = "岗位Id列表", requiredMode = Schema.RequiredMode.REQUIRED)
-  public List<Long> getPostIds() {
-    return posts.stream().map(PostResponse::getId).toList();
-  }
 
   /**
    * 获取角色Id列表

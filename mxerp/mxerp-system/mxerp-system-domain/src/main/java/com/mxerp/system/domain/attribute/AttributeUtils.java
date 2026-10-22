@@ -17,8 +17,7 @@ import org.jspecify.annotations.Nullable;
  * <p>输入用的是「代码 → 值」的 Map（值可以是标量，也可以是数组），落库却是一行一个值，中间还要按定义
  * 校验；这三步必须有唯一的换算处，否则物料、规格各写一遍，同一段代码解释两遍，签名和界面对不上。
  *
- * <p>「摊平」和「规范成比较文本」这两个动作不放在这里，见
- * {@link ValueTextUtils}——规格属性值算规格签名时要用同一套规则，两处各写一遍会让同一个组合算出两个签名。
+ * <p>「摊平」和「规范成比较文本」这两个动作不放在这里，见 {@link ValueTextUtils}——规格属性值算规格签名时要用同一套规则，两处各写一遍会让同一个组合算出两个签名。
  */
 @NullMarked
 public final class AttributeUtils {
@@ -29,8 +28,8 @@ public final class AttributeUtils {
   /**
    * 解析入参：按代码找定义 → 校验取值 → 摊平成属性值行数据，顺带做必填校验
    *
-   * <p>入参为 {@code null} 表示「这一笔不改动属性值」，返回 {@code null} 让调用方跳过同步；
-   * 传空 Map 才是「清空」。这两种写法差别要分清，否则导入只带规格组合的那一步会把已维护的属性全删掉。
+   * <p>入参为 {@code null} 表示「这一笔不改动属性值」，返回 {@code null} 让调用方跳过同步； 传空 Map
+   * 才是「清空」。这两种写法差别要分清，否则导入只带规格组合的那一步会把已维护的属性全删掉。
    *
    * @param definitions 该持有者类型下的属性定义
    * @param attributes 目标属性值（可空）
@@ -79,7 +78,7 @@ public final class AttributeUtils {
   public static TreeMap<String, Object> toMap(List<AttributeAssignment> attributes) {
     Map<String, List<String>> grouped = new LinkedHashMap<>();
     for (AttributeAssignment attribute : attributes) {
-      if (Boolean.TRUE.equals(attribute.getIsDeleted())) {
+      if (attribute.getIsDeleted()) {
         continue;
       }
       grouped

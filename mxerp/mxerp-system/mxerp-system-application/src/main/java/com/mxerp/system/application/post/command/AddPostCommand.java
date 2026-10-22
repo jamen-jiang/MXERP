@@ -2,7 +2,6 @@ package com.mxerp.system.application.post.command;
 
 import com.mxerp.shared.application.cqrs.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -21,39 +20,39 @@ public class AddPostCommand extends Command {
   @Schema(description = "组织机构Id", requiredMode = Schema.RequiredMode.REQUIRED)
   private final Long departmentId;
 
-  /** 职级Id */
-  @Schema(description = "职级Id", requiredMode = Schema.RequiredMode.REQUIRED)
-  private final Long rankId;
+  /** 上级岗位Id（可空） */
+  @Schema(description = "上级岗位Id")
+  @Nullable
+  private final Long parentId;
+
+  /** 是否禁用 */
+  @Schema(description = "是否禁用", requiredMode = Schema.RequiredMode.REQUIRED)
+  private final boolean disabled;
 
   /** 备注（可空） */
   @Schema(description = "备注")
   @Nullable
   private final String remark;
 
-  /** 角色Id列表（可空） */
-  @Schema(description = "角色Id列表")
-  @Nullable
-  private final List<Long> roleIds;
-
   /**
    * 构造器
    *
    * @param name 岗位名称
    * @param departmentId 组织机构Id
-   * @param rankId 职级Id
+   * @param parentId 上级岗位Id（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param roleIds 角色Id列表（可空）
    */
   public AddPostCommand(
       String name,
       long departmentId,
-      long rankId,
-      @Nullable String remark,
-      @Nullable List<Long> roleIds) {
+      @Nullable Long parentId,
+      boolean disabled,
+      @Nullable String remark) {
     this.name = name;
     this.departmentId = departmentId;
-    this.rankId = rankId;
+    this.parentId = parentId;
+    this.disabled = disabled;
     this.remark = remark;
-    this.roleIds = roleIds;
   }
 }

@@ -23,7 +23,7 @@ public interface ProductionReportRepository extends Repository<ProductionReport>
    * @param workOrderId 工单Id
    * @return 报工单列表
    */
-  List<ProductionReport> getListByWorkOrderId(Long workOrderId);
+  List<ProductionReport> getListByWorkOrderId(long workOrderId);
 
   /**
    * 按工单工序查询报工单
@@ -31,7 +31,7 @@ public interface ProductionReportRepository extends Repository<ProductionReport>
    * @param workOrderOperationId 工单工序Id
    * @return 报工单列表
    */
-  List<ProductionReport> getListByWorkOrderOperationId(Long workOrderOperationId);
+  List<ProductionReport> getListByWorkOrderOperationId(long workOrderOperationId);
 
   /**
    * 判断单号是否存在

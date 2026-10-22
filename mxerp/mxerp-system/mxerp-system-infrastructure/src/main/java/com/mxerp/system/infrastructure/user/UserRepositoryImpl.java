@@ -2,8 +2,6 @@ package com.mxerp.system.infrastructure.user;
 
 import com.mxerp.system.domain.user.User;
 import com.mxerp.system.domain.user.UserRepository;
-import java.util.Collection;
-import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
@@ -47,20 +45,6 @@ public class UserRepositoryImpl implements UserRepository {
   @Nullable
   public User getByUserName(String userName) {
     return jpa.findByUserName(userName).orElse(null);
-  }
-
-  /**
-   * 按岗位Id列表批量查询用户
-   *
-   * @param postIds 岗位Id集合
-   * @return 用户列表
-   */
-  @Override
-  public List<User> getListByPostIds(Collection<Long> postIds) {
-    if (postIds.isEmpty()) {
-      return List.of();
-    }
-    return jpa.findListByPostIds(postIds);
   }
 
   /**

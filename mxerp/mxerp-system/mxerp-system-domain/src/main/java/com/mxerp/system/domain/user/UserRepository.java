@@ -1,8 +1,6 @@
 package com.mxerp.system.domain.user;
 
 import com.mxerp.shared.domain.repository.Repository;
-import java.util.Collection;
-import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -17,14 +15,6 @@ public interface UserRepository extends Repository<User> {
    * @return 用户实体（可空），不存在返回 null
    */
   @Nullable User getByUserName(String userName);
-
-  /**
-   * 按岗位Id列表批量查询用户
-   *
-   * @param postIds 岗位Id集合
-   * @return 用户列表
-   */
-  List<User> getListByPostIds(Collection<Long> postIds);
 
   /**
    * 判断名称是否存在

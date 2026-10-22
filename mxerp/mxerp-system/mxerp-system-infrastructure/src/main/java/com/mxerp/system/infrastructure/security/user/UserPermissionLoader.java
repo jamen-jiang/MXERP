@@ -3,23 +3,22 @@ package com.mxerp.system.infrastructure.security.user;
 import com.mxerp.system.domain.app.App;
 import com.mxerp.system.domain.app.AppTypeEnum;
 import com.mxerp.system.domain.department.Department;
+import com.mxerp.system.domain.employee.Employee;
 import com.mxerp.system.domain.post.Post;
-import com.mxerp.system.domain.post.Post_Role;
 import com.mxerp.system.domain.privilege.Privilege;
-import com.mxerp.system.domain.rank.Rank;
 import com.mxerp.system.domain.user.User;
-import com.mxerp.system.domain.user.User_Post;
-import com.mxerp.system.domain.user.User_Role;
+import com.mxerp.system.domain.user.UserRole;
 import com.mxerp.system.infrastructure.app.AppJpa;
 import com.mxerp.system.infrastructure.department.DepartmentJpa;
+import com.mxerp.system.infrastructure.employee.EmployeeJpa;
 import com.mxerp.system.infrastructure.post.PostJpa;
 import com.mxerp.system.infrastructure.privilege.PrivilegeJpa;
-import com.mxerp.system.infrastructure.rank.RankJpa;
 import com.mxerp.system.infrastructure.user.UserJpa;
 import com.mxerp.shared.infrastructure.security.user.LoginUser;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,8 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 用户权限加载器：登录时一次性算全「数据范围 + 应用许可」，避免每个请求都递归查组织树
  *
- * <p>数据范围口径：用户 → 岗位 → 部门/职级，再沿部门树、职级树**向下展开到子孙**，所以上级能看到
- * 自己及所有下级的岗位。
+ * <p>数据范围口径：用户 → 员工 → 岗位 → 部门，再沿部门树**向下展开到子孙**，
+ * 所以上级能看到自己及所有下级部门的岗位。用户本身不挂岗位（岗位是员工上的一列，单值）。
  */
 @Service
 public class UserPermissionLoader {
@@ -45,14 +44,17 @@ public class UserPermissionLoader {
   /** 权限主体：角色 */
   private static final String MASTER_ROLE = "Role";
 
+  /** 权限主体：岗位 */
+  private static final String MASTER_POST = "Post";
+
   /** 岗位 JPA */
   private final PostJpa postJpa;
 
   /** 部门 JPA */
   private final DepartmentJpa departmentJpa;
 
-  /** 职级 JPA */
-  private final RankJpa rankJpa;
+  /** 员工 JPA */
+  private final EmployeeJpa employeeJpa;
 
   /** 权限 JPA */
   private final PrivilegeJpa privilegeJpa;
@@ -65,19 +67,19 @@ public class UserPermissionLoader {
    *
    * @param postJpa 岗位 JPA
    * @param departmentJpa 部门 JPA
-   * @param rankJpa 职级 JPA
+   * @param employeeJpa 员工 JPA
    * @param privilegeJpa 权限 JPA
    * @param appJpa 应用 JPA
    */
   public UserPermissionLoader(
       PostJpa postJpa,
       DepartmentJpa departmentJpa,
-      RankJpa rankJpa,
+      EmployeeJpa employeeJpa,
       PrivilegeJpa privilegeJpa,
       AppJpa appJpa) {
     this.postJpa = postJpa;
     this.departmentJpa = departmentJpa;
-    this.rankJpa = rankJpa;
+    this.employeeJpa = employeeJpa;
     this.privilegeJpa = privilegeJpa;
     this.appJpa = appJpa;
   }
@@ -92,46 +94,44 @@ public class UserPermissionLoader {
   public UserPermissionData load(User model) {
     UserPermissionData data = new UserPermissionData();
 
-    // 1. 用户直接角色、用户岗位（都在聚合内，无需查库）
+    // 1. 用户直接角色（聚合内，无需查库）
     Set<Long> userRoleIds =
-        model.getUserRoles().stream().map(User_Role::getRoleId).collect(Collectors.toSet());
+        model.getUserRoles().stream().map(UserRole::getRoleId).collect(Collectors.toSet());
+
+    // 2. 用户 → 员工 → 岗位（岗位是员工上的一列，可为空）
+    List<Employee> employees = employeeJpa.findByUserId(model.getId());
     Set<Long> userPostIds =
-        model.getUserPosts().stream().map(User_Post::getPostId).collect(Collectors.toSet());
+        employees.stream()
+            .map(Employee::getPostId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
 
     List<Post> userPosts = userPostIds.isEmpty() ? List.of() : postJpa.findAllById(userPostIds);
 
-    // 2. 岗位 → 部门 / 职级（聚合内是 Id，需查实体）
+    // 3. 岗位 → 部门（聚合内是 Id，需查实体）
     Set<Long> userDepartmentIds = collectIds(userPosts, Post::getDepartmentId);
-    Set<Long> userRankIds = collectIds(userPosts, Post::getRankId);
 
-    // 3. 部门 → 公司（组织的顶层链路终点）
+    // 4. 部门 → 公司（组织的顶层链路终点）
     List<Department> userDepartments =
         userDepartmentIds.isEmpty() ? List.of() : departmentJpa.findAllById(userDepartmentIds);
     data.companyIds = collectIds(userDepartments, Department::getCompanyId);
 
-    // 4. 沿部门树 / 职级树向下展开到子孙，这是「数据范围」的真正口径
+    // 5. 沿部门树向下展开到子孙，这是「数据范围」的真正口径
     Set<Long> allDepartmentIds =
         userDepartmentIds.isEmpty()
             ? Set.of()
-            : collectIds(departmentJpa.findByIdsOrDescendants(userDepartmentIds), Department::getId);
-    Set<Long> allRankIds =
-        userRankIds.isEmpty()
-            ? Set.of()
-            : collectIds(rankJpa.findByIdsOrDescendants(userRankIds), Rank::getId);
+            : collectIds(
+                departmentJpa.findByIdsOrDescendants(userDepartmentIds), Department::getId);
 
-    // 5. 部门 × 职级交叉出的岗位，才是用户实际可见的岗位
-    Set<Long> allPostIds;
-    if (allDepartmentIds.isEmpty() || allRankIds.isEmpty()) {
-      allPostIds = Set.of();
-    } else {
-      allPostIds =
-          collectIds(postJpa.findByDepartmentIdInAndRankIdIn(allDepartmentIds, allRankIds), Post::getId);
-    }
+    // 6. 部门子树内的岗位，才是用户实际可见的岗位
+    Set<Long> allPostIds =
+        allDepartmentIds.isEmpty()
+            ? Set.of()
+            : collectIds(postJpa.findByDepartmentIdIn(allDepartmentIds), Post::getId);
     data.departmentIds = allDepartmentIds;
-    data.rankIds = allRankIds;
     data.postIds = allPostIds;
 
-    // 6. 超级管理员走独立分支：直接放开全部应用，不再查权限表
+    // 7. 超级管理员走独立分支：直接放开全部应用，不再查权限表
     if (userRoleIds.contains(ADMIN_ROLE_ID)) {
       data.superAdmin = true;
       Set<App> apps = new HashSet<>(appJpa.findAll());
@@ -141,15 +141,7 @@ public class UserPermissionLoader {
 
     data.superAdmin = false;
 
-    // 7. 岗位聚合内挂的角色 → 角色Id
-    Set<Long> postRoleIds = new HashSet<>();
-    for (Post item : postJpa.findAllById(allPostIds)) {
-      for (Post_Role postRole : item.getPostRoles()) {
-        postRoleIds.add(postRole.getRoleId());
-      }
-    }
-
-    // 8. 权限来源三条：用户直接、用户角色、岗位角色
+    // 8. 权限来源三条：用户直接、用户角色、本人岗位（岗位授权走 Privilege 的 Post 主体）
     Set<Long> appIds = new HashSet<>();
     addAccessValues(
         appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_USER, Set.of(model.getId())));
@@ -157,9 +149,9 @@ public class UserPermissionLoader {
       addAccessValues(
           appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_ROLE, userRoleIds));
     }
-    if (!postRoleIds.isEmpty()) {
+    if (!userPostIds.isEmpty()) {
       addAccessValues(
-          appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_ROLE, postRoleIds));
+          appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_POST, userPostIds));
     }
 
     if (appIds.isEmpty()) {
@@ -230,9 +222,6 @@ public class UserPermissionLoader {
 
     /** 岗位Id集合 */
     public Set<Long> postIds = Set.of();
-
-    /** 职级Id集合（含子孙） */
-    public Set<Long> rankIds = Set.of();
 
     /** 应用Id集合 */
     public Set<Long> appIds = Set.of();

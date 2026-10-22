@@ -26,14 +26,20 @@ public class SupplierFactory {
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
-   * @param address 地址（可空）
+   * @param supplierGroupId 供应商分类Id
+   * @param currencyId 结算币别Id
+   * @param taxRegisterCode 税务登记号（可空）
+   * @param country 国家（可空）
+   * @param province 省份（可空）
+   * @param city 城市（可空）
+   * @param district 区县（可空）
+   * @param zip 邮政编码（可空）
+   * @param address 详细地址（可空）
    * @param telephone 电话号码（可空）
    * @param fax 传真（可空）
    * @param email 邮箱（可空）
-   * @param contactPerson 负责人（可空）
    * @param taxRateId 税率Id（可空）
-   * @param payMode 支付方式（可空）
-   * @param deliveryMode 收货方式（可空）
+   * @param disabled 是否停用
    * @param remark 备注（可空）
    * @return 供应商聚合
    * @throws DomainException 供应商代码已存在时抛出
@@ -42,14 +48,20 @@ public class SupplierFactory {
       String code,
       String name,
       @Nullable String shortName,
+      long supplierGroupId,
+      long currencyId,
+      @Nullable String taxRegisterCode,
+      @Nullable String country,
+      @Nullable String province,
+      @Nullable String city,
+      @Nullable String district,
+      @Nullable String zip,
       @Nullable String address,
       @Nullable String telephone,
       @Nullable String fax,
       @Nullable String email,
-      @Nullable String contactPerson,
       @Nullable Long taxRateId,
-      @Nullable String payMode,
-      @Nullable String deliveryMode,
+      boolean disabled,
       @Nullable String remark) {
     // 校验供应商代码唯一
     if (supplierRepository.isExistByCodeExcludeId(code)) {
@@ -59,14 +71,20 @@ public class SupplierFactory {
         code,
         name,
         shortName,
+        supplierGroupId,
+        currencyId,
+        taxRegisterCode,
+        country,
+        province,
+        city,
+        district,
+        zip,
         address,
         telephone,
         fax,
         email,
-        contactPerson,
         taxRateId,
-        payMode,
-        deliveryMode,
+        disabled,
         remark);
   }
 }

@@ -23,9 +23,10 @@ public class ModifyUserCommand extends AddUserCommand {
    * @param name 用户名称
    * @param userName 账号
    * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
    * @param password 密码
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param postIds 岗位Id列表
    * @param roleIds 角色Id列表（可空）
    */
   public ModifyUserCommand(
@@ -33,11 +34,12 @@ public class ModifyUserCommand extends AddUserCommand {
       String name,
       String userName,
       @Nullable String email,
+      @Nullable String mobile,
       String password,
+      boolean disabled,
       @Nullable String remark,
-      List<Long> postIds,
       @Nullable List<Long> roleIds) {
-    super(name, userName, email, password, remark, postIds, roleIds);
+    super(name, userName, email, mobile, password, disabled, remark, roleIds);
     this.id = id;
   }
 }

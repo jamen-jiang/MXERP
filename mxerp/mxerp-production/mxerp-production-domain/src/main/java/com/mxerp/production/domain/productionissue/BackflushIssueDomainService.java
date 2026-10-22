@@ -61,7 +61,7 @@ public class BackflushIssueDomainService {
    * @throws DomainException 工单不存在、用料行没带发料仓库、或倒冲后净领料超过需求量时抛出
    */
   public @Nullable ProductionIssue generate(
-      Long workOrderId, IssueTriggerEnum trigger, BigDecimal outputQuantity) {
+      long workOrderId, IssueTriggerEnum trigger, BigDecimal outputQuantity) {
     if (outputQuantity.signum() <= 0) {
       return null;
     }
@@ -119,7 +119,7 @@ public class BackflushIssueDomainService {
    * @return 工单聚合
    * @throws DomainException 工单不存在时抛出
    */
-  private WorkOrder requireWorkOrder(Long workOrderId) {
+  private WorkOrder requireWorkOrder(long workOrderId) {
     WorkOrder workOrder = workOrderRepository.get(workOrderId);
     if (workOrder == null) {
       throw new DomainException("工单" + workOrderId + "不存在!");

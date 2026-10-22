@@ -57,11 +57,11 @@ public class Currency extends UpdateAggregateRoot {
   @Column(name = "IsStandard", nullable = false)
   private Boolean isStandard;
 
-/** 是否禁用 */
+  /** 是否禁用 */
   @Column(name = "Disabled", nullable = false)
   private Boolean disabled;
 
-/**
+  /**
    * 构造器
    *
    * @param code 币种代码

@@ -3,7 +3,6 @@ package com.mxerp.system.infrastructure.user;
 import com.mxerp.system.domain.user.User;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
@@ -11,8 +10,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /** 用户 JPA 接口 */
@@ -61,17 +58,6 @@ public interface UserJpa
   default boolean existsByEmailExcludeId(@Nullable String email, @Nullable Long id) {
     return exists(buildExcludeIdSpec("email", email, id));
   }
-
-  /**
-   * 按岗位Id集合批量查询用户（去重）
-   *
-   * @param postIds 岗位Id集合
-   * @return 用户列表
-   */
-  @Query(
-      "SELECT DISTINCT u FROM User u JOIN u.userPosts up"
-          + " WHERE up.postId IN :postIds AND up.isDeleted = false")
-  List<User> findListByPostIds(@Param("postIds") Collection<Long> postIds);
 
   /**
    * 构造「字段相等 + 排除Id」条件

@@ -24,16 +24,6 @@ public class GetPageUsersQuery extends PageRequestWithUnique<Long> {
   @Nullable
   private Long departmentId;
 
-  /** 岗位Id（可空） */
-  @Schema(description = "岗位Id")
-  @Nullable
-  private Long postId;
-
-  /** 职级Id（可空） */
-  @Schema(description = "职级Id")
-  @Nullable
-  private Long rankId;
-
   /** 用户名称（可空） */
   @Schema(description = "用户名称")
   @Nullable

@@ -17,9 +17,6 @@ public final class EntityConst {
   /** 岗位 */
   public static final String POST = "post";
 
-  /** 职级 */
-  public static final String RANK = "rank";
-
   /** 角色 */
   public static final String ROLE = "role";
 

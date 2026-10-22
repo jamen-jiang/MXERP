@@ -1,23 +1,32 @@
 package com.mxerp.system.domain.post;
 
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
+import com.mxerp.shared.domain.entity.Parent;
 import com.mxerp.shared.domain.exception.DomainException;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 岗位 */
+/**
+ * 岗位
+ *
+ * <p>上级岗位构成一棵树（金蝶的岗位就带「上级岗位」：业务员的上级是业务组长），层级路径由
+ * {@link PostDomainService} 维护，与 {@code Category}、{@code Department}、{@code Company} 同一套。
+ *
+ * <p>岗位不携带角色。授权只有两张写法：**角色只挂人**（{@code UserRole}），
+ * **谁能用哪个应用/资源走 {@code Privilege}**（主体可以是 Role / User / Department / Post）。
+ * 所以给岗位授权就是往 {@code Privilege} 写一行 {@code Master='Post', MasterValue=岗位Id}，
+ * 原来的 {@code PostRole} 中转表已删——同一件事不需要两套实现。
+ *
+ * <p>不挂职级：Odoo {@code hr.job} 没有级别字段、ERPNext 的级别（{@code Employee Grade}）挂在员工上、
+ * SAP 的薪酬等级也属人事薪酬——「同一岗位不同人不同级」是现实，职级等员工主数据建立后再决定挂哪里。
+ */
 @NullMarked
 @Getter
 @Setter(AccessLevel.PROTECTED)
@@ -28,9 +37,10 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Post_Name", columnList = "Name"),
       @Index(name = "IX_Post_DepartmentId", columnList = "DepartmentId"),
-      @Index(name = "IX_Post_RankId", columnList = "RankId")
+      @Index(name = "IX_Post_ParentId", columnList = "ParentId"),
+      @Index(name = "IX_Post_Level", columnList = "Level")
     })
-public class Post extends UpdateAggregateRoot {
+public class Post extends UpdateAggregateRoot implements Parent {
 
   /** 岗位名称 */
   @Nationalized
@@ -41,9 +51,20 @@ public class Post extends UpdateAggregateRoot {
   @Column(name = "DepartmentId", nullable = false)
   private Long departmentId;
 
-  /** 职级Id */
-  @Column(name = "RankId", nullable = false)
-  private Long rankId;
+  /** 上级岗位Id（可空，空表示顶级） */
+  @Column(name = "ParentId")
+  @Nullable
+  private Long parentId;
+
+  /** 层级路径（可空，形如 "1,3,5"，由层级编排逻辑维护） */
+  @Nationalized
+  @Column(name = "Level")
+  @Nullable
+  private String level;
+
+  /** 是否禁用 */
+  @Column(name = "Disabled", nullable = false)
+  private Boolean disabled = false;
 
   /** 备注（可空） */
   @Nationalized
@@ -51,43 +72,24 @@ public class Post extends UpdateAggregateRoot {
   @Nullable
   private String remark;
 
-  /** 岗位角色列表 */
-  @OneToMany(
-      fetch = FetchType.EAGER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-      orphanRemoval = true)
-  @JoinColumn(name = "PostId")
-  @SQLRestriction("IsDeleted = 0")
-  private List<Post_Role> postRoles = new ArrayList<>();
-
-  /**
-   * 获取岗位角色列表（只读）
-   *
-   * @return 不可变视图
-   */
-  public List<Post_Role> getPostRoles() {
-    return Collections.unmodifiableList(postRoles);
-  }
-
   /**
    * 构造器
    *
    * @param name 岗位名称
    * @param departmentId 部门Id
-   * @param rankId 职级Id
+   * @param parentId 上级岗位Id（可空）
+   * @param level 层级路径（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param roleIds 角色Id列表（可空）
    */
-  Post(String name, long departmentId, long rankId, @Nullable String remark, List<Long> roleIds) {
-    String trimmedName = StringUtils.trimToNull(name);
-    if (trimmedName == null) {
-      throw new DomainException("岗位名称不能为空");
-    }
-    this.name = trimmedName;
-    this.departmentId = departmentId;
-    this.rankId = rankId;
-    this.remark = remark;
-    syncRoles(roleIds);
+  Post(
+      String name,
+      long departmentId,
+      @Nullable Long parentId,
+      @Nullable String level,
+      boolean disabled,
+      @Nullable String remark) {
+    apply(name, departmentId, parentId, level, disabled, remark);
   }
 
   /**
@@ -95,58 +97,60 @@ public class Post extends UpdateAggregateRoot {
    *
    * @param name 岗位名称
    * @param departmentId 部门Id
-   * @param rankId 职级Id
+   * @param parentId 上级岗位Id（可空）
+   * @param level 层级路径（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param roleIds 角色Id列表（可空）
    */
   void modify(
-      String name, long departmentId, long rankId, @Nullable String remark, List<Long> roleIds) {
+      String name,
+      long departmentId,
+      @Nullable Long parentId,
+      @Nullable String level,
+      boolean disabled,
+      @Nullable String remark) {
+    apply(name, departmentId, parentId, level, disabled, remark);
+  }
+
+  /**
+   * 设置层级
+   *
+   * @param level 层级字符串（可空）
+   */
+  @Override
+  public void changeLevel(@Nullable String level) {
+    this.level = level;
+  }
+
+  // ==================== 私有：校验与赋值 ====================
+
+  /**
+   * 统一的校验与赋值入口（构造器与修改共用）
+   *
+   * @param name 岗位名称
+   * @param departmentId 部门Id
+   * @param parentId 上级岗位Id（可空）
+   * @param level 层级路径（可空）
+   * @param disabled 是否禁用
+   * @param remark 备注（可空）
+   * @throws DomainException 岗位名称为空时抛出
+   */
+  private void apply(
+      String name,
+      long departmentId,
+      @Nullable Long parentId,
+      @Nullable String level,
+      boolean disabled,
+      @Nullable String remark) {
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedName == null) {
       throw new DomainException("岗位名称不能为空");
     }
     this.name = trimmedName;
     this.departmentId = departmentId;
-    this.rankId = rankId;
+    this.parentId = parentId;
+    this.level = StringUtils.trimToNull(level);
+    this.disabled = disabled;
     this.remark = remark;
-    syncRoles(roleIds);
-  }
-
-  /**
-   * 删除角色
-   *
-   * @param roleId 角色Id
-   */
-  void deleteRole(long roleId) {
-    Post_Role item =
-        postRoles.stream()
-            .filter(x -> Objects.equals(x.getId(), roleId) && !x.getIsDeleted())
-            .findFirst()
-            .orElse(null);
-    if (item != null) {
-      item.delete();
-    }
-  }
-
-  /**
-   * 同步角色列表
-   *
-   * @param roleIds 角色Id列表
-   */
-  private void syncRoles(List<Long> roleIds) {
-    // 1. 删除未在输入中出现的角色
-    List<Post_Role> toRemoves =
-        postRoles.stream()
-            .filter(a -> roleIds.stream().noneMatch(i -> Objects.equals(i, a.getRoleId())))
-            .toList();
-    for (Post_Role item : toRemoves) {
-      deleteRole(item.getId());
-    }
-    // 2. 添加输入中不存在的角色
-    for (Long roleId : roleIds) {
-      if (postRoles.stream().noneMatch(x -> Objects.equals(x.getRoleId(), roleId))) {
-        postRoles.add(new Post_Role(roleId));
-      }
-    }
   }
 }

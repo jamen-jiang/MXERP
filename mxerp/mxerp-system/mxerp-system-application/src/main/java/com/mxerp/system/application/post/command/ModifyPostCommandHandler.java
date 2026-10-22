@@ -5,6 +5,7 @@ import com.mxerp.shared.application.port.lock.DistributedLock;
 import com.mxerp.system.domain.post.Post;
 import com.mxerp.system.domain.post.PostDomainService;
 import com.mxerp.system.domain.post.PostRepository;
+import java.util.List;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
@@ -42,14 +43,16 @@ public class ModifyPostCommandHandler {
   @Transactional
   @DistributedLock(prefix = EntityConst.POST, value = "#command.id")
   public void handle(ModifyPostCommand command) {
-    Post model =
+    List<Post> models =
         postDomainService.modify(
             command.getId(),
             command.getName(),
             command.getDepartmentId(),
-            command.getRankId(),
-            command.getRemark(),
-            command.getRoleIds());
-    postRepository.save(model);
+            command.getParentId(),
+            command.isDisabled(),
+            command.getRemark());
+    for (Post model : models) {
+      postRepository.save(model);
+    }
   }
 }

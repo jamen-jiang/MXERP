@@ -200,7 +200,7 @@ public class StockDomainService {
    * @throws DomainException 该键还没有库存行时抛出
    */
   private Stock getExist(
-      Long variantId, Long warehouseId, @Nullable Long locationId, String stockStatus) {
+      long variantId, long warehouseId, @Nullable Long locationId, String stockStatus) {
     Stock model = stockRepository.getByKey(variantId, warehouseId, locationId, stockStatus);
     if (model == null) {
       throw new DomainException(

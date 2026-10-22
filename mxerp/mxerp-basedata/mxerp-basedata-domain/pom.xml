@@ -17,5 +17,17 @@
             <artifactId>mxerp-shared-domain</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- 单元测试：单位换算与落数等纯算法验证 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -21,5 +21,5 @@ public interface StockRepository extends Repository<Stock> {
    * @return 库存行（可空），该键还没有记录时返回 null
    */
   @Nullable Stock getByKey(
-      Long variantId, Long warehouseId, @Nullable Long locationId, String stockStatus);
+      long variantId, long warehouseId, @Nullable Long locationId, String stockStatus);
 }

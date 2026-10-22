@@ -49,10 +49,6 @@ public class Privilege extends DeleteAggregateRoot {
   @Column(name = "AccessValue", nullable = false)
   private Long accessValue;
 
-  /** 操作 */
-  @Column(name = "Operation", nullable = false)
-  private Integer operation = 0;
-
   /**
    * 构造器（枚举）
    *
@@ -66,7 +62,6 @@ public class Privilege extends DeleteAggregateRoot {
     this.masterValue = masterValue;
     this.access = access.getCode();
     this.accessValue = accessValue;
-    this.operation = 0;
   }
 
   /**
@@ -83,7 +78,6 @@ public class Privilege extends DeleteAggregateRoot {
     this.masterValue = masterValue;
     this.access = validateAccess(access);
     this.accessValue = accessValue;
-    this.operation = 0;
   }
 
   // ==================== 私有：校验 ====================

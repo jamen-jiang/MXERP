@@ -30,9 +30,10 @@ public class UserDomainService {
    * @param name 用户名称
    * @param userName 账号
    * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
    * @param password 密码
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param postIds 岗位Id列表
    * @param roleIds 角色Id列表（可空）
    * @return 用户实体
    * @throws DomainException 用户不存在时抛出
@@ -45,9 +46,10 @@ public class UserDomainService {
       String name,
       String userName,
       @Nullable String email,
+      @Nullable String mobile,
       String password,
+      boolean disabled,
       @Nullable String remark,
-      List<Long> postIds,
       @Nullable List<Long> roleIds) {
     // 1. 查用户
     User model = userRepository.get(id);
@@ -55,7 +57,7 @@ public class UserDomainService {
       throw new DomainException("用户不存在!");
     }
     // 2. 委托给使用已有聚合的重载
-    modify(model, name, userName, email, password, remark, postIds, roleIds);
+    modify(model, name, userName, email, mobile, password, disabled, remark, roleIds);
     return model;
   }
 
@@ -66,9 +68,10 @@ public class UserDomainService {
    * @param name 用户名称
    * @param userName 账号
    * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
    * @param password 密码
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param postIds 岗位Id列表
    * @param roleIds 角色Id列表（可空）
    * @throws DomainException 名称已存在时抛出
    * @throws DomainException 账号已存在时抛出
@@ -79,9 +82,10 @@ public class UserDomainService {
       String name,
       String userName,
       @Nullable String email,
+      @Nullable String mobile,
       String password,
+      boolean disabled,
       @Nullable String remark,
-      List<Long> postIds,
       @Nullable List<Long> roleIds) {
     // 校验用户名称唯一（排除自身）
     if (userRepository.isExistByNameExcludeId(name, user.getId())) {
@@ -96,6 +100,6 @@ public class UserDomainService {
         && userRepository.isExistByEmailExcludeId(email, user.getId())) {
       throw new DomainException("用户邮箱" + email + "已存在!");
     }
-    user.modify(name, userName, email, password, remark, postIds, roleIds);
+    user.modify(name, userName, email, mobile, password, disabled, remark, roleIds);
   }
 }

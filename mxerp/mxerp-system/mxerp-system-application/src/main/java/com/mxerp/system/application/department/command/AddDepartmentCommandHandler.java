@@ -44,13 +44,9 @@ public class AddDepartmentCommandHandler {
         departmentFactory.create(
             command.getCompanyId(),
             command.getParentId(),
-            command.getCode(),
             command.getName(),
-            command.getTelephone(),
-            command.getFax(),
-            command.getEmail(),
+            command.isDisabled(),
             command.getSort(),
-            command.getAddress(),
             command.getRemark());
     departmentRepository.save(model);
     return model.getId();

@@ -33,20 +33,26 @@ public class TaxRateDomainService {
    * @param code 税率代码
    * @param name 税率名称
    * @param rate 税率值
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
    * @param remark 备注（可空）
    * @return 税率聚合
    */
   public TaxRate importGenerate(
-      String code, String name, BigDecimal rate, @Nullable Integer sort, @Nullable String remark) {
+      String code,
+      String name,
+      BigDecimal rate,
+      boolean disabled,
+      @Nullable Integer sort,
+      @Nullable String remark) {
     // 按代码查税率
     TaxRate model = taxRateRepository.getByCode(code);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = taxRateFactory.create(code, name, rate, sort, remark);
+      model = taxRateFactory.create(code, name, rate, disabled, sort, remark);
     } else {
-      modify(model, code, name, rate, sort, remark);
+      modify(model, code, name, rate, disabled, sort, remark);
     }
 
     return model;
@@ -59,6 +65,7 @@ public class TaxRateDomainService {
    * @param code 税率代码
    * @param name 税率名称
    * @param rate 税率值
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
    * @param remark 备注（可空）
    * @return 税率聚合
@@ -68,13 +75,14 @@ public class TaxRateDomainService {
       String code,
       String name,
       BigDecimal rate,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     TaxRate model = taxRateRepository.get(id);
     if (model == null) {
       throw new DomainException("税率" + id + "不存在!");
     }
-    modify(model, code, name, rate, sort, remark);
+    modify(model, code, name, rate, disabled, sort, remark);
     return model;
   }
 
@@ -85,6 +93,7 @@ public class TaxRateDomainService {
    * @param code 税率代码
    * @param name 税率名称
    * @param rate 税率值
+   * @param disabled 是否禁用
    * @param sort 排序（可空）
    * @param remark 备注（可空）
    */
@@ -93,12 +102,13 @@ public class TaxRateDomainService {
       String code,
       String name,
       BigDecimal rate,
+      boolean disabled,
       @Nullable Integer sort,
       @Nullable String remark) {
     // 校验税率代码唯一
     if (taxRateRepository.isExistByCodeExcludeId(code, model.getId())) {
       throw new DomainException("税率代码" + code + "已存在!");
     }
-    model.modify(code, name, rate, sort, remark);
+    model.modify(code, name, rate, disabled, sort, remark);
   }
 }

@@ -17,7 +17,17 @@ import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 用户 */
+/**
+ * 用户（登录身份）
+ *
+ * <p>字段对照别家：Odoo {@code res.users}（name、login、password、active、groups_id）、
+ * Frappe/ERPNext {@code User}（email 即主键、first_name、enabled、roles 子表）——两家都用
+ * **邮箱或登录名**标识身份、都有启用开关、角色都挂在用户上。我们比他们多一层「岗位 → 角色」，
+ * 因为还没有员工主数据（两家的岗位/职务挂在 Employee 上，不在用户上）。
+ *
+ * <p>不抄的：Odoo 的个人偏好（语言/时区/签名）与公司归属、Frappe 的通讯录字段
+ * （gender/birth_date/location）、last_login 与 api_key——都要等真有消费它们的流程。
+ */
 @NullMarked
 @Getter
 @Setter(AccessLevel.PROTECTED)
@@ -46,25 +56,26 @@ public class User extends UpdateAggregateRoot {
   @Nullable
   private String email;
 
+  /** 手机号（可空） */
+  @Nationalized
+  @Column(name = "Mobile", length = 20)
+  @Nullable
+  private String mobile;
+
   /** 密码 */
   @Nationalized
   @Column(name = "Password", nullable = false, length = 50)
   private String password;
+
+  /** 是否禁用 */
+  @Column(name = "Disabled", nullable = false)
+  private Boolean disabled = false;
 
   /** 备注（可空） */
   @Nationalized
   @Column(name = "Remark", length = 500)
   @Nullable
   private String remark;
-
-  /** 用户岗位列表 */
-  @OneToMany(
-      fetch = FetchType.EAGER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-      orphanRemoval = true)
-  @JoinColumn(name = "UserId")
-  @SQLRestriction("IsDeleted = 0")
-  private List<User_Post> userPosts = new ArrayList<>();
 
   /** 用户角色列表 */
   @OneToMany(
@@ -73,23 +84,14 @@ public class User extends UpdateAggregateRoot {
       orphanRemoval = true)
   @JoinColumn(name = "UserId")
   @SQLRestriction("IsDeleted = 0")
-  private List<User_Role> userRoles = new ArrayList<>();
-
-  /**
-   * 获取用户岗位列表（只读）
-   *
-   * @return 不可变视图
-   */
-  public List<User_Post> getUserPosts() {
-    return Collections.unmodifiableList(userPosts);
-  }
+  private List<UserRole> userRoles = new ArrayList<>();
 
   /**
    * 获取用户角色列表（只读）
    *
    * @return 不可变视图
    */
-  public List<User_Role> getUserRoles() {
+  public List<UserRole> getUserRoles() {
     return Collections.unmodifiableList(userRoles);
   }
 
@@ -99,40 +101,22 @@ public class User extends UpdateAggregateRoot {
    * @param name 用户名称
    * @param userName 账号
    * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
    * @param password 密码
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param postIds 岗位Id列表
    * @param roleIds 角色Id列表（可空）
    */
   User(
       String name,
       String userName,
       @Nullable String email,
+      @Nullable String mobile,
       String password,
+      boolean disabled,
       @Nullable String remark,
-      List<Long> postIds,
       @Nullable List<Long> roleIds) {
-    String trimmedName = StringUtils.trimToNull(name);
-    String trimmedUserName = StringUtils.trimToNull(userName);
-    if (trimmedName == null) {
-      throw new DomainException("用户名称不能为空");
-    }
-    if (trimmedUserName == null) {
-      throw new DomainException("账号不能为空");
-    }
-    if (StringUtils.isBlank(password)) {
-      throw new DomainException("密码不能为空");
-    }
-    if (postIds.isEmpty()) {
-      throw new DomainException("岗位不允许为空!");
-    }
-    this.name = trimmedName;
-    this.userName = trimmedUserName;
-    this.email = StringUtils.trimToNull(email);
-    this.password = password;
-    this.remark = remark;
-    syncPosts(postIds);
-    syncRoles(roleIds);
+    apply(name, userName, email, mobile, password, disabled, remark, roleIds);
   }
 
   /**
@@ -141,18 +125,47 @@ public class User extends UpdateAggregateRoot {
    * @param name 用户名称
    * @param userName 账号
    * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
    * @param password 密码
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @param postIds 岗位Id列表
    * @param roleIds 角色Id列表（可空）
    */
   void modify(
       String name,
       String userName,
       @Nullable String email,
+      @Nullable String mobile,
       String password,
+      boolean disabled,
       @Nullable String remark,
-      List<Long> postIds,
+      @Nullable List<Long> roleIds) {
+    apply(name, userName, email, mobile, password, disabled, remark, roleIds);
+  }
+
+  // ==================== 私有：校验与赋值 ====================
+
+  /**
+   * 统一的校验与赋值入口（构造器与修改共用）
+   *
+   * @param name 用户名称
+   * @param userName 账号
+   * @param email 邮箱（可空）
+   * @param mobile 手机号（可空）
+   * @param password 密码
+   * @param disabled 是否禁用
+   * @param remark 备注（可空）
+   * @param roleIds 角色Id列表（可空）
+   * @throws DomainException 名称/账号/密码为空、或岗位为空时抛出
+   */
+  private void apply(
+      String name,
+      String userName,
+      @Nullable String email,
+      @Nullable String mobile,
+      String password,
+      boolean disabled,
+      @Nullable String remark,
       @Nullable List<Long> roleIds) {
     String trimmedName = StringUtils.trimToNull(name);
     String trimmedUserName = StringUtils.trimToNull(userName);
@@ -165,43 +178,14 @@ public class User extends UpdateAggregateRoot {
     if (StringUtils.isBlank(password)) {
       throw new DomainException("密码不能为空");
     }
-    if (postIds.isEmpty()) {
-      throw new DomainException("岗位不允许为空!");
-    }
     this.name = trimmedName;
     this.userName = trimmedUserName;
     this.email = StringUtils.trimToNull(email);
+    this.mobile = StringUtils.trimToNull(mobile);
     this.password = password;
+    this.disabled = disabled;
     this.remark = remark;
-    syncPosts(postIds);
     syncRoles(roleIds);
-  }
-
-  /**
-   * 同步岗位列表
-   *
-   * @param postIds 岗位Id列表
-   */
-  private void syncPosts(List<Long> postIds) {
-
-    // 1. 删除未在输入中出现的岗位
-    List<User_Post> toRemoves =
-        userPosts.stream()
-            .filter(a -> postIds.stream().noneMatch(i -> Objects.equals(i, a.getPostId())))
-            .toList();
-    for (User_Post item : toRemoves) {
-      deletePost(item.getId());
-    }
-
-    // 2. 添加输入中不存在的岗位
-    for (Long postId : postIds) {
-      boolean exists =
-          userPosts.stream()
-              .anyMatch(x -> Objects.equals(x.getPostId(), postId) && !x.getIsDeleted());
-      if (!exists) {
-        userPosts.add(new User_Post(postId));
-      }
-    }
   }
 
   /**
@@ -213,11 +197,11 @@ public class User extends UpdateAggregateRoot {
     List<Long> target = roleIds == null ? List.of() : roleIds;
 
     // 1. 删除未在输入中出现的角色
-    List<User_Role> toRemoves =
+    List<UserRole> toRemoves =
         userRoles.stream()
             .filter(a -> target.stream().noneMatch(i -> Objects.equals(i, a.getRoleId())))
             .toList();
-    for (User_Role item : toRemoves) {
+    for (UserRole item : toRemoves) {
       deleteRole(item.getId());
     }
 
@@ -227,21 +211,9 @@ public class User extends UpdateAggregateRoot {
           userRoles.stream()
               .anyMatch(x -> Objects.equals(x.getRoleId(), roleId) && !x.getIsDeleted());
       if (!exists) {
-        userRoles.add(new User_Role(roleId));
+        userRoles.add(new UserRole(roleId));
       }
     }
-  }
-
-  /**
-   * 删除岗位
-   *
-   * @param userPostId 用户岗位关联Id
-   */
-  private void deletePost(long userPostId) {
-    userPosts.stream()
-        .filter(x -> Objects.equals(x.getId(), userPostId))
-        .findFirst()
-        .ifPresent(User_Post::delete);
   }
 
   /**
@@ -253,6 +225,6 @@ public class User extends UpdateAggregateRoot {
     userRoles.stream()
         .filter(x -> Objects.equals(x.getId(), userRoleId))
         .findFirst()
-        .ifPresent(User_Role::delete);
+        .ifPresent(UserRole::delete);
   }
 }
