@@ -19,11 +19,9 @@ import org.jspecify.annotations.Nullable;
  * 生产领料单行
  *
  * <p>一行说的是「哪张工单的哪条用料、从哪个仓、领或退多少」：工单用料行Id 是指针，SPU、SKU、单位按快照抄一份，
- * 因为单据要能独立打印与核对，不能等工单那边改版后再去看。需求量不在这里抄——还差多少只有工单知道，
- * 抄一份就会有两个说法。
+ * 因为单据要能独立打印与核对，不能等工单那边改版后再去看。需求量不在这里抄——还差多少只有工单知道， 抄一份就会有两个说法。
  *
- * <p>数量分两列：申请数量是车间报上来的要多少，核定数量是仓管批下来给多少。短装就发生在这一对数字上，
- * 也让「超领多少、谁批的」查得出来。
+ * <p>数量分两列：申请数量是车间报上来的要多少，核定数量是仓管批下来给多少。短装就发生在这一对数字上， 也让「超领多少、谁批的」查得出来。
  */
 @NullMarked
 @Getter
@@ -37,12 +35,13 @@ import org.jspecify.annotations.Nullable;
       @Index(
           name = "IX_ProductionIssueLine_WorkOrderMaterialId",
           columnList = "WorkOrderMaterialId"),
+      @Index(name = "IX_ProductionIssueLine_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_ProductionIssueLine_VariantId", columnList = "VariantId")
     })
 public class ProductionIssueLine extends BaseDeleteEntity {
 
   /** 生产领料单Id */
-  @Column(name = "ProductionIssueId", nullable = false)
+  @Column(name = "ProductionIssueId")
   private Long productionIssueId;
 
   /** 工单用料行Id */

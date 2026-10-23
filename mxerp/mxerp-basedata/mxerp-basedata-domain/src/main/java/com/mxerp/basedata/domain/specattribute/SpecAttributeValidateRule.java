@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
 public class SpecAttributeValidateRule extends BaseDeleteEntity {
 
   /** 规格属性Id */
-  @Column(name = "SpecAttributeId", nullable = false)
+  @Column(name = "SpecAttributeId")
   private Long specAttributeId;
 
   /** 表达式 */

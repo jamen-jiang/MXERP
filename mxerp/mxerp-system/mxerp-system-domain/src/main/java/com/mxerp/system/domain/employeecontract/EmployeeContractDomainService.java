@@ -41,9 +41,9 @@ public class EmployeeContractDomainService {
    *
    * <p>币种只校验非空（&gt;0），存在性交给应用层：币种在 basedata 模块，system 不引入横向模块依赖。
    *
+   * @param type 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param employeeId 员工Id
    * @param number 合同编号
-   * @param contractType 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param startDate 开始日期
    * @param endDate 结束日期（可空）
    * @param trialEndDate 试用期结束日期（可空）
@@ -55,9 +55,9 @@ public class EmployeeContractDomainService {
    * @throws DomainException 员工不存在、或合同编号已存在时抛出
    */
   public EmployeeContract create(
+      String type,
       long employeeId,
       String number,
-      String contractType,
       LocalDate startDate,
       @Nullable LocalDate endDate,
       @Nullable LocalDate trialEndDate,
@@ -67,9 +67,9 @@ public class EmployeeContractDomainService {
       @Nullable String remark) {
     requireEmployee(employeeId);
     return employeeContractFactory.create(
+        type,
         employeeId,
         number,
-        contractType,
         startDate,
         endDate,
         trialEndDate,
@@ -82,9 +82,9 @@ public class EmployeeContractDomainService {
   /**
    * 导入生成：合同编号存在则修改，不存在则创建
    *
+   * @param type 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param employeeId 员工Id
    * @param number 合同编号
-   * @param contractType 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param startDate 开始日期
    * @param endDate 结束日期（可空）
    * @param trialEndDate 试用期结束日期（可空）
@@ -95,9 +95,9 @@ public class EmployeeContractDomainService {
    * @return 合同聚合
    */
   public EmployeeContract importGenerate(
+      String type,
       long employeeId,
       String number,
-      String contractType,
       LocalDate startDate,
       @Nullable LocalDate endDate,
       @Nullable LocalDate trialEndDate,
@@ -112,9 +112,9 @@ public class EmployeeContractDomainService {
     if (model == null) {
       model =
           create(
+              type,
               employeeId,
               number,
-              contractType,
               startDate,
               endDate,
               trialEndDate,
@@ -126,7 +126,7 @@ public class EmployeeContractDomainService {
       modify(
           model,
           number,
-          contractType,
+          type,
           startDate,
           endDate,
           trialEndDate,
@@ -143,8 +143,8 @@ public class EmployeeContractDomainService {
    * 修改合同
    *
    * @param id 合同Id
+   * @param type 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param number 合同编号
-   * @param contractType 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param startDate 开始日期
    * @param endDate 结束日期（可空）
    * @param trialEndDate 试用期结束日期（可空）
@@ -157,8 +157,8 @@ public class EmployeeContractDomainService {
    */
   public EmployeeContract modify(
       long id,
+      String type,
       String number,
-      String contractType,
       LocalDate startDate,
       @Nullable LocalDate endDate,
       @Nullable LocalDate trialEndDate,
@@ -173,7 +173,7 @@ public class EmployeeContractDomainService {
     modify(
         model,
         number,
-        contractType,
+        type,
         startDate,
         endDate,
         trialEndDate,
@@ -188,8 +188,8 @@ public class EmployeeContractDomainService {
    * 修改合同（使用已有聚合）
    *
    * @param model 合同聚合
+   * @param type 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param number 合同编号
-   * @param contractType 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param startDate 开始日期
    * @param endDate 结束日期（可空）
    * @param trialEndDate 试用期结束日期（可空）
@@ -201,8 +201,8 @@ public class EmployeeContractDomainService {
    */
   public void modify(
       EmployeeContract model,
+      String type,
       String number,
-      String contractType,
       LocalDate startDate,
       @Nullable LocalDate endDate,
       @Nullable LocalDate trialEndDate,
@@ -216,7 +216,7 @@ public class EmployeeContractDomainService {
     }
     model.modify(
         number,
-        contractType,
+        type,
         startDate,
         endDate,
         trialEndDate,

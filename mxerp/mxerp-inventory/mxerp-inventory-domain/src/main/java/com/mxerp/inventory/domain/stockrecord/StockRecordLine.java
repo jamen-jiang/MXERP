@@ -40,7 +40,7 @@ import org.jspecify.annotations.Nullable;
 public class StockRecordLine extends BaseDeleteEntity {
 
   /** 库存记录Id */
-  @Column(name = "StockRecordId", nullable = false)
+  @Column(name = "StockRecordId")
   private Long stockRecordId;
 
   /** 物料SPU（快照，仅作汇总与展示） */

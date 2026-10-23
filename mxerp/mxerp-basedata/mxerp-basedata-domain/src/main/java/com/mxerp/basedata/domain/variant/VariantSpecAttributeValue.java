@@ -43,7 +43,7 @@ import org.jspecify.annotations.NullMarked;
 public class VariantSpecAttributeValue extends BaseDeleteEntity {
 
   /** 所属SKU Id（由 SKU 聚合的关联列写入，Java 侧不赋值） */
-  @Column(name = "VariantId", nullable = false)
+  @Column(name = "VariantId")
   private Long variantId;
 
   /** 规格属性定义Id */

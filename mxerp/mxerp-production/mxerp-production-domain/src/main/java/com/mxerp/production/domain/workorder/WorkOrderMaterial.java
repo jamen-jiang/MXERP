@@ -52,7 +52,7 @@ import org.jspecify.annotations.Nullable;
 public class WorkOrderMaterial extends BaseDeleteEntity {
 
   /** 工单Id */
-  @Column(name = "WorkOrderId", nullable = false)
+  @Column(name = "WorkOrderId")
   private Long workOrderId;
 
   /** 来源BOM行Id（可空，手工加料时为空） */

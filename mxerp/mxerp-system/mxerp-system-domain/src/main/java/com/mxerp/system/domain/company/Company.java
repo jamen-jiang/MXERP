@@ -20,18 +20,17 @@ import org.jspecify.annotations.Nullable;
 /**
  * 公司（集团下属分工厂）
  *
- * <p>字段照别家的公司主数据取：ERPNext {@code Company} 的 {@code parent_company}（上级公司）、{@code tax_id}、
- * {@code date_of_establishment}、{@code default_currency}（必填）；Odoo {@code res.company} 的
- * {@code company_registry}（工商注册号）、{@code currency_id}（必填）；金蝶「组织机构」的上级组织与禁用。
+ * <p>字段照别家的公司主数据取：ERPNext {@code Company} 的 {@code parent_company}（上级公司）、{@code tax_id}、 {@code
+ * date_of_establishment}、{@code default_currency}（必填）；Odoo {@code res.company} 的 {@code
+ * company_registry}（工商注册号）、{@code currency_id}（必填）；金蝶「组织机构」的上级组织与禁用。
  *
  * <p>地址与 {@code Supplier} 同形：{@code Country/Province/City/District/Zip} + 详细地址一段（{@code Address}），
  * 便于以后按省市统计和打印。
  *
- * <p>代码与简称是两件事，别混用：代码是给机器认的稳定串（导入对码、以后拼单号前缀），改了要断历史，所以全司唯一且必填——
- * SAP 的公司代码 {@code BUKRS}（4 位，本身就是主键，名称另存 {@code BUTXT}）、D365 的法人编号（{@code USMF} 这种）、
- * ERPNext 的 {@code abbr}（必填，会被拼进科目、仓库、成本中心编码前）、金蝶组织机构的 {@code FNumber} 都是这一列；
- * Odoo 是唯一没有代码列的，它靠 {@code partner_id} 把公司指成一个联系人、用 {@code company_registry} 当对外唯一号。
- * 简称是给人在单据页眉上看的短名，想改随时能改，可空。
+ * <p>代码与简称是两件事，别混用：代码是给机器认的稳定串（导入对码、以后拼单号前缀），改了要断历史，所以全司唯一且必填—— SAP 的公司代码 {@code BUKRS}（4
+ * 位，本身就是主键，名称另存 {@code BUTXT}）、D365 的法人编号（{@code USMF} 这种）、 ERPNext 的 {@code
+ * abbr}（必填，会被拼进科目、仓库、成本中心编码前）、金蝶组织机构的 {@code FNumber} 都是这一列； Odoo 是唯一没有代码列的，它靠 {@code partner_id}
+ * 把公司指成一个联系人、用 {@code company_registry} 当对外唯一号。 简称是给人在单据页眉上看的短名，想改随时能改，可空。
  *
  * <p>上级公司构成一棵树，层级路径由 {@link CompanyDomainService} 维护（与 {@code Category}、{@code Department}
  * 同一套）；往返、跨公司校验放在领域服务里。
@@ -44,10 +43,11 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Company",
     indexes = {
+      @Index(name = "IX_Company_ParentId", columnList = "ParentId"),
+      @Index(name = "IX_Company_ParentPath", columnList = "ParentPath"),
       @Index(name = "IX_Company_Code", columnList = "Code"),
       @Index(name = "IX_Company_Name", columnList = "Name"),
-      @Index(name = "IX_Company_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Company_ParentPath", columnList = "ParentPath")
+      @Index(name = "IX_Company_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，用 Flyway 创建
       // 注意：同级公司名称唯一由 CompanyRepository.isExistByNameAndParentIdExcludeId 校验
     })

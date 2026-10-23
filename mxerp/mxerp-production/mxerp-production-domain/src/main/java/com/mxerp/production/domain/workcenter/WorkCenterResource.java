@@ -35,14 +35,14 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_WorkCenterResource_WorkCenterId", columnList = "WorkCenterId"),
       @Index(name = "IX_WorkCenterResource_Code", columnList = "Code"),
       @Index(name = "IX_WorkCenterResource_Name", columnList = "Name"),
-      @Index(name = "IX_WorkCenterResource_Category", columnList = "Category"),
+      @Index(name = "IX_WorkCenterResource_CategoryId", columnList = "WorkCenterResourceCategoryId"),
       @Index(name = "IX_WorkCenterResource_Disabled", columnList = "Disabled")
       // 注意：WorkCenterId + Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class WorkCenterResource extends BaseDeleteEntity {
 
   /** 工作中心Id */
-  @Column(name = "WorkCenterId", nullable = false)
+  @Column(name = "WorkCenterId")
   private Long workCenterId;
 
   /** 代码 */

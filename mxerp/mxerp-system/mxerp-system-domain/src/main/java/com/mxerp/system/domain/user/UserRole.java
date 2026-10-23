@@ -26,7 +26,7 @@ import org.jspecify.annotations.NullMarked;
 public class UserRole extends BaseDeleteEntity {
 
   /** 用户Id */
-  @Column(name = "UserId", nullable = false)
+  @Column(name = "UserId")
   private Long userId;
 
   /** 角色Id */

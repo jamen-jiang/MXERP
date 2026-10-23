@@ -65,7 +65,7 @@ import org.jspecify.annotations.Nullable;
     name = "Material",
     indexes = {
       @Index(name = "IX_Material_CategoryId", columnList = "CategoryId"),
-      @Index(name = "IX_Material_Group", columnList = "[Group]"),
+      @Index(name = "IX_Material_Type", columnList = "Type"),
       @Index(name = "IX_Material_Code", columnList = "Code"),
       @Index(name = "IX_Material_Name", columnList = "Name")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，用 Flyway 创建

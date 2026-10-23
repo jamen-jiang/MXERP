@@ -24,13 +24,11 @@ import org.jspecify.annotations.Nullable;
  * <p>为什么不给工单加个「已入库数量」就完事：入库是「一次交付」，得留下什么时候进的、进了哪个仓（库位）、
  * 申报多少与实收多少。工单上那个累计数只是这些单据的合计，光看它对不出任何一笔，也就没法追短装。
  *
- * <p>没有行：一张工单只产出一个 SKU，入库天然是一单一货。真要用到联产品、副产品，或者一张单收好几张工单，
- * 再拆行不迟。
+ * <p>没有行：一张工单只产出一个 SKU，入库天然是一单一货。真要用到联产品、副产品，或者一张单收好几张工单， 再拆行不迟。
  *
  * <p>生命周期与生产领料单同一套，只有两态：{@code DRAFT → POSTED}。入库那一下同时是审核：实收数量落定、计入工单
  * 已入库、货进成品仓，三件事在同一个动作里完成。草稿不动库存也不动工单，直接删掉即可，所以没有作废状态。已入库的
- * 不在这张单上翻状态——货真进过仓，冲它是在库存那边照原库存记录开一张红字单，本单停在已入库当历史记录，
- * 「被冲过没有」去库存那边查指着它的红字单。
+ * 不在这张单上翻状态——货真进过仓，冲它是在库存那边照原库存记录开一张红字单，本单停在已入库当历史记录， 「被冲过没有」去库存那边查指着它的红字单。
  */
 @NullMarked
 @Getter
@@ -40,8 +38,8 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "ProductionReceipt",
     indexes = {
-      @Index(name = "IX_ProductionReceipt_Number", columnList = "Number"),
       @Index(name = "IX_ProductionReceipt_WorkOrderId", columnList = "WorkOrderId"),
+      @Index(name = "IX_ProductionReceipt_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_ProductionReceipt_VariantId", columnList = "VariantId"),
       @Index(name = "IX_ProductionReceipt_Status", columnList = "Status")
     })
@@ -215,8 +213,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
   /**
    * 入库：实收数量落定，单据转入已入库并记下入库时间
    *
-   * <p>审核与入库合成一步。实收数量没填就照批申报数；把实收数量累加到工单由
-   * {@code ProductionReceiptDomainService} 编排，货进成品仓由应用层在同一事务里调库存服务。
+   * <p>审核与入库合成一步。实收数量没填就照批申报数；把实收数量累加到工单由 {@code ProductionReceiptDomainService}
+   * 编排，货进成品仓由应用层在同一事务里调库存服务。
    *
    * @param time 入库时间
    * @throws DomainException 非草稿状态时抛出

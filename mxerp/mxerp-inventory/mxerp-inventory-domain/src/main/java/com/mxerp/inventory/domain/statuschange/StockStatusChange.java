@@ -55,7 +55,6 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "StockStatusChange",
     indexes = {
-      @Index(name = "IX_StockStatusChange_Number", columnList = "Number"),
       @Index(
           name = "IX_StockStatusChange_SourceType_SourceId",
           columnList = "SourceType,SourceId"),

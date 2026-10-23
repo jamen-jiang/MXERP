@@ -19,10 +19,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * 部门
  *
- * <p>字段只保留组织结构信息：Odoo 的 {@code hr.department}（name、company_id、parent_id、parent_path）、
- * ERPNext 的 {@code Department}（department_name、parent_department、company、disabled、lft/rgt）、
- * 金蝶「部门」（编码、名称、上级部门、创建组织、部门属性）都只有这些——**没有一家在部门上存地址或电话**，
- * 联系信息属于公司或员工/岗位。
+ * <p>字段只保留组织结构信息：Odoo 的 {@code hr.department}（name、company_id、parent_id、parent_path）、 ERPNext 的
+ * {@code Department}（department_name、parent_department、company、disabled、lft/rgt）、
+ * 金蝶「部门」（编码、名称、上级部门、创建组织、部门属性）都只有这些——**没有一家在部门上存地址或电话**， 联系信息属于公司或员工/岗位。
  *
  * <p>负责人（Odoo {@code manager_id}）与成员（{@code member_ids}）等员工主数据建立后再加。
  */
@@ -36,7 +35,9 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Department_CompanyId", columnList = "CompanyId"),
       @Index(name = "IX_Department_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Department_Name", columnList = "Name")
+      @Index(name = "IX_Department_ParentPath", columnList = "ParentPath"),
+      @Index(name = "IX_Department_Name", columnList = "Name"),
+      @Index(name = "IX_Department_Sequence", columnList = "Sequence")
     })
 public class Department extends UpdateAggregateRoot implements Parent {
 

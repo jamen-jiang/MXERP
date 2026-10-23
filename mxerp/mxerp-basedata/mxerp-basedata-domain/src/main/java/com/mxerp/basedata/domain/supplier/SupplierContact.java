@@ -1,6 +1,6 @@
 package com.mxerp.basedata.domain.supplier;
 
-import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
+import com.mxerp.shared.domain.entity.BaseDeleteEntity;
 import com.mxerp.shared.domain.exception.DomainException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,12 +16,13 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 供应商联系人
+ * 供应商联系人（供应商的子表）
  *
  * <p>按金蝶供应商「联系人」页签做：姓名必填，固定电话/移动电话/传真/邮箱选填，一行一个联系人、
  * 一个供应商可以挂多个。采购单打印时从这里带对接人。
  *
- * <p>与银行账户（{@code com.mxerp.basedata.domain.bankaccount.BankAccount}）一样是独立聚合：一个供应商多个联系人，
+ * <p>是 {@link Supplier} 的子表：FK 由父侧 {@code @JoinColumn(name = "SupplierId")} 写，
+ * 生命周期跟供应商一起（orphanRemoval），不再单独建仓储/工厂/领域服务。
  * 一个字符串字段装不下「业务对接、对账、收货」三个不同的人。
  */
 @NullMarked
@@ -35,10 +36,10 @@ import org.jspecify.annotations.Nullable;
       @Index(name = "IX_SupplierContact_SupplierId", columnList = "SupplierId")
       // 注意：(SupplierId, Name) 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
-public class SupplierContact extends UpdateAggregateRoot {
+public class SupplierContact extends BaseDeleteEntity {
 
-  /** 供应商Id */
-  @Column(name = "SupplierId", nullable = false)
+  /** 供应商Id（由父侧 JoinColumn 写，Java 侧不赋值） */
+  @Column(name = "SupplierId")
   private Long supplierId;
 
   /** 姓名 */
@@ -78,7 +79,6 @@ public class SupplierContact extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param supplierId 供应商Id
    * @param name 姓名
    * @param telephone 固定电话（可空）
    * @param mobile 移动电话（可空）
@@ -87,17 +87,12 @@ public class SupplierContact extends UpdateAggregateRoot {
    * @param sequence 排序（可空）
    */
   SupplierContact(
-      long supplierId,
       String name,
       @Nullable String telephone,
       @Nullable String mobile,
       @Nullable String fax,
       @Nullable String email,
       @Nullable Integer sequence) {
-    if (supplierId <= 0) {
-      throw new DomainException("联系人必须属于某个供应商");
-    }
-    this.supplierId = supplierId;
     apply(name, telephone, mobile, fax, email, sequence);
   }
 

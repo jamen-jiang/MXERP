@@ -40,6 +40,7 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "TaxRate",
     indexes = {
+      @Index(name = "IX_TaxRate_Code", columnList = "Code"),
       @Index(name = "IX_TaxRate_Name", columnList = "Name"),
       @Index(name = "IX_TaxRate_Sequence", columnList = "Sequence")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建

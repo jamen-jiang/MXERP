@@ -59,18 +59,22 @@ public class EmployeeDomainService {
   /**
    * 创建员工
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -78,30 +82,30 @@ public class EmployeeDomainService {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @return 员工聚合
    * @throws DomainException 引用的主数据不存在、或编号已存在时抛出
    */
   public Employee create(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -109,28 +113,28 @@ public class EmployeeDomainService {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     validateReferences(companyId, departmentId, postId, userId);
     return employeeFactory.create(
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -138,31 +142,31 @@ public class EmployeeDomainService {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
   }
 
   /**
    * 导入生成：员工存在则修改，不存在则创建
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -170,30 +174,30 @@ public class EmployeeDomainService {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @return 员工聚合
    * @throws DomainException 引用的主数据不存在、或编号冲突时抛出
    */
   public Employee importGenerate(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -201,14 +205,10 @@ public class EmployeeDomainService {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     // 按编号查员工
     Employee model = employeeRepository.getByNumber(number);
 
@@ -216,18 +216,22 @@ public class EmployeeDomainService {
     if (model == null) {
       model =
           create(
-              number,
-              name,
+              type,
               companyId,
               departmentId,
+              postId,
               userId,
+              number,
+              name,
+              badgeNumber,
+              identificationNumber,
               joinDate,
+              birthDate,
+              maritalStatus,
+              bankAccountId,
               mobile,
               email,
               gender,
-              birthDate,
-              maritalStatus,
-              identificationNumber,
               address,
               emergencyContactName,
               emergencyContactPhone,
@@ -235,29 +239,29 @@ public class EmployeeDomainService {
               educationLevel,
               studyField,
               studySchool,
-              employeeType,
-              badgeNumber,
               departureDate,
               departureReason,
-              bankAccountId,
               status,
-              remark,
-              postId);
+              remark);
     } else {
       modify(
           model,
-          number,
-          name,
+          type,
           companyId,
           departmentId,
+          postId,
           userId,
+          number,
+          name,
+          badgeNumber,
+          identificationNumber,
           joinDate,
+          birthDate,
+          maritalStatus,
+          bankAccountId,
           mobile,
           email,
           gender,
-          birthDate,
-          maritalStatus,
-          identificationNumber,
           address,
           emergencyContactName,
           emergencyContactPhone,
@@ -265,14 +269,10 @@ public class EmployeeDomainService {
           educationLevel,
           studyField,
           studySchool,
-          employeeType,
-          badgeNumber,
           departureDate,
           departureReason,
-          bankAccountId,
           status,
-          remark,
-          postId);
+          remark);
     }
     return model;
   }
@@ -281,18 +281,22 @@ public class EmployeeDomainService {
    * 修改员工（按Id查询后修改）
    *
    * @param id 员工Id
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -300,31 +304,31 @@ public class EmployeeDomainService {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @return 员工聚合
    * @throws DomainException 员工不存在时抛出
    */
   public Employee modify(
       long id,
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -332,14 +336,10 @@ public class EmployeeDomainService {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     // 1. 查员工
     Employee model = employeeRepository.get(id);
     if (model == null) {
@@ -348,18 +348,22 @@ public class EmployeeDomainService {
     // 2. 委托给使用已有聚合的重载
     modify(
         model,
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -367,14 +371,10 @@ public class EmployeeDomainService {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
     return model;
   }
 
@@ -382,18 +382,22 @@ public class EmployeeDomainService {
    * 修改员工（使用已有聚合，避免重复查询）
    *
    * @param employee 员工聚合
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -401,30 +405,30 @@ public class EmployeeDomainService {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @throws DomainException 引用的主数据不存在、或编号冲突时抛出
    */
   public void modify(
       Employee employee,
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -432,14 +436,10 @@ public class EmployeeDomainService {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     // 1. 引用的主数据要存在
     validateReferences(companyId, departmentId, postId, userId);
     // 2. 校验员工编号唯一（排除自身）
@@ -448,18 +448,22 @@ public class EmployeeDomainService {
     }
     // 3. 修改主字段
     employee.modify(
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -467,14 +471,10 @@ public class EmployeeDomainService {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
   }
 
   // ==================== 私有：校验 ====================
@@ -486,7 +486,7 @@ public class EmployeeDomainService {
    *
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空）
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @throws DomainException 任一引用的主数据不存在时抛出
    */

@@ -16,16 +16,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * 岗位
  *
- * <p>上级岗位构成一棵树（金蝶的岗位就带「上级岗位」：业务员的上级是业务组长），层级路径由
- * {@link PostDomainService} 维护，与 {@code Category}、{@code Department}、{@code Company} 同一套。
+ * <p>上级岗位构成一棵树（金蝶的岗位就带「上级岗位」：业务员的上级是业务组长），层级路径由 {@link PostDomainService} 维护，与 {@code
+ * Category}、{@code Department}、{@code Company} 同一套。
  *
- * <p>岗位不携带角色。授权只有两张写法：**角色只挂人**（{@code UserRole}），
- * **谁能用哪个应用/资源走 {@code Privilege}**（主体可以是 Role / User / Department / Post）。
- * 所以给岗位授权就是往 {@code Privilege} 写一行 {@code Master='Post', MasterValue=岗位Id}，
- * 原来的 {@code PostRole} 中转表已删——同一件事不需要两套实现。
+ * <p>岗位不携带角色。授权只有两张写法：**角色只挂人**（{@code UserRole}）， **谁能用哪个应用/资源走 {@code Privilege}**（主体可以是 Role /
+ * User / Department / Post）。 所以给岗位授权就是往 {@code Privilege} 写一行 {@code Master='Post',
+ * MasterValue=岗位Id}， 原来的 {@code PostRole} 中转表已删——同一件事不需要两套实现。
  *
- * <p>不挂职级：Odoo {@code hr.job} 没有级别字段、ERPNext 的级别（{@code Employee Grade}）挂在员工上、
- * SAP 的薪酬等级也属人事薪酬——「同一岗位不同人不同级」是现实，职级等员工主数据建立后再决定挂哪里。
+ * <p>不挂职级：Odoo {@code hr.job} 没有级别字段、ERPNext 的级别（{@code Employee Grade}）挂在员工上、 SAP
+ * 的薪酬等级也属人事薪酬——「同一岗位不同人不同级」是现实，职级等员工主数据建立后再决定挂哪里。
  */
 @NullMarked
 @Getter
@@ -35,10 +34,10 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Post",
     indexes = {
-      @Index(name = "IX_Post_Name", columnList = "Name"),
       @Index(name = "IX_Post_DepartmentId", columnList = "DepartmentId"),
       @Index(name = "IX_Post_ParentId", columnList = "ParentId"),
-      @Index(name = "IX_Post_ParentPath", columnList = "ParentPath")
+      @Index(name = "IX_Post_ParentPath", columnList = "ParentPath"),
+      @Index(name = "IX_Post_Name", columnList = "Name"),
     })
 public class Post extends UpdateAggregateRoot implements Parent {
 

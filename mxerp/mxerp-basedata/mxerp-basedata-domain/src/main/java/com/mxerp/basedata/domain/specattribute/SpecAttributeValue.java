@@ -34,7 +34,7 @@ import org.jspecify.annotations.Nullable;
 public class SpecAttributeValue extends BaseDeleteEntity {
 
   /** 规格属性Id */
-  @Column(name = "SpecAttributeId", nullable = false)
+  @Column(name = "SpecAttributeId")
   private Long specAttributeId;
 
   /** 规格属性值（如：-25,-50） */

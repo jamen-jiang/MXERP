@@ -44,7 +44,7 @@ import org.jspecify.annotations.Nullable;
 public class StockStatusChangeLine extends BaseDeleteEntity {
 
   /** 转换单Id */
-  @Column(name = "StockStatusChangeId", nullable = false)
+  @Column(name = "StockStatusChangeId")
   private Long stockStatusChangeId;
 
   /** 物料Id（快照，新建目标状态那行库存时要用） */

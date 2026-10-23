@@ -24,18 +24,22 @@ public class EmployeeFactory {
   /**
    * 创建员工
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -43,30 +47,30 @@ public class EmployeeFactory {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @return 员工聚合
    * @throws DomainException 员工编号已存在时抛出
    */
   public Employee create(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -74,31 +78,31 @@ public class EmployeeFactory {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     // 校验员工编号唯一
     if (employeeRepository.isExistByNumberExcludeId(number)) {
       throw new DomainException("员工编号" + number + "已存在!");
     }
     return new Employee(
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -106,13 +110,9 @@ public class EmployeeFactory {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
   }
 }

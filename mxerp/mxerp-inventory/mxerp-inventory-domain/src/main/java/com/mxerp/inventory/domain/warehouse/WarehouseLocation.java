@@ -43,7 +43,7 @@ import org.jspecify.annotations.Nullable;
 public class WarehouseLocation extends BaseDeleteEntity {
 
   /** 仓库Id */
-  @Column(name = "WarehouseId", nullable = false)
+  @Column(name = "WarehouseId")
   private Long warehouseId;
 
   /** 库位代码（仓内唯一） */

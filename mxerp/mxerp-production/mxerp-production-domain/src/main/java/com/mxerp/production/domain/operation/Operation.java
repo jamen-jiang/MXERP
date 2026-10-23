@@ -18,11 +18,10 @@ import org.jspecify.annotations.Nullable;
 /**
  * 工序（工艺字典）
  *
- * <p>只描述「这道工序本身是什么」，不描述它在某个物料上做多久、用哪台设备、是否外协、是否可选——
- * 那些都是「在一条具体路线里怎么用这道工序」的决策，属于 {@code RoutingOperation}。
+ * <p>只描述「这道工序本身是什么」，不描述它在某个物料上做多久、用哪台设备、是否外协、是否可选—— 那些都是「在一条具体路线里怎么用这道工序」的决策，属于 {@code
+ * RoutingOperation}。
  *
- * <p>字段刻意保持精简（参考 ERPNext 的 Operation）：工序表一旦膨胀，工艺员维护不动，
- * 最后一定退化成没人看的垃圾字段。
+ * <p>字段刻意保持精简（参考 ERPNext 的 Operation）：工序表一旦膨胀，工艺员维护不动， 最后一定退化成没人看的垃圾字段。
  */
 @NullMarked
 @Getter
@@ -34,6 +33,7 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Operation_Code", columnList = "Code"),
       @Index(name = "IX_Operation_Name", columnList = "Name"),
+      @Index(name = "IX_Operation_WorkCenterId", columnList = "WorkCenterId"),
       @Index(name = "IX_Operation_Disabled", columnList = "Disabled")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
@@ -90,14 +90,7 @@ public class Operation extends UpdateAggregateRoot {
       boolean qualityInspectionRequired,
       @Nullable String description,
       boolean disabled) {
-    apply(
-        code,
-        name,
-        workCenterId,
-        isCorrective,
-        qualityInspectionRequired,
-        description,
-        disabled);
+    apply(code, name, workCenterId, isCorrective, qualityInspectionRequired, description, disabled);
   }
 
   /**
@@ -119,14 +112,7 @@ public class Operation extends UpdateAggregateRoot {
       boolean qualityInspectionRequired,
       @Nullable String description,
       boolean disabled) {
-    apply(
-        code,
-        name,
-        workCenterId,
-        isCorrective,
-        qualityInspectionRequired,
-        description,
-        disabled);
+    apply(code, name, workCenterId, isCorrective, qualityInspectionRequired, description, disabled);
   }
 
   /**
@@ -152,8 +138,7 @@ public class Operation extends UpdateAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * <p>把「去空格 → 非空校验 → 数值校验 → 赋值」收敛到一处，避免构造器和 {@link #modify}
-   * 各写一遍导致规则漂移。
+   * <p>把「去空格 → 非空校验 → 数值校验 → 赋值」收敛到一处，避免构造器和 {@link #modify} 各写一遍导致规则漂移。
    *
    * @param code 工序代码
    * @param name 工序名称

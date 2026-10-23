@@ -50,7 +50,7 @@ import org.jspecify.annotations.Nullable;
 public class WorkOrderOperation extends BaseDeleteEntity {
 
   /** 工单Id */
-  @Column(name = "WorkOrderId", nullable = false)
+  @Column(name = "WorkOrderId")
   private Long workOrderId;
 
   /** 工序顺序 */

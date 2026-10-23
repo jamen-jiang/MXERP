@@ -26,11 +26,9 @@ import org.jspecify.annotations.Nullable;
  * <p>现场只该填三样：工序、良品数、报废数。工单号、工序名称、工作中心这些快照由领域服务 从工单上抄，工时不填就按工序的标准时间算——让人抄一遍就等于给自己留一个对不上的机会。
  *
  * <p>建单即提交：这张单没有草稿。现场扫完工单号落下三个数，当场就累加进工单工序的汇总，校验也在那一刻发生
- * ——错了当场报错，而不是留到下班对账才发现。要改数只有一条路：作废这一张，重新报一张；作废会把当初累加
- * 进去的良品、报废与工时从工序上减回来，单据本身留着当痕迹。
+ * ——错了当场报错，而不是留到下班对账才发现。要改数只有一条路：作废这一张，重新报一张；作废会把当初累加 进去的良品、报废与工时从工序上减回来，单据本身留着当痕迹。
  *
- * <p>所以这里没有状态机，只有一列「作废时间」：为空表示这笔报工还算数，有值表示已经冲回去了。报工不动库存，
- * 因此不必像库存单据那样另开一张红字单——作废与红冲是同一件事，这张单自己就能承载。
+ * <p>所以这里没有状态机，只有一列「作废时间」：为空表示这笔报工还算数，有值表示已经冲回去了。报工不动库存， 因此不必像库存单据那样另开一张红字单——作废与红冲是同一件事，这张单自己就能承载。
  */
 @NullMarked
 @Getter
@@ -40,11 +38,11 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "ProductionReport",
     indexes = {
-      @Index(name = "IX_ProductionReport_Number", columnList = "Number"),
       @Index(name = "IX_ProductionReport_WorkOrderId", columnList = "WorkOrderId"),
-      @Index(name = "IX_ProductionReport_Operation", columnList = "WorkOrderOperationId"),
-      @Index(name = "IX_ProductionReport_Operator", columnList = "OperatorId"),
-      @Index(name = "IX_ProductionReport_VoidedTime", columnList = "VoidedTime")
+      @Index(
+          name = "IX_ProductionReport_WorkOrderOperationId",
+          columnList = "WorkOrderOperationId"),
+      @Index(name = "IX_ProductionReport_OperatorId", columnList = "OperatorId")
     })
 public class ProductionReport extends OrderAggregateRoot {
 

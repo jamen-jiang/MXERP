@@ -23,8 +23,11 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "App",
     indexes = {
+      @Index(name = "IX_App_Type", columnList = "Type"),
+      @Index(name = "IX_App_ParentId", columnList = "ParentId"),
+      @Index(name = "IX_App_ParentPath", columnList = "ParentPath"),
       @Index(name = "IX_App_Name", columnList = "Name"),
-      @Index(name = "IX_App_Type", columnList = "Type")
+      @Index(name = "IX_App_Sequence", columnList = "Sequence"),
     })
 public class App extends UpdateAggregateRoot implements Parent {
 
@@ -111,7 +114,8 @@ public class App extends UpdateAggregateRoot implements Parent {
     this.license = StringUtils.trimToNull(license);
     this.remark = remark;
     this.meta =
-        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
+        new MetaVO(
+            title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
   }
 
   void modify(
@@ -143,7 +147,8 @@ public class App extends UpdateAggregateRoot implements Parent {
     this.license = StringUtils.trimToNull(license);
     this.remark = remark;
     this.meta =
-        new MetaVO(title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
+        new MetaVO(
+            title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sequence);
   }
 
   @Override

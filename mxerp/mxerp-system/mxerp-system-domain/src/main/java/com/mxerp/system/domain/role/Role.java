@@ -4,6 +4,7 @@ import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.exception.DomainException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,7 +21,11 @@ import org.jspecify.annotations.Nullable;
 @Setter(AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "Role")
+@Table(
+    name = "Role",
+    indexes = {
+      @Index(name = "IX_Role_Name", columnList = "Name"),
+    })
 public class Role extends UpdateAggregateRoot {
 
   /** 角色名称 */

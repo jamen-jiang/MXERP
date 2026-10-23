@@ -20,13 +20,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * 用户（登录身份）
  *
- * <p>字段对照别家：Odoo {@code res.users}（name、login、password、active、groups_id）、
- * Frappe/ERPNext {@code User}（email 即主键、first_name、enabled、roles 子表）——两家都用
- * **邮箱或登录名**标识身份、都有启用开关、角色都挂在用户上。我们比他们多一层「岗位 → 角色」，
- * 因为还没有员工主数据（两家的岗位/职务挂在 Employee 上，不在用户上）。
+ * <p>字段对照别家：Odoo {@code res.users}（name、login、password、active、groups_id）、 Frappe/ERPNext {@code
+ * User}（email 即主键、first_name、enabled、roles 子表）——两家都用 **邮箱或登录名**标识身份、都有启用开关、角色都挂在用户上。我们比他们多一层「岗位 →
+ * 角色」， 因为还没有员工主数据（两家的岗位/职务挂在 Employee 上，不在用户上）。
  *
- * <p>不抄的：Odoo 的个人偏好（语言/时区/签名）与公司归属、Frappe 的通讯录字段
- * （gender/birth_date/location）、last_login 与 api_key——都要等真有消费它们的流程。
+ * <p>不抄的：Odoo 的个人偏好（语言/时区/签名）与公司归属、Frappe 的通讯录字段 （gender/birth_date/location）、last_login 与
+ * api_key——都要等真有消费它们的流程。
  */
 @NullMarked
 @Getter
@@ -35,7 +34,9 @@ import org.jspecify.annotations.Nullable;
 @Entity
 @Table(
     name = "User",
-    indexes = {@Index(name = "IX_User_Name", columnList = "Name")
+    indexes = {
+      @Index(name = "IX_User_Name", columnList = "Name"),
+      @Index(name = "IX_User_UserName", columnList = "UserName")
       // 注意：UserName 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class User extends UpdateAggregateRoot {

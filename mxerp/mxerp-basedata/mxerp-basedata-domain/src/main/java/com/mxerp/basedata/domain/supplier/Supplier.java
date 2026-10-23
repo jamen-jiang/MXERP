@@ -2,16 +2,25 @@ package com.mxerp.basedata.domain.supplier;
 
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.exception.DomainException;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -36,8 +45,9 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Supplier",
     indexes = {
-      @Index(name = "IX_Supplier_Name", columnList = "Name"),
-      @Index(name = "IX_Supplier_GroupId", columnList = "GroupId")
+      @Index(name = "IX_Supplier_GroupId", columnList = "GroupId"),
+      @Index(name = "IX_Supplier_Code", columnList = "Code"),
+      @Index(name = "IX_Supplier_Name", columnList = "Name")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Supplier extends UpdateAggregateRoot {
@@ -140,6 +150,100 @@ public class Supplier extends UpdateAggregateRoot {
   @Column(name = "Remark", length = 500)
   @Nullable
   private String remark;
+
+  /** 联系人列表（子表，一个供应商多个联系人） */
+  @OneToMany(
+      fetch = FetchType.EAGER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      orphanRemoval = true)
+  @JoinColumn(name = "SupplierId")
+  @SQLRestriction("IsDeleted = 0")
+  private List<SupplierContact> supplierContacts = new ArrayList<>();
+
+  /**
+   * 获取联系人列表（只读）
+   *
+   * @return 不可变视图
+   */
+  public List<SupplierContact> getSupplierContacts() {
+    return Collections.unmodifiableList(supplierContacts);
+  }
+
+  /**
+   * 新增联系人
+   *
+   * @param name 姓名
+   * @param telephone 固定电话（可空）
+   * @param mobile 移动电话（可空）
+   * @param fax 传真（可空）
+   * @param email 邮箱（可空）
+   * @param sequence 排序（可空）
+   */
+  public void addContact(
+      String name,
+      @Nullable String telephone,
+      @Nullable String mobile,
+      @Nullable String fax,
+      @Nullable String email,
+      @Nullable Integer sequence) {
+    supplierContacts.add(
+        new SupplierContact(name, telephone, mobile, fax, email, sequence));
+  }
+
+  /**
+   * 修改联系人
+   *
+   * @param contactId 联系人Id
+   * @param name 姓名
+   * @param telephone 固定电话（可空）
+   * @param mobile 移动电话（可空）
+   * @param fax 传真（可空）
+   * @param email 邮箱（可空）
+   * @param sequence 排序（可空）
+   * @throws DomainException 联系人不存在时抛出
+   */
+  public void modifyContact(
+      long contactId,
+      String name,
+      @Nullable String telephone,
+      @Nullable String mobile,
+      @Nullable String fax,
+      @Nullable String email,
+      @Nullable Integer sequence) {
+    SupplierContact contact = findContact(contactId);
+    if (contact == null) {
+      throw new DomainException("供应商联系人不存在!");
+    }
+    contact.modify(name, telephone, mobile, fax, email, sequence);
+  }
+
+  /**
+   * 删除联系人（逻辑删除）
+   *
+   * <p>找不到时静默返回，保证删除幂等。
+   *
+   * @param contactId 联系人Id
+   */
+  public void deleteContact(long contactId) {
+    SupplierContact contact = findContact(contactId);
+    if (contact != null) {
+      contact.delete();
+    }
+  }
+
+  /**
+   * 按Id查联系人（排除已删除）
+   *
+   * @param contactId 联系人Id
+   * @return 联系人（可空）
+   */
+  @Nullable
+  private SupplierContact findContact(long contactId) {
+    return supplierContacts.stream()
+        .filter(x -> Objects.equals(x.getId(), contactId) && !x.getIsDeleted())
+        .findFirst()
+        .orElse(null);
+  }
 
   /**
    * 构造器

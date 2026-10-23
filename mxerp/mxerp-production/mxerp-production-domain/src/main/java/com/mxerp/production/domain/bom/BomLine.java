@@ -52,7 +52,7 @@ import org.jspecify.annotations.Nullable;
 public class BomLine extends BaseDeleteEntity {
 
   /** BOM Id */
-  @Column(name = "BomId", nullable = false)
+  @Column(name = "BomId")
   private Long bomId;
 
   /** 行号 */

@@ -25,9 +25,9 @@ public class EmployeeContractFactory {
   /**
    * 创建合同
    *
+   * @param type 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param employeeId 员工Id
    * @param number 合同编号
-   * @param contractType 合同期限类型（EmployeeContractTypeEnum 的 code）
    * @param startDate 开始日期
    * @param endDate 结束日期（可空）
    * @param trialEndDate 试用期结束日期（可空）
@@ -39,9 +39,9 @@ public class EmployeeContractFactory {
    * @throws DomainException 合同编号已存在时抛出
    */
   public EmployeeContract create(
+      String type,
       long employeeId,
       String number,
-      String contractType,
       LocalDate startDate,
       @Nullable LocalDate endDate,
       @Nullable LocalDate trialEndDate,
@@ -54,9 +54,9 @@ public class EmployeeContractFactory {
       throw new DomainException("合同编号" + number + "已存在!");
     }
     return new EmployeeContract(
+        type,
         employeeId,
         number,
-        contractType,
         startDate,
         endDate,
         trialEndDate,

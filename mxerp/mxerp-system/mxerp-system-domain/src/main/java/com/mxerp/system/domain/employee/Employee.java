@@ -17,30 +17,27 @@ import org.jspecify.annotations.Nullable;
 /**
  * 员工
  *
- * <p>员工是人事档案，跟 {@code User}（登录身份）分开——Odoo {@code hr.employee.user_id}、
- * ERPNext {@code Employee.user_id} 都是**可空**的用户引用，因为没有系统账号的人也可以是员工。
+ * <p>员工是人事档案，跟 {@code User}（登录身份）分开——Odoo {@code hr.employee.user_id}、 ERPNext {@code
+ * Employee.user_id} 都是**可空**的用户引用，因为没有系统账号的人也可以是员工。
  *
  * <p>归属：公司 + 部门 + 岗位。岗位是**单值**（员工上的一列 {@code PostId}）——金蝶的「员工任岗明细」
- * 支持一人多岗，但我们的权限链路只取一个岗位，主岗/调岗历史都没有消费者，所以 2026-10-22 把关系行
- * 收回成员工上的一列；用户那边只留角色。
+ * 支持一人多岗，但我们的权限链路只取一个岗位，主岗/调岗历史都没有消费者，所以 2026-10-22 把关系行 收回成员工上的一列；用户那边只留角色。
  *
  * <p>编号必须有：金蝶明确「员工姓名**允许重名**、员工编号数据中心唯一」——姓名不能当键。
  *
- * <p>字段口径：编号 ↔ ERPNext {@code employee_number}；身份证 ↔ Odoo {@code identification_id}；
- * 用工类型 ↔ Odoo {@code employee_type}（6 值）；离职原因/日期 ↔ ERPNext
- * {@code reason_for_leaving} + Odoo {@code departure_date}；工牌 ↔ Odoo {@code barcode}（Badge ID）；
- * 银行账户 ↔ Odoo {@code bank_account_id}（**单个**，指向通用 {@code BankAccount}）。
+ * <p>字段口径：编号 ↔ ERPNext {@code employee_number}；身份证 ↔ Odoo {@code identification_id}； 用工类型 ↔ Odoo
+ * {@code employee_type}（6 值）；离职原因/日期 ↔ ERPNext {@code reason_for_leaving} + Odoo {@code
+ * departure_date}；工牌 ↔ Odoo {@code barcode}（Badge ID）； 银行账户 ↔ Odoo {@code
+ * bank_account_id}（**单个**，指向通用 {@code BankAccount}）。
  *
- * <p>个人档案照 Odoo + ERPNext 补齐：性别/出生日期/婚姻状况 ↔ {@code gender} / {@code birthday} /
- * {@code marital}（ERPNext 的 {@code gender}、{@code date_of_birth} 是必填）；住址 ↔ Odoo 的
- * {@code private_street} 一组（ERPNext 分现住址和户籍地址两套，我们只留一段）；紧急联系人 ↔
- * {@code emergency_contact} + {@code emergency_phone}；学历 ↔ {@code certificate} /
- * {@code study_field} / {@code study_school}（ERPNext 用 {@code education} 子表）。
+ * <p>个人档案照 Odoo + ERPNext 补齐：性别/出生日期/婚姻状况 ↔ {@code gender} / {@code birthday} / {@code
+ * marital}（ERPNext 的 {@code gender}、{@code date_of_birth} 是必填）；住址 ↔ Odoo 的 {@code private_street}
+ * 一组（ERPNext 分现住址和户籍地址两套，我们只留一段）；紧急联系人 ↔ {@code emergency_contact} + {@code emergency_phone}；学历 ↔
+ * {@code certificate} / {@code study_field} / {@code study_school}（ERPNext 用 {@code education} 子表）。
  * 护照/签证/照片/家庭背景等没有流程读，暂不建。
  *
  * <p>状态 {@code status} 只两档：在职 / 离职（{@link EmployeeStatusEnum}）。ERPNext 是四档、金蝶 ERP 更只有一个
- * 「禁用」开关，我们按事实收敛——离职＝不在公司了，必须填离职日期；非离职状态会把离职日期与原因清空，
- * 避免「在职却挂着离职日期」。
+ * 「禁用」开关，我们按事实收敛——离职＝不在公司了，必须填离职日期；非离职状态会把离职日期与原因清空， 避免「在职却挂着离职日期」。
  */
 @NullMarked
 @Getter
@@ -50,25 +47,22 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Employee",
     indexes = {
-      @Index(name = "IX_Employee_Name", columnList = "Name"),
+      @Index(name = "IX_Employee_Type", columnList = "Type"),
       @Index(name = "IX_Employee_CompanyId", columnList = "CompanyId"),
       @Index(name = "IX_Employee_DepartmentId", columnList = "DepartmentId"),
       @Index(name = "IX_Employee_PostId", columnList = "PostId"),
       @Index(name = "IX_Employee_UserId", columnList = "UserId"),
-      @Index(name = "IX_Employee_BankAccountId", columnList = "BankAccountId")
+      @Index(name = "IX_Employee_Number", columnList = "Number"),
+      @Index(name = "IX_Employee_Name", columnList = "Name"),
+      @Index(name = "IX_Employee_Status", columnList = "Status")
       // 注意：Number 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Employee extends UpdateAggregateRoot {
 
-  /** 员工编号 */
+  /** 用工类型编码，取值见 {@link EmployeeTypeEnum} */
   @Nationalized
-  @Column(name = "Number", nullable = false, length = 50)
-  private String number;
-
-  /** 姓名 */
-  @Nationalized
-  @Column(name = "Name", nullable = false, length = 50)
-  private String name;
+  @Column(name = "Type", nullable = false, length = 50)
+  private String type;
 
   /** 公司Id */
   @Column(name = "CompanyId", nullable = false)
@@ -88,9 +82,47 @@ public class Employee extends UpdateAggregateRoot {
   @Nullable
   private Long userId;
 
+  /** 员工编号 */
+  @Nationalized
+  @Column(name = "Number", nullable = false, length = 50)
+  private String number;
+
+  /** 姓名 */
+  @Nationalized
+  @Column(name = "Name", nullable = false, length = 50)
+  private String name;
+
+  /** 工牌号（可空） */
+  @Nationalized
+  @Column(name = "BadgeNumber", length = 50)
+  @Nullable
+  private String badgeNumber;
+
+  /** 身份证号（可空） */
+  @Nationalized
+  @Column(name = "IdentificationNumber", length = 30)
+  @Nullable
+  private String identificationNumber;
+
   /** 入职日期 */
   @Column(name = "JoinDate", nullable = false)
   private LocalDate joinDate;
+
+  /** 出生日期（可空） */
+  @Column(name = "BirthDate")
+  @Nullable
+  private LocalDate birthDate;
+
+  /** 婚姻状况编码，取值见 {@link MaritalStatusEnum}（可空） */
+  @Nationalized
+  @Column(name = "MaritalStatus", length = 20)
+  @Nullable
+  private String maritalStatus;
+
+  /** 银行账户Id（可空，指向 basedata 的通用 BankAccount，归属类型 EMPLOYEE） */
+  @Column(name = "BankAccountId")
+  @Nullable
+  private Long bankAccountId;
 
   /** 手机号（可空） */
   @Nationalized
@@ -109,23 +141,6 @@ public class Employee extends UpdateAggregateRoot {
   @Column(name = "Gender", length = 20)
   @Nullable
   private String gender;
-
-  /** 出生日期（可空） */
-  @Column(name = "BirthDate")
-  @Nullable
-  private LocalDate birthDate;
-
-  /** 婚姻状况编码，取值见 {@link MaritalStatusEnum}（可空） */
-  @Nationalized
-  @Column(name = "MaritalStatus", length = 20)
-  @Nullable
-  private String maritalStatus;
-
-  /** 身份证号（可空） */
-  @Nationalized
-  @Column(name = "IdentificationNumber", length = 30)
-  @Nullable
-  private String identificationNumber;
 
   /** 住址（可空，一段文本，不分现住址与户籍地址） */
   @Nationalized
@@ -169,17 +184,6 @@ public class Employee extends UpdateAggregateRoot {
   @Nullable
   private String studySchool;
 
-  /** 用工类型编码，取值见 {@link EmployeeTypeEnum} */
-  @Nationalized
-  @Column(name = "EmployeeType", nullable = false, length = 50)
-  private String employeeType;
-
-  /** 工牌号（可空） */
-  @Nationalized
-  @Column(name = "BadgeNumber", length = 50)
-  @Nullable
-  private String badgeNumber;
-
   /** 离职日期（可空，填了就必须停用） */
   @Column(name = "DepartureDate")
   @Nullable
@@ -190,11 +194,6 @@ public class Employee extends UpdateAggregateRoot {
   @Column(name = "DepartureReason", length = 500)
   @Nullable
   private String departureReason;
-
-  /** 银行账户Id（可空，指向 basedata 的通用 BankAccount，归属类型 EMPLOYEE） */
-  @Column(name = "BankAccountId")
-  @Nullable
-  private Long bankAccountId;
 
   /** 员工状态编码，取值见 {@link EmployeeStatusEnum} */
   @Nationalized
@@ -210,18 +209,22 @@ public class Employee extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -229,28 +232,28 @@ public class Employee extends UpdateAggregateRoot {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    */
   Employee(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -258,27 +261,27 @@ public class Employee extends UpdateAggregateRoot {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     apply(
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -286,31 +289,31 @@ public class Employee extends UpdateAggregateRoot {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
   }
 
   /**
    * 修改员工
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -318,28 +321,28 @@ public class Employee extends UpdateAggregateRoot {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    */
   void modify(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -347,27 +350,27 @@ public class Employee extends UpdateAggregateRoot {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     apply(
-        number,
-        name,
+        type,
         companyId,
         departmentId,
+        postId,
         userId,
+        number,
+        name,
+        badgeNumber,
+        identificationNumber,
         joinDate,
+        birthDate,
+        maritalStatus,
+        bankAccountId,
         mobile,
         email,
         gender,
-        birthDate,
-        maritalStatus,
-        identificationNumber,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -375,14 +378,10 @@ public class Employee extends UpdateAggregateRoot {
         educationLevel,
         studyField,
         studySchool,
-        employeeType,
-        badgeNumber,
         departureDate,
         departureReason,
-        bankAccountId,
         status,
-        remark,
-        postId);
+        remark);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -390,18 +389,22 @@ public class Employee extends UpdateAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * @param number 员工编号
-   * @param name 姓名
+   * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
+   * @param postId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
+   * @param number 员工编号
+   * @param name 姓名
+   * @param badgeNumber 工牌号（可空）
+   * @param identificationNumber 身份证号（可空）
    * @param joinDate 入职日期
+   * @param birthDate 出生日期（可空）
+   * @param maritalStatus 婚姻状况编码（可空）
+   * @param bankAccountId 银行账户Id（可空）
    * @param mobile 手机号（可空）
    * @param email 邮箱（可空）
    * @param gender 性别编码（可空）
-   * @param birthDate 出生日期（可空）
-   * @param maritalStatus 婚姻状况编码（可空）
-   * @param identificationNumber 身份证号（可空）
    * @param address 住址（可空）
    * @param emergencyContactName 紧急联系人姓名（可空）
    * @param emergencyContactPhone 紧急联系人电话（可空）
@@ -409,29 +412,29 @@ public class Employee extends UpdateAggregateRoot {
    * @param educationLevel 最高学历编码（可空）
    * @param studyField 所学专业（可空）
    * @param studySchool 毕业学校（可空）
-   * @param employeeType 用工类型编码
-   * @param badgeNumber 工牌号（可空）
    * @param departureDate 离职日期（可空）
    * @param departureReason 离职原因（可空）
-   * @param bankAccountId 银行账户Id（可空）
    * @param status 员工状态编码
    * @param remark 备注（可空）
-   * @param postId 岗位Id（可空，空表示未定岗）
    * @throws DomainException 编号/姓名/公司/部门/入职日期/用工类型为空或非法、离职未停用时抛出
    */
   private void apply(
-      String number,
-      String name,
+      String type,
       long companyId,
       long departmentId,
+      @Nullable Long postId,
       @Nullable Long userId,
+      String number,
+      String name,
+      @Nullable String badgeNumber,
+      @Nullable String identificationNumber,
       LocalDate joinDate,
+      @Nullable LocalDate birthDate,
+      @Nullable String maritalStatus,
+      @Nullable Long bankAccountId,
       @Nullable String mobile,
       @Nullable String email,
       @Nullable String gender,
-      @Nullable LocalDate birthDate,
-      @Nullable String maritalStatus,
-      @Nullable String identificationNumber,
       @Nullable String address,
       @Nullable String emergencyContactName,
       @Nullable String emergencyContactPhone,
@@ -439,14 +442,10 @@ public class Employee extends UpdateAggregateRoot {
       @Nullable String educationLevel,
       @Nullable String studyField,
       @Nullable String studySchool,
-      String employeeType,
-      @Nullable String badgeNumber,
       @Nullable LocalDate departureDate,
       @Nullable String departureReason,
-      @Nullable Long bankAccountId,
       String status,
-      @Nullable String remark,
-      @Nullable Long postId) {
+      @Nullable String remark) {
     String trimmedNumber = StringUtils.trimToNull(number);
     String trimmedName = StringUtils.trimToNull(name);
     if (trimmedNumber == null) {
@@ -464,8 +463,8 @@ public class Employee extends UpdateAggregateRoot {
     if (joinDate == null) {
       throw new DomainException("员工入职日期不能为空");
     }
-    if (EnumUtils.fromCode(EmployeeTypeEnum.class, employeeType) == null) {
-      throw new DomainException("员工" + trimmedNumber + "的用工类型" + employeeType + "有误!");
+    if (EnumUtils.fromCode(EmployeeTypeEnum.class, type) == null) {
+      throw new DomainException("员工" + trimmedNumber + "的用工类型" + type + "有误!");
     }
     if (gender != null && EnumUtils.fromCode(GenderEnum.class, gender) == null) {
       throw new DomainException("员工" + trimmedNumber + "的性别" + gender + "有误!");
@@ -496,19 +495,22 @@ public class Employee extends UpdateAggregateRoot {
       throw new DomainException("员工" + trimmedNumber + "离职时必须填离职日期");
     }
 
-    this.number = trimmedNumber;
-    this.name = trimmedName;
+    this.type = type;
     this.companyId = companyId;
     this.departmentId = departmentId;
     this.postId = postId;
     this.userId = userId;
+    this.number = trimmedNumber;
+    this.name = trimmedName;
+    this.badgeNumber = StringUtils.trimToNull(badgeNumber);
+    this.identificationNumber = StringUtils.trimToNull(identificationNumber);
     this.joinDate = joinDate;
+    this.birthDate = birthDate;
+    this.maritalStatus = maritalStatus;
+    this.bankAccountId = bankAccountId;
     this.mobile = StringUtils.trimToNull(mobile);
     this.email = StringUtils.trimToNull(email);
     this.gender = gender;
-    this.birthDate = birthDate;
-    this.maritalStatus = maritalStatus;
-    this.identificationNumber = StringUtils.trimToNull(identificationNumber);
     this.address = StringUtils.trimToNull(address);
     this.emergencyContactName = StringUtils.trimToNull(emergencyContactName);
     this.emergencyContactPhone = StringUtils.trimToNull(emergencyContactPhone);
@@ -516,12 +518,9 @@ public class Employee extends UpdateAggregateRoot {
     this.educationLevel = educationLevel;
     this.studyField = StringUtils.trimToNull(studyField);
     this.studySchool = StringUtils.trimToNull(studySchool);
-    this.employeeType = employeeType;
-    this.badgeNumber = StringUtils.trimToNull(badgeNumber);
     // 不是离职就清掉离职日期与原因，避免「在职却挂着离职日期」
     this.departureDate = left ? departureDate : null;
     this.departureReason = left ? StringUtils.trimToNull(departureReason) : null;
-    this.bankAccountId = bankAccountId;
     this.status = status;
     this.remark = remark;
   }

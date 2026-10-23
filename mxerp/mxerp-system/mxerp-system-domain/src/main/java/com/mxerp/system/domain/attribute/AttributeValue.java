@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
 public class AttributeValue extends BaseDeleteEntity {
 
   /** 属性Id */
-  @Column(name = "AttributeId", nullable = false)
+  @Column(name = "AttributeId")
   private Long attributeId;
 
   /** 属性值（如：A、B、C） */

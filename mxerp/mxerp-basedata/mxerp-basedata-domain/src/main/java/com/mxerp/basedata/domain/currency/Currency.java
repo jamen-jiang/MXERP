@@ -24,8 +24,8 @@ import org.jspecify.annotations.NullMarked;
 @Table(
     name = "Currency",
     indexes = {
-      @Index(name = "IX_Currency_Name", columnList = "Name"),
-      @Index(name = "IX_Currency_IsEnable", columnList = "IsEnable")
+      @Index(name = "IX_Currency_Code", columnList = "Code"),
+      @Index(name = "IX_Currency_Name", columnList = "Name")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Currency extends UpdateAggregateRoot {

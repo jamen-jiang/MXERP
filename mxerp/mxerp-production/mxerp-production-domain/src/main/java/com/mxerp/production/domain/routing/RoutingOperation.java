@@ -41,7 +41,7 @@ import org.jspecify.annotations.Nullable;
 public class RoutingOperation extends BaseDeleteEntity {
 
   /** 工艺路线Id */
-  @Column(name = "RoutingId", nullable = false)
+  @Column(name = "RoutingId")
   private Long routingId;
 
   /** 工序顺序 */

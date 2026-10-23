@@ -21,8 +21,7 @@ import org.jspecify.annotations.Nullable;
  * <p>一行说的是「哪张工单的哪条用料、退回哪个仓、多少」：工单用料行Id 是指针，SPU、SKU、单位按快照抄一份，
  * 因为单据要能独立打印与核对，不能等工单那边改版后再去看。需求量与已领量都不在这里抄——够不够退只有工单知道。
  *
- * <p>数量分两列：申请退料数量是车间报上来的，核定退料数量是仓管点收后落定的。退多了就是退料超过已领未耗，
- * 由工单用料行自己拦。
+ * <p>数量分两列：申请退料数量是车间报上来的，核定退料数量是仓管点收后落定的。退多了就是退料超过已领未耗， 由工单用料行自己拦。
  */
 @NullMarked
 @Getter
@@ -38,12 +37,13 @@ import org.jspecify.annotations.Nullable;
       @Index(
           name = "IX_ProductionReturnLine_WorkOrderMaterialId",
           columnList = "WorkOrderMaterialId"),
+      @Index(name = "IX_ProductionReturnLine_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_ProductionReturnLine_VariantId", columnList = "VariantId")
     })
 public class ProductionReturnLine extends BaseDeleteEntity {
 
   /** 生产退料单Id */
-  @Column(name = "ProductionReturnId", nullable = false)
+  @Column(name = "ProductionReturnId")
   private Long productionReturnId;
 
   /** 工单用料行Id */
@@ -153,12 +153,7 @@ public class ProductionReturnLine extends BaseDeleteEntity {
     }
     if (quantity.compareTo(this.appliedQuantity) > 0) {
       throw new DomainException(
-          "物料"
-              + this.variantId
-              + "核定退料数量"
-              + quantity
-              + "不能大于申请数量"
-              + this.appliedQuantity);
+          "物料" + this.variantId + "核定退料数量" + quantity + "不能大于申请数量" + this.appliedQuantity);
     }
     this.approvedQuantity = quantity;
   }
