@@ -1,8 +1,8 @@
 package com.mxerp.production.domain.operation;
 
-import com.mxerp.production.domain.workcenter.WorkCenter;
 import com.mxerp.production.domain.workcenter.WorkCenterRepository;
 import com.mxerp.shared.domain.exception.DomainException;
+import java.math.BigDecimal;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -40,9 +40,8 @@ public class OperationDomainService {
    *
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
    * @return 工序聚合
@@ -50,9 +49,8 @@ public class OperationDomainService {
   public Operation importGenerate(
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
     // 按代码查工序
@@ -62,24 +60,9 @@ public class OperationDomainService {
     if (model == null) {
       requireWorkCenter(workCenterId);
       model =
-          operationFactory.create(
-              code,
-              name,
-              workCenterId,
-              isCorrective,
-              qualityInspectionRequired,
-              description,
-              disabled);
+          operationFactory.create(code, name, workCenterId, batchSize, description, disabled);
     } else {
-      modify(
-          model,
-          code,
-          name,
-          workCenterId,
-          isCorrective,
-          qualityInspectionRequired,
-          description,
-          disabled);
+      modify(model, code, name, workCenterId, batchSize, description, disabled);
     }
 
     return model;
@@ -91,9 +74,8 @@ public class OperationDomainService {
    * @param id 工序Id
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
    * @return 工序聚合
@@ -103,24 +85,15 @@ public class OperationDomainService {
       long id,
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
     Operation model = operationRepository.get(id);
     if (model == null) {
       throw new DomainException("工序" + id + "不存在!");
     }
-    modify(
-        model,
-        code,
-        name,
-        workCenterId,
-        isCorrective,
-        qualityInspectionRequired,
-        description,
-        disabled);
+    modify(model, code, name, workCenterId, batchSize, description, disabled);
     return model;
   }
 
@@ -130,9 +103,8 @@ public class OperationDomainService {
    * @param model 工序
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
    * @throws DomainException 工序代码已被其它工序占用、或工作中心不存在时抛出
@@ -141,9 +113,8 @@ public class OperationDomainService {
       Operation model,
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
     // 校验工序代码唯一
@@ -151,28 +122,20 @@ public class OperationDomainService {
       throw new DomainException("工序代码" + code + "已存在!");
     }
     requireWorkCenter(workCenterId);
-    model.modify(
-        code,
-        name,
-        workCenterId,
-        isCorrective,
-        qualityInspectionRequired,
-        description,
-        disabled);
+    model.modify(code, name, workCenterId, batchSize, description, disabled);
   }
 
   /**
-   * 校验工作中心存在
+   * 校验默认工作中心存在（可空：为空表示建路线时必须自己选）
    *
-   * @param workCenterId 工作中心Id
-   * @throws DomainException 未指定工作中心、或工作中心不存在时抛出
+   * @param workCenterId 工作中心Id（可空）
+   * @throws DomainException 工作中心不存在时抛出
    */
-  private void requireWorkCenter(long workCenterId) {
-    if (workCenterId <= 0) {
-      throw new DomainException("工序必须指定工作中心");
+  private void requireWorkCenter(@Nullable Long workCenterId) {
+    if (workCenterId == null) {
+      return;
     }
-    WorkCenter workCenter = workCenterRepository.get(workCenterId);
-    if (workCenter == null) {
+    if (workCenterRepository.get(workCenterId) == null) {
       throw new DomainException("工作中心" + workCenterId + "不存在!");
     }
   }

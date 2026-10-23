@@ -83,15 +83,15 @@ public class ProductionReceipt extends OrderAggregateRoot {
   @Column(name = "ReceivedQuantity", nullable = false, precision = 18, scale = 2)
   private BigDecimal receivedQuantity;
 
-  /** 状态：草稿、已入库 */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
-
   /** 入库时间（可空，转入已入库时写入） */
   @Column(name = "ReceiptTime")
   @Nullable
   private LocalDateTime receiptTime;
+
+  /** 状态：草稿、已入库 */
+  @Nationalized
+  @Column(name = "Status", nullable = false, length = 50)
+  private String status;
 
   /** 备注（可空） */
   @Nationalized

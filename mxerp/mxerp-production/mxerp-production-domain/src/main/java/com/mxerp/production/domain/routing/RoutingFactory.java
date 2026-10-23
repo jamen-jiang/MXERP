@@ -1,7 +1,6 @@
 package com.mxerp.production.domain.routing;
 
 import com.mxerp.shared.domain.exception.DomainException;
-import java.time.LocalDateTime;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -22,33 +21,26 @@ public class RoutingFactory {
   }
 
   /**
-   * 创建工艺路线（草稿）
+   * 创建工艺路线
    *
-   * @param materialId 物料系列Id（SPU）
    * @param code 路线代码
    * @param name 路线名称
    * @param version 版本号
-   * @param isPrimary 是否主路线
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @return 工艺路线聚合
-   * @throws DomainException 路线代码 + 版本已存在时抛出
+   * @throws DomainException 代码 + 版本已存在时抛出
    */
   public Routing create(
-      long materialId,
       String code,
       String name,
       String version,
-      boolean isPrimary,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      boolean disabled,
       @Nullable String remark) {
-    // 校验路线代码 + 版本唯一
+    // 校验代码 + 版本唯一
     if (routingRepository.isExistByCodeAndVersionExcludeId(code, version)) {
       throw new DomainException("工艺路线" + code + "的版本" + version + "已存在!");
     }
-    return new Routing(
-        materialId, code, name, version, isPrimary, effectiveFrom, effectiveTo, remark);
+    return new Routing(code, name, version, disabled, remark);
   }
 }

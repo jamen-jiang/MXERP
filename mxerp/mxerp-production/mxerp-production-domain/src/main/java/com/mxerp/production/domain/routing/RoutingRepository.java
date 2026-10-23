@@ -1,8 +1,6 @@
 package com.mxerp.production.domain.routing;
 
 import com.mxerp.shared.domain.repository.Repository;
-import java.time.LocalDateTime;
-import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -18,31 +16,6 @@ public interface RoutingRepository extends Repository<Routing> {
    * @return 工艺路线（可空），不存在返回 null
    */
   @Nullable Routing getByCodeAndVersion(String code, String version);
-
-  /**
-   * 按代码查询全部版本
-   *
-   * @param code 工艺路线代码
-   * @return 工艺路线列表
-   */
-  List<Routing> getListByCode(String code);
-
-  /**
-   * 按物料系列查询全部路线（含各版本）
-   *
-   * @param materialId 物料系列Id
-   * @return 工艺路线列表
-   */
-  List<Routing> getListByMaterialId(long materialId);
-
-  /**
-   * 取物料在指定时点生效的主路线
-   *
-   * @param materialId 物料系列Id
-   * @param moment 判定时点
-   * @return 生效的主路线（可空），没有则返回 null
-   */
-  @Nullable Routing getEffectivePrimaryByMaterialIdAt(long materialId, LocalDateTime moment);
 
   /**
    * 判断代码 + 版本是否存在

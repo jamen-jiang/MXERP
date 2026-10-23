@@ -1,0 +1,39 @@
+package com.mxerp.production.domain.routing;
+
+import com.mxerp.shared.domain.enums.BaseEnum;
+import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
+
+/**
+ * 工时计算方式
+ *
+ * <p>照 Odoo 19 {@code mrp.routing.workcenter.time_mode}：{@code manual} 手工填固定工时；
+ * {@code auto} 按最近若干张已完工工单的实际工时取平均。
+ */
+@NullMarked
+@Getter
+public enum TimeModeEnum implements BaseEnum {
+
+  /** 固定：用手工填的工时 */
+  MANUAL("Manual", "固定"),
+
+  /** 按历史计算：取最近若干张工单的平均工时 */
+  AUTO("Auto", "按历史计算");
+
+  /** 编码 */
+  private final String code;
+
+  /** 标签 */
+  private final String label;
+
+  /**
+   * 构造器
+   *
+   * @param code 编码
+   * @param label 标签
+   */
+  TimeModeEnum(String code, String label) {
+    this.code = code;
+    this.label = label;
+  }
+}

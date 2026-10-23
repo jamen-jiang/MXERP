@@ -33,18 +33,17 @@ import org.jspecify.annotations.Nullable;
 /**
  * 工单（生产订单）
  *
- * <p>工单是生产的执行单元：一张工单做且只做一个 SKU 的一个数量。销售订单行可以拆多张工单（分批投产），
- * 库存补货与返工也可以直接开单，所以来源用 {@code sourceType + sourceId} 表达而不是绑死销售订单。
+ * <p>工单是生产的执行单元：一张工单做且只做一个 SKU 的一个数量。销售订单行可以拆多张工单（分批投产）， 库存补货与返工也可以直接开单，所以来源用 {@code sourceType +
+ * sourceId} 表达而不是绑死销售订单。
  *
  * <p>生命周期：{@code DRAFT → RELEASED → IN_PROGRESS → COMPLETED → CLOSED}，任意阶段可 {@code CANCELLED}。
  * 下达（{@link #release}）是唯一一次「定型」动作：按 BOM 展开用料、按工艺路线快照工序，之后路线改版不影响本单。
  *
- * <p>{@code materialId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠
- * 到一起看，靠它分组。物料类型不在这里抄：它记在 {@code Variant} 主数据上，工单再存一份就成了两处说法，
- * 而且「半成品/成品」这种分法在报表上并不比按 SPU 分组更准。
+ * <p>{@code materialId} 是产出 SKU 所属的 SPU，由开单方随 SKU 一起提交：一个系列下多个度数的工单要能折叠 到一起看，靠它分组。物料类型不在这里抄：它记在
+ * {@code Variant} 主数据上，工单再存一份就成了两处说法， 而且「半成品/成品」这种分法在报表上并不比按 SPU 分组更准。
  *
- * <p>{@code dueTime} 是答应客户的承诺，属于需求侧，生产侧只读不写：它记的是当初答应的是哪天，改了就再也没
- * 人知道。口径取自 SAP 的基本完成日期／计划完成日期、D365 的交货日期。
+ * <p>{@code dueTime} 是答应客户的承诺，属于需求侧，生产侧只读不写：它记的是当初答应的是哪天，改了就再也没 人知道。口径取自 SAP 的基本完成日期／计划完成日期、D365
+ * 的交货日期。
  */
 @NullMarked
 @Getter
@@ -77,11 +76,6 @@ public class WorkOrder extends OrderAggregateRoot {
   @Column(name = "UnitId", nullable = false)
   private Long unitId;
 
-  /** 状态：草稿、已下达、生产中、已完工、已关闭、已取消 */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
-
   /** 来源类型：销售订单、库存补货、返工 */
   @Nationalized
   @Column(name = "SourceType", nullable = false, length = 50)
@@ -103,7 +97,7 @@ public class WorkOrder extends OrderAggregateRoot {
   @Nullable
   private Long bomId;
 
-  /** BOM 版本号（可空，快照：下达时实际展开所用的那一版） */
+  /** BOM 版本号（可空，快照：下达时实际取到的那一版） */
   @Nationalized
   @Column(name = "BomVersion", length = 50)
   @Nullable
@@ -143,6 +137,11 @@ public class WorkOrder extends OrderAggregateRoot {
   @Column(name = "WarehouseId")
   @Nullable
   private Long warehouseId;
+
+  /** 状态：草稿、已下达、生产中、已完工、已关闭、已取消 */
+  @Nationalized
+  @Column(name = "Status", nullable = false, length = 50)
+  private String status;
 
   /** 备注（可空） */
   @Nationalized
@@ -310,48 +309,25 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 添加工序快照（仅草稿状态可加）
    *
-   * <p>工序不保存计划投入数量：可投入多少取决于前置工序实际产出，报工时由本聚合现算，见 {@link
-   * #availableQuantityFor}。
+   * <p>工序不保存计划投入数量：可投入多少取决于前置工序实际产出，报工时由本聚合现算，见 {@link #availableQuantityFor}。
    *
-   * @param sequence 工序顺序
    * @param operationId 工序Id
    * @param operationName 工序名称（快照）
-   * @param isOptional 是否可选工序
-   * @param isOutsourced 是否外协工序
    * @param workCenterId 工作中心Id
    * @param workCenterName 工作中心名称（快照）
-   * @param setupTime 标准准备工时（分钟）
-   * @param runTime 标准加工工时（分钟）
-   * @param queueTime 标准排队工时（分钟）
-   * @param rateId 费率卡Id（可空，快照，为空表示这道工序不计加工成本）
-   * @param setupRate 准备费率（元/小时）
-   * @param runRate 加工费率（元/小时）
-   * @param quantityRate 计件费率（元/件）
-   * @param timeFormula 工时取时公式编码（快照）
-   * @param standardBatchSize 标准批量（可空）
-   * @param reworkOperationId 返工回到的工序Id（可空）
-   * @param remark 备注（可空）
+   * @param timeMode 工时计算方式编码（快照）
+   * @param cycleTime 单次循环工时（分钟）
+   * @param sequence 工序顺序
    * @throws DomainException 非草稿状态、或工序顺序重复时抛出
    */
   public void addOperation(
-      int sequence,
       long operationId,
       String operationName,
-      boolean isOptional,
-      boolean isOutsourced,
       long workCenterId,
       String workCenterName,
-      BigDecimal setupTime,
-      BigDecimal runTime,
-      BigDecimal queueTime,
-      @Nullable Long rateId,
-      BigDecimal setupRate,
-      BigDecimal runRate,
-      BigDecimal quantityRate,
-      String timeFormula,
-      @Nullable BigDecimal standardBatchSize,
-      @Nullable Long reworkOperationId,
-      @Nullable String remark) {
+      String timeMode,
+      BigDecimal cycleTime,
+      int sequence) {
     if (!isDraft()) {
       throw new DomainException("工单已下达，不能再加工序");
     }
@@ -360,24 +336,13 @@ public class WorkOrder extends OrderAggregateRoot {
     }
     workOrderOperations.add(
         new WorkOrderOperation(
-            sequence,
             operationId,
             operationName,
-            isOptional,
-            isOutsourced,
             workCenterId,
             workCenterName,
-            setupTime,
-            runTime,
-            queueTime,
-            rateId,
-            setupRate,
-            runRate,
-            quantityRate,
-            timeFormula,
-            standardBatchSize,
-            reworkOperationId,
-            remark));
+            timeMode,
+            cycleTime,
+            sequence));
   }
 
   /**
@@ -387,11 +352,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * @param materialId 物料SPU
    * @param variantId 物料SKU
    * @param requiredQuantity 需求数量
-   * @param unitQuantity 净单位用量（可空，含损耗；手工加料时为空）
    * @param unitId 单位Id
-   * @param issueMode 发料方式（快照）
-   * @param issueTrigger 发料触发（快照）
-   * @param isKeyPart 是否关键件（快照，缺料即停线）
    * @param warehouseId 发料仓库Id（可空）
    * @param remark 备注（可空）
    * @throws DomainException 非草稿状态时抛出
@@ -401,36 +362,19 @@ public class WorkOrder extends OrderAggregateRoot {
       long materialId,
       long variantId,
       BigDecimal requiredQuantity,
-      @Nullable BigDecimal unitQuantity,
-      long unitId,
-      String issueMode,
-      String issueTrigger,
-      boolean isKeyPart,
-      @Nullable Long warehouseId,
-      @Nullable String remark) {
+      long unitId) {
     if (!isDraft()) {
       throw new DomainException("工单已下达，不能再加用料");
     }
     workOrderMaterials.add(
-        new WorkOrderMaterial(
-            bomLineId,
-            materialId,
-            variantId,
-            requiredQuantity,
-            unitQuantity,
-            unitId,
-            issueMode,
-            issueTrigger,
-            isKeyPart,
-            warehouseId,
-            remark));
+        new WorkOrderMaterial(bomLineId, materialId, variantId, requiredQuantity, unitId));
   }
 
   /**
    * 下达：把已装配的工序与用料固化，工单转入已下达
    *
-   * <p>下达是幂等的边界：一旦下达，工序与用料就固化在本单内，工艺路线或 BOM 后续改版不影响本单。
-   * 版本号一并快照，是因为单看 Id 只能连回那一行数据，单据上印的是版本号，回溯和核对都按版本号说话。
+   * <p>下达是幂等的边界：一旦下达，工序与用料就固化在本单内，工艺路线或 BOM 后续改版不影响本单。 BOM 与工艺路线都仍快照版本号，因为单看 Id
+   * 只能连回那一行数据，单据上印的是版本号，回溯和核对都按版本号说话。
    *
    * @param bomId 展开所用的BOM（可空）
    * @param bomVersion BOM 版本号（可空，快照）
@@ -478,8 +422,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * 完工
    *
    * <p>正常路径是工序一道道收尾后自动转完工，这里保留手工入口用于「产出与报废已达成计划数量、但还有
-   * 工序挂在加工中」的车间收尾场景。不满足数量口径时不允许手工结单：产出加报废没凑够计划数，说明还有料
-   * 没交代去处，结单会把这笔账留在库存与成本上。
+   * 工序挂在加工中」的车间收尾场景。不满足数量口径时不允许手工结单：产出加报废没凑够计划数，说明还有料 没交代去处，结单会把这笔账留在库存与成本上。
    *
    * @param endTime 实际完工时间
    * @throws DomainException 非生产中的工单、或产出加报废未达计划数量时抛出
@@ -537,20 +480,6 @@ public class WorkOrder extends OrderAggregateRoot {
   }
 
   /**
-   * 外协工序回厂确认
-   *
-   * <p>外协不是工序状态，而是 {@code isOutsourced} 属性加发出/回厂两个动作：开工即发出，回厂确认后才允许 报工与完工。
-   *
-   * @param workOrderOperationId 工单工序Id
-   * @param time 回厂时间
-   * @throws DomainException 工单已结束、工序不存在或非外协工序时抛出
-   */
-  public void returnOperation(long workOrderOperationId, LocalDateTime time) {
-    ensureExecutable();
-    requireOperation(workOrderOperationId).confirmReturn(time);
-  }
-
-  /**
    * 工序报工
    *
    * <p>报工明细由 {@code ProductionReport} 承载，这里只做汇总累加。上限取本工序的可投入数量， 而不是工单计划数量——前置工序报了多少良品，本工序才允许流转过多少。
@@ -574,14 +503,12 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 撤回报工：把良品、报废与工时从工序行减回去
    *
-   * <p>只能倒序冲：后面已经报过工的工序，吃的就是本工序报出来的数，本工序一冲它们的产出就没了依据，所以要
-   * 先把后面那道的报工单冲干净。
+   * <p>只能倒序冲：后面已经报过工的工序，吃的就是本工序报出来的数，本工序一冲它们的产出就没了依据，所以要 先把后面那道的报工单冲干净。
    *
    * <p>已完工的工单允许撤——工序全部收尾会把工单自动推到已完工，撤回正好是它的逆操作；撤完只要有一道工序
    * 回到未结束状态，工单就退回生产中。成品入库不会跟着退，所以冲完若完工数低于已入库数，要求先退入库。
    *
-   * <p>标了「报工倒冲」的用料不会因为这次撤回自动退料：那张已照批的领料单是另一笔业务，料要还回去就另开一张
-   * 退料单，两边各自校验、各自留单据痕迹。
+   * <p>标了「报工倒冲」的用料不会因为这次撤回自动退料：那张已照批的领料单是另一笔业务，料要还回去就另开一张 退料单，两边各自校验、各自留单据痕迹。
    *
    * @param workOrderOperationId 工单工序Id
    * @param goodQuantity 冲回的良品数量
@@ -598,8 +525,7 @@ public class WorkOrder extends OrderAggregateRoot {
     WorkOrderOperation operation = requireOperation(workOrderOperationId);
     WorkOrderOperation later = firstLaterProductionReported(operation);
     if (later != null) {
-      throw new DomainException(
-          "后续工序" + later.getOperationName() + "已经报过工，请先撤回它的报工");
+      throw new DomainException("后续工序" + later.getOperationName() + "已经报过工，请先撤回它的报工");
     }
     operation.unreport(goodQuantity, scrapQuantity, workTime);
     retractReleaseAfter(operation);
@@ -709,8 +635,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 完工入库：累加已入库数量
    *
-   * <p>上限取已完工数量而不是计划数量：能进成品仓的只有真做出来的良品，报废的那部分不进来。允许分次入库，
-   * 所以判的是累计数而不是「必须一次清空」。
+   * <p>上限取已完工数量而不是计划数量：能进成品仓的只有真做出来的良品，报废的那部分不进来。允许分次入库， 所以判的是累计数而不是「必须一次清空」。
    *
    * @param quantity 本次入库数量
    * @throws DomainException 数量非正、工单未下达或已关闭/已取消、或累计入库超过已完工数量时抛出
@@ -737,8 +662,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * 退回成品入库：把已入库数量减回去
    *
    * <p>这是入库单作废或红冲在工单侧的那一半，也是「撤回后完工数量不足已入库数量」那条拦截的出路：先把入库
-   * 退回，报工才冲得动。已完工的工单照样能退——工单完工看的是工序收没收尾，退库只是还有货没进仓，不会把工单
-   * 拽回生产中。
+   * 退回，报工才冲得动。已完工的工单照样能退——工单完工看的是工序收没收尾，退库只是还有货没进仓，不会把工单 拽回生产中。
    *
    * @param quantity 退回数量
    * @throws DomainException 数量非正、工单未下达或已关闭/已取消、或退回超过已入库数量时抛出
@@ -758,8 +682,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 已完工数量
    *
-   * <p>不落库：做出来多少本来就是末道已完工工序的良品数，工序行上就有，工单再存一份就得维护两处一致。
-   * 末道被撤回、一道都没完工时归零。
+   * <p>不落库：做出来多少本来就是末道已完工工序的良品数，工序行上就有，工单再存一份就得维护两处一致。 末道被撤回、一道都没完工时归零。
    *
    * @return 末道已完工工序的累计良品数
    */
@@ -792,23 +715,6 @@ public class WorkOrder extends OrderAggregateRoot {
   public BigDecimal unreceivedQuantity() {
     BigDecimal remaining = getCompletedQuantity().subtract(this.receivedQuantity);
     return remaining.signum() < 0 ? BigDecimal.ZERO : remaining;
-  }
-
-  /**
-   * 按计划数量估算整张工单的加工成本
-   *
-   * <p>逐道工序算出估算金额后汇总，最后才舍到 2 位：先舍单道会把每道工序的零头各自截掉，工单工序越多误差越往低估。
-   * 外协工序这里仍按路线上的内部费率估算，真实加工费要以供应商报价的采购价为准，等采购对账后覆盖。
-   *
-   * @return 各道未删除工序的估算成本之和（元）
-   */
-  public BigDecimal estimatedProcessingCost() {
-    BigDecimal total =
-        workOrderOperations.stream()
-            .filter(o -> !o.getIsDeleted())
-            .map(o -> o.estimatedCost(this.quantity))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-    return total.setScale(2, RoundingMode.HALF_UP);
   }
 
   /**
@@ -1040,8 +946,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 放行下一道可开工工序
    *
-   * <p>按顺序扫：已结束的跳过，遇到第一道未开始的就放行；遇到已经可开工或加工中（外协工序开工即发出，同样是加工中）
-   * 的就停，说明它前面的工序还没完，后面的不能越过。
+   * <p>按顺序扫：已结束的跳过，遇到第一道未开始的就放行；遇到已经可开工或加工中（外协工序开工即发出，同样是加工中） 的就停，说明它前面的工序还没完，后面的不能越过。
    */
   private void promoteNextOperation() {
     for (WorkOrderOperation operation : orderedOperations()) {
@@ -1059,8 +964,7 @@ public class WorkOrder extends OrderAggregateRoot {
    * 取本工序之后第一道已经报过工的工序
    *
    * <p>倒序拦的是「后面那道工序已经用掉你报出来的数」，判据取累计报工数而不是工序状态：撤回会把已完工的
-   * 工序退回加工中，若按状态拦，链子冲到第二道就再也冲不动——后面那道明明一张报工单都不剩，却被自己的
-   * 「加工中」挡住。跳过与否也一样不拦。
+   * 工序退回加工中，若按状态拦，链子冲到第二道就再也冲不动——后面那道明明一张报工单都不剩，却被自己的 「加工中」挡住。跳过与否也一样不拦。
    *
    * @param operation 本工序
    * @return 已经报过工的后续工序，没有时返回 {@code null}
@@ -1103,11 +1007,9 @@ public class WorkOrder extends OrderAggregateRoot {
    * 回填工单产出，工序全部结束时自动完工
    *
    * <p>判据取工序状态而不是数量：车间的「做完了」体现在每道工序都收了尾，不体现在数字凑没凑够。首道工序
-   * 一次报满计划数量并不能说明镀膜、包装也好了，按数量判会把工单提前推到已完工、后面再也报不进工。反过来
-   * 中间工序报废到只剩 90 片、五道都收了尾，那 90 片就是这张工单的产出，该完工。
+   * 一次报满计划数量并不能说明镀膜、包装也好了，按数量判会把工单提前推到已完工、后面再也报不进工。反过来 中间工序报废到只剩 90 片、五道都收了尾，那 90 片就是这张工单的产出，该完工。
    *
-   * <p>数量口径留给 {@link #complete} 那个手工入口：产出与报废凑够了计划数、工序却还挂着没做完，由主管
-   * 自己判定要不要提前结单。
+   * <p>数量口径留给 {@link #complete} 那个手工入口：产出与报废凑够了计划数、工序却还挂着没做完，由主管 自己判定要不要提前结单。
    *
    * @param endTime 实际完工时间
    */
@@ -1122,8 +1024,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 撤回报工后重判状态：工序不再全部结束的已完工工单退回生产中
    *
-   * <p>与 {@code refreshCompletionStatus} 对称——完工由工序收尾触发，撤回把某道工序退回了加工中，完工就
-   * 不成立了，完工时间一并清空。
+   * <p>与 {@code refreshCompletionStatus} 对称——完工由工序收尾触发，撤回把某道工序退回了加工中，完工就 不成立了，完工时间一并清空。
    */
   private void reopenIfNotAllFinished() {
     if (!isCompleted()) {
@@ -1139,8 +1040,7 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 是否所有工序都已结束（完工或跳过）
    *
-   * <p>按我们的放行规则，末道工序能结束就说明前面全部结束，这里仍逐道判而不是只看末道：判据说什么，读代码
-   * 的人就不必再去回忆放行规则。
+   * <p>按我们的放行规则，末道工序能结束就说明前面全部结束，这里仍逐道判而不是只看末道：判据说什么，读代码 的人就不必再去回忆放行规则。
    *
    * @return true 表示没有工序挂在未开始、可开工或加工中
    */

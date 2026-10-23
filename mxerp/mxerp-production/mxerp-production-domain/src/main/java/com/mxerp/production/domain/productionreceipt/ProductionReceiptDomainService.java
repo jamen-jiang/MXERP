@@ -130,10 +130,6 @@ public class ProductionReceiptDomainService {
    *
    * <p>货进成品仓由应用层在同一事务里调库存服务完成，本方法只管单据与工单这一半。
    *
-   * <p>标了「入库倒冲」的用料不在这里触发：它要生成一张生产领料单，那张单得由应用层保存，与库存动账同理。
-   * 应用层在这一步之后调 {@code BackflushIssueDomainService.generate}，触发传入库倒冲、产出量传本单的实收数量
-   * 就行——金蝶的倒冲生产领料单也是在入库单过账时生成的。发料仓不看本单的仓库，取用料行上快照的那个。
-   *
    * @param id 入库单Id
    * @param receivedQuantity 实收数量（可空，空即照批申报数量；短装时给实际点到的数）
    * @param time 入库时间

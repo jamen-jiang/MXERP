@@ -37,14 +37,12 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>生命周期只有两态：{@code DRAFT → POSTED}。发料那一下同时是审核：核定数量落到行上、计入工单用料的已领
  * 数量、货从仓库出去，三件事在同一个动作里完成，中间不留「批了还没发」的窗口。草稿不动库存也不动工单用料，
- * 直接删掉即可，所以没有作废状态。已发料的单子不在这张单上翻状态——货真出过仓库，冲它是在库存那边照原库存
- * 单据开一张红字单，本单停在已发料当历史记录，「被冲过没有」去库存那边查指着它的红字单。
+ * 直接删掉即可，所以没有作废状态。已发料的单子不在这张单上翻状态——货真出过仓库，冲它是在库存那边照原库存 单据开一张红字单，本单停在已发料当历史记录，「被冲过没有」去库存那边查指着它的红字单。
  *
  * <p>退料是另一张单（{@code ProductionReturn}）：生产领料单只管料往工单出，一张单一个方向。库存那一半（出库动账）
  * 不在这里做：本模块不依赖库存模块，两个聚合之间的动账由应用层编排，生产领料单只保证单据自身与工单用料对得上。
  * 名也不用另存一份——本单的行就是占用（批准量还没发出去的那部分），库存那边的预留量只是它的合计。
- * 已发料的单子开错了，应用层照它开一张红字单把货倒回来——料一旦真出过仓，单据状态改不回去库存；草稿还没动货，
- * 删掉重开即可。
+ * 已发料的单子开错了，应用层照它开一张红字单把货倒回来——料一旦真出过仓，单据状态改不回去库存；草稿还没动货， 删掉重开即可。
  */
 @NullMarked
 @Getter
@@ -68,11 +66,6 @@ public class ProductionIssue extends OrderAggregateRoot {
   @Column(name = "WorkOrderNumber", nullable = false, length = 30)
   private String workOrderNumber;
 
-  /** 状态：草稿、已发料 */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
-
   /** 经办人Id（可空，领料人） */
   @Column(name = "OperatorId")
   @Nullable
@@ -82,6 +75,11 @@ public class ProductionIssue extends OrderAggregateRoot {
   @Column(name = "IssueTime")
   @Nullable
   private LocalDateTime issueTime;
+
+  /** 状态：草稿、已发料 */
+  @Nationalized
+  @Column(name = "Status", nullable = false, length = 50)
+  private String status;
 
   /** 备注（可空） */
   @Nationalized
@@ -211,8 +209,7 @@ public class ProductionIssue extends OrderAggregateRoot {
   /**
    * 核定：把仓管批下来的数量逐行记上，状态仍是草稿
    *
-   * <p>没在审批清单里点到的行留待 {@link #confirm()} 按申请数照批。一条用料行只能给一个核定数，
-   * 重复提交说明调用方拼错了清单。
+   * <p>没在审批清单里点到的行留待 {@link #post(LocalDateTime)} 按申请数照批。一条用料行只能给一个核定数， 重复提交说明调用方拼错了清单。
    *
    * @param approvals 逐行核定清单
    * @throws DomainException 非草稿状态、用料行不在单内、或核定数量非法时抛出

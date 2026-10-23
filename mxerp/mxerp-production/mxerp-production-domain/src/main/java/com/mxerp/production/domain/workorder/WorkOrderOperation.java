@@ -1,6 +1,6 @@
 package com.mxerp.production.domain.workorder;
 
-import com.mxerp.production.domain.routing.TimeFormulaEnum;
+import com.mxerp.production.domain.routing.TimeModeEnum;
 import com.mxerp.shared.domain.entity.BaseDeleteEntity;
 import com.mxerp.shared.domain.exception.DomainException;
 import com.mxerp.shared.domain.util.EnumUtils;
@@ -23,15 +23,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * 工单工序
  *
- * <p>工单下达时从工艺路线「快照」生成：工序名、工作中心名、工时与费率都冗余存一份，之后路线改版或调价都不影响
- * 在制工单——费率快照钉住的是下达当时生效的那张费率卡，具体是哪一张记在 {@code rateId}。
+ * <p>工单下达时从工艺路线「快照」生成：工序名、工作中心名与工时都冗余存一份，之后路线改版不影响在制工单。
  *
  * <p>这里只保存工序自己的事实（累计良品、累计报废、累计工时、实际起止），不保存「计划投入数量」。工序可投入多少
  * 由前置工序的产出决定，是运行时派生值，由 {@code WorkOrder} 计算后传入报工校验——把它在本行存成静态字段，
  * 下达时前置工序还没开工，根本取不到值。
  *
- * <p>外协不是一个状态，而是本行 {@code isOutsourced} 快照属性加两个动作：{@code start} 即发料给供应商，
- * {@code confirmReturn} 即回厂确认；未确认回厂不允许报工与完工。
  */
 @NullMarked
 @Getter
@@ -66,14 +63,6 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   @Column(name = "OperationName", nullable = false, length = 100)
   private String operationName;
 
-  /** 是否可选工序（快照） */
-  @Column(name = "IsOptional", nullable = false)
-  private Boolean isOptional;
-
-  /** 是否外协工序（快照） */
-  @Column(name = "IsOutsourced", nullable = false)
-  private Boolean isOutsourced;
-
   /** 工作中心Id */
   @Column(name = "WorkCenterId", nullable = false)
   private Long workCenterId;
@@ -83,49 +72,14 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   @Column(name = "WorkCenterName", nullable = false, length = 100)
   private String workCenterName;
 
-  /** 标准准备工时（分钟，快照） */
-  @Column(name = "SetupTime", nullable = false, precision = 18, scale = 2)
-  private BigDecimal setupTime;
+  /** 单次循环工时（分钟，快照） */
+  @Column(name = "CycleTime", nullable = false, precision = 18, scale = 2)
+  private BigDecimal cycleTime;
 
-  /** 标准加工工时（分钟，快照） */
-  @Column(name = "RunTime", nullable = false, precision = 18, scale = 2)
-  private BigDecimal runTime;
-
-  /** 标准排队工时（分钟，快照）：只影响交期，不计入成本 */
-  @Column(name = "QueueTime", nullable = false, precision = 18, scale = 2)
-  private BigDecimal queueTime;
-
-  /** 费率卡Id（可空，快照）：下达时实际取到价格的那张卡，为空表示这道工序不计加工成本 */
-  @Column(name = "RateId")
-  @Nullable
-  private Long rateId;
-
-  /** 准备费率（元/小时，快照） */
-  @Column(name = "SetupRate", nullable = false, precision = 18, scale = 2)
-  private BigDecimal setupRate;
-
-  /** 加工费率（元/小时，快照） */
-  @Column(name = "RunRate", nullable = false, precision = 18, scale = 2)
-  private BigDecimal runRate;
-
-  /** 计件费率（元/件，快照） */
-  @Column(name = "QuantityRate", nullable = false, precision = 18, scale = 2)
-  private BigDecimal quantityRate;
-
-  /** 工时取时公式（快照）：按件时加工工时是单件工时，按批时是每批工时 */
+  /** 工时计算方式（快照）：固定=手工工时；按历史计算=取最近若干张工单平均 */
   @Nationalized
-  @Column(name = "TimeFormula", nullable = false, length = 50)
-  private String timeFormula;
-
-  /** 标准批量（可空，快照）：按批取时时必填 */
-  @Column(name = "StandardBatchSize", precision = 18, scale = 2)
-  @Nullable
-  private BigDecimal standardBatchSize;
-
-  /** 返工回到的工序Id（可空，快照） */
-  @Column(name = "ReworkOperationId")
-  @Nullable
-  private Long reworkOperationId;
+  @Column(name = "TimeMode", nullable = false, length = 50)
+  private String timeMode;
 
   /** 状态 */
   @Nationalized
@@ -142,11 +96,6 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   @Nullable
   private LocalDateTime actualEndTime;
 
-  /** 外协回厂时间（可空，仅外协工序） */
-  @Column(name = "ReturnedTime")
-  @Nullable
-  private LocalDateTime returnedTime;
-
   /** 累计良品数量 */
   @Column(name = "CompletedQuantity", nullable = false, precision = 18, scale = 2)
   private BigDecimal completedQuantity;
@@ -156,81 +105,42 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   private BigDecimal scrapQuantity;
 
   /** 实际加工工时（分钟，可空，报工汇总） */
-  @Column(name = "ActualRunTime", precision = 18, scale = 2)
+  @Column(name = "ActualCycleTime", precision = 18, scale = 2)
   @Nullable
-  private BigDecimal actualRunTime;
+  private BigDecimal actualCycleTime;
 
   /** 主操作人Id（可空） */
   @Column(name = "OperatorId")
   @Nullable
   private Long operatorId;
 
-  /** 备注（可空） */
-  @Nationalized
-  @Column(name = "Remark", length = 500)
-  @Nullable
-  private String remark;
-
   /**
    * 构造器：从路线快照生成，初始状态为未开始
    *
-   * @param sequence 工序顺序
    * @param operationId 工序Id
    * @param operationName 工序名称（快照）
-   * @param isOptional 是否可选工序
-   * @param isOutsourced 是否外协工序
    * @param workCenterId 工作中心Id
    * @param workCenterName 工作中心名称（快照）
-   * @param setupTime 标准准备工时（分钟）
-   * @param runTime 标准加工工时（分钟）
-   * @param queueTime 标准排队工时（分钟）
-   * @param rateId 费率卡Id（可空，快照）
-   * @param setupRate 准备费率（元/小时）
-   * @param runRate 加工费率（元/小时）
-   * @param quantityRate 计件费率（元/件）
-   * @param timeFormula 工时取时公式编码（快照）
-   * @param standardBatchSize 标准批量（可空）
-   * @param reworkOperationId 返工回到的工序Id（可空）
-   * @param remark 备注（可空）
+   * @param timeMode 工时计算方式编码（快照）
+   * @param cycleTime 单次循环工时（分钟）
+   * @param sequence 工序顺序
    */
   WorkOrderOperation(
-      int sequence,
       long operationId,
       String operationName,
-      boolean isOptional,
-      boolean isOutsourced,
       long workCenterId,
       String workCenterName,
-      BigDecimal setupTime,
-      BigDecimal runTime,
-      BigDecimal queueTime,
-      @Nullable Long rateId,
-      BigDecimal setupRate,
-      BigDecimal runRate,
-      BigDecimal quantityRate,
-      String timeFormula,
-      @Nullable BigDecimal standardBatchSize,
-      @Nullable Long reworkOperationId,
-      @Nullable String remark) {
+      String timeMode,
+      BigDecimal cycleTime,
+      int sequence) {
     apply(
-        sequence,
         operationId,
         operationName,
-        isOptional,
-        isOutsourced,
         workCenterId,
         workCenterName,
-        setupTime,
-        runTime,
-        queueTime,
-        rateId,
-        setupRate,
-        runRate,
-        quantityRate,
-        timeFormula,
-        standardBatchSize,
-        reworkOperationId,
-        remark);
+        timeMode,
+        cycleTime,
+        sequence);
     this.status = WorkOrderOperationStatusEnum.PENDING.getCode();
     this.completedQuantity = BigDecimal.ZERO;
     this.scrapQuantity = BigDecimal.ZERO;
@@ -245,7 +155,7 @@ public class WorkOrderOperation extends BaseDeleteEntity {
    * @return 总时长（分钟）
    */
   public BigDecimal estimatedMinutes(BigDecimal quantity) {
-    return estimatedSetupMinutes(quantity).add(estimatedRunMinutes(quantity));
+    return estimatedRunMinutes(quantity);
   }
 
   /**
@@ -289,22 +199,6 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   }
 
   /**
-   * 外协回厂确认
-   *
-   * @param time 回厂时间
-   * @throws DomainException 非外协工序、或工序不在加工中时抛出
-   */
-  public void confirmReturn(LocalDateTime time) {
-    if (!isOutsourced()) {
-      throw new DomainException("工序" + this.operationName + "不是外协工序，无需回厂确认");
-    }
-    if (!isInProgress()) {
-      throw new DomainException("工序" + this.operationName + "尚未发出，不能确认回厂");
-    }
-    this.returnedTime = time;
-  }
-
-  /**
    * 报工：累加良品、报废与实际工时
    *
    * <p>上限由调用方（工单聚合）算出的可用数量决定：本工序最多能报出前置工序流转过来的数量。
@@ -323,9 +217,6 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     if (!isInProgress()) {
       throw new DomainException("工序" + this.operationName + "未开工，不能报工");
     }
-    if (isOutsourced() && this.returnedTime == null) {
-      throw new DomainException("工序" + this.operationName + "外协未回厂，不能报工");
-    }
     if (goodQuantity.signum() < 0 || scrapQuantity.signum() < 0 || workTime.signum() < 0) {
       throw new DomainException("报工数量与工时不能为负数");
     }
@@ -337,8 +228,8 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     }
     this.completedQuantity = this.completedQuantity.add(goodQuantity);
     this.scrapQuantity = this.scrapQuantity.add(scrapQuantity);
-    this.actualRunTime =
-        (this.actualRunTime == null ? BigDecimal.ZERO : this.actualRunTime).add(workTime);
+    this.actualCycleTime =
+        (this.actualCycleTime == null ? BigDecimal.ZERO : this.actualCycleTime).add(workTime);
   }
 
   /**
@@ -363,13 +254,13 @@ public class WorkOrderOperation extends BaseDeleteEntity {
         || this.scrapQuantity.subtract(scrapQuantity).signum() < 0) {
       throw new DomainException("工序" + this.operationName + "冲回数超过已累计的报工数");
     }
-    BigDecimal runTime = this.actualRunTime == null ? BigDecimal.ZERO : this.actualRunTime;
-    if (runTime.subtract(workTime).signum() < 0) {
+    BigDecimal cycleTime = this.actualCycleTime == null ? BigDecimal.ZERO : this.actualCycleTime;
+    if (cycleTime.subtract(workTime).signum() < 0) {
       throw new DomainException("工序" + this.operationName + "冲回工时超过已累计的工时");
     }
     this.completedQuantity = this.completedQuantity.subtract(goodQuantity);
     this.scrapQuantity = this.scrapQuantity.subtract(scrapQuantity);
-    this.actualRunTime = runTime.subtract(workTime);
+    this.actualCycleTime = cycleTime.subtract(workTime);
     if (isCompleted()) {
       this.status = WorkOrderOperationStatusEnum.IN_PROGRESS.getCode();
       this.actualEndTime = null;
@@ -386,24 +277,16 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     if (!isInProgress()) {
       throw new DomainException("工序" + this.operationName + "未开工，不能完工");
     }
-    if (isOutsourced() && this.returnedTime == null) {
-      throw new DomainException("工序" + this.operationName + "外协未回厂，不能完工");
-    }
     this.status = WorkOrderOperationStatusEnum.COMPLETED.getCode();
     this.actualEndTime = endTime;
   }
 
   /**
-   * 跳过（仅可选工序可用）
+   * 跳过
    *
-   * <p>是否可选取自下达时的工序快照，不由调用方传入，避免外部传错把必经工序跳过。
-   *
-   * @throws DomainException 非可选工序不允许跳过时抛出
+   * <p>把这道工序标记为不执行，后续工序照常推进。
    */
   void skip() {
-    if (!Boolean.TRUE.equals(this.isOptional)) {
-      throw new DomainException("工序" + this.operationName + "不是可选工序，不能跳过");
-    }
     this.status = WorkOrderOperationStatusEnum.SKIPPED.getCode();
   }
 
@@ -472,73 +355,21 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     return WorkOrderOperationStatusEnum.SKIPPED.getCode().equals(this.status);
   }
 
-  /**
-   * 是否外协工序（取自下达时的路线快照）
-   *
-   * @return true 表示外协工序
-   */
-  boolean isOutsourced() {
-    return Boolean.TRUE.equals(this.isOutsourced);
-  }
-
   // ==================== 估算：工时与成本 ====================
 
   /**
-   * 估算准备工时（分钟）
+   * 估算单次循环工时（分钟）
    *
-   * <p>按批取时意味着每批都要重新装夹、调机，所以准备工时也随批次数放大；按件取时时整单只做一次准备。
-   *
-   * @param quantity 计划数量
-   * @return 估算准备工时（分钟）
-   * @throws DomainException 数量为负、或按批取时却没有标准批量时抛出
-   */
-  public BigDecimal estimatedSetupMinutes(BigDecimal quantity) {
-    checkQuantity(quantity);
-    return this.setupTime.multiply(batchCount(quantity));
-  }
-
-  /**
-   * 估算加工工时（分钟）
-   *
-   * <p>按件口径下 {@code runTime} 是单件工时，乘以数量；按批口径下它是每批工时，乘以批次数。
+   * <p>手工模式下 {@code cycleTime} 是固定工时，乘以数量；自动模式应取历史工单平均，
+   * 但历史取数需要仓储支持，本版本按固定工时兜底。
    *
    * @param quantity 计划数量
-   * @return 估算加工工时（分钟）
-   * @throws DomainException 数量为负、或按批取时却没有标准批量时抛出
+   * @return 估算单次循环工时（分钟）
+   * @throws DomainException 数量为负时抛出
    */
   public BigDecimal estimatedRunMinutes(BigDecimal quantity) {
     checkQuantity(quantity);
-    if (isBatchFormula()) {
-      return this.runTime.multiply(batchCount(quantity));
-    }
-    return this.runTime.multiply(quantity);
-  }
-
-  /**
-   * 估算本道工序的加工成本（元，保留 4 位）
-   *
-   * <p>口径与 Dynamics 365 一致：三块相加——准备与加工按时间（钱 = 时间 × 费率，费率按小时维护而工时是
-   * 分钟，所以要除以 60），计件按产出（钱 = 数量 × 元/件）。不需要某一块的工序把对应费率填 0 即可，
-   * 所以不必再引入一个「计价方式」枚举。排队工时不计费——机器没在干活的那段时间摊不进加工成本，它只影响交期。
-   * 这里刻意保留 4 位小数，是因为单道工序的金额常常不到 1 分钱，先舍入到 2 位会把整道的成本抹成 0；
-   * 由 {@code WorkOrder} 汇总后再收到 2 位。
-   *
-   * <p>外协工序仍按快照上的内部费率估算，真正的加工费属于采购价，不在本版本里。
-   *
-   * @param quantity 计划数量
-   * @return 估算成本（元）
-   * @throws DomainException 数量为负、或按批取时却没有标准批量时抛出
-   */
-  public BigDecimal estimatedCost(BigDecimal quantity) {
-    BigDecimal hours = BigDecimal.valueOf(60);
-    BigDecimal setupCost =
-        estimatedSetupMinutes(quantity)
-            .multiply(this.setupRate)
-            .divide(hours, 4, RoundingMode.HALF_UP);
-    BigDecimal runCost =
-        estimatedRunMinutes(quantity).multiply(this.runRate).divide(hours, 4, RoundingMode.HALF_UP);
-    BigDecimal quantityCost = quantity.multiply(this.quantityRate);
-    return setupCost.add(runCost).add(quantityCost).setScale(4, RoundingMode.HALF_UP);
+    return this.cycleTime.multiply(quantity);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -546,45 +377,23 @@ public class WorkOrderOperation extends BaseDeleteEntity {
   /**
    * 快照字段的校验与赋值（构造时调用一次）
    *
-   * @param sequence 工序顺序
    * @param operationId 工序Id
    * @param operationName 工序名称（快照）
-   * @param isOptional 是否可选工序
-   * @param isOutsourced 是否外协工序
    * @param workCenterId 工作中心Id
    * @param workCenterName 工作中心名称（快照）
-   * @param setupTime 标准准备工时（分钟）
-   * @param runTime 标准加工工时（分钟）
-   * @param queueTime 标准排队工时（分钟）
-   * @param rateId 费率卡Id（可空，快照）
-   * @param setupRate 准备费率（元/小时）
-   * @param runRate 加工费率（元/小时）
-   * @param quantityRate 计件费率（元/件）
-   * @param timeFormula 工时取时公式编码（快照）
-   * @param standardBatchSize 标准批量（可空）
-   * @param reworkOperationId 返工回到的工序Id（可空）
-   * @param remark 备注（可空）
+   * @param timeMode 工时计算方式编码（快照）
+   * @param cycleTime 单次循环工时（分钟）
+   * @param sequence 工序顺序
    * @throws DomainException 快照字段非法时抛出
    */
   private void apply(
-      int sequence,
       long operationId,
       String operationName,
-      boolean isOptional,
-      boolean isOutsourced,
       long workCenterId,
       String workCenterName,
-      BigDecimal setupTime,
-      BigDecimal runTime,
-      BigDecimal queueTime,
-      @Nullable Long rateId,
-      BigDecimal setupRate,
-      BigDecimal runRate,
-      BigDecimal quantityRate,
-      String timeFormula,
-      @Nullable BigDecimal standardBatchSize,
-      @Nullable Long reworkOperationId,
-      @Nullable String remark) {
+      String timeMode,
+      BigDecimal cycleTime,
+      int sequence) {
     if (sequence <= 0) {
       throw new DomainException("工序顺序必须大于0");
     }
@@ -602,51 +411,22 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     if (trimmedWorkCenterName == null) {
       throw new DomainException("工作中心名称不能为空");
     }
-    // 费率卡可空（为空即这道工序不计成本），一旦填写必须是有效Id
-    if (rateId != null && rateId <= 0) {
-      throw new DomainException("费率卡不能为空");
+    validateNonNegative("循环工时", cycleTime);
+    String trimmedMode = StringUtils.trimToNull(timeMode);
+    if (trimmedMode == null) {
+      throw new DomainException("工时计算方式不能为空");
     }
-    // 卡与价是一对：没挂卡却快照出费率，说明下达装配时把别处的价格串到了这一行
-    if (rateId == null
-        && (setupRate.signum() > 0 || runRate.signum() > 0 || quantityRate.signum() > 0)) {
-      throw new DomainException("工序" + trimmedName + "没有费率卡，不能快照出费率");
-    }
-    validateNonNegative("准备工时", setupTime);
-    validateNonNegative("加工工时", runTime);
-    validateNonNegative("排队工时", queueTime);
-    validateNonNegative("准备费率", setupRate);
-    validateNonNegative("加工费率", runRate);
-    validateNonNegative("计件费率", quantityRate);
-    String trimmedFormula = StringUtils.trimToNull(timeFormula);
-    if (trimmedFormula == null) {
-      throw new DomainException("工时取时公式不能为空");
-    }
-    if (EnumUtils.fromCode(TimeFormulaEnum.class, trimmedFormula) == null) {
-      throw new DomainException("工时取时公式" + trimmedFormula + "有误!");
-    }
-    // 取时公式与批量是一对：按批取时缺了批量，这道工序的工时与成本都算不出来
-    if (TimeFormulaEnum.BATCH.getCode().equals(trimmedFormula) && standardBatchSize == null) {
-      throw new DomainException("工序" + trimmedName + "按批计算工时，但快照里没有标准批量");
+    if (EnumUtils.fromCode(TimeModeEnum.class, trimmedMode) == null) {
+      throw new DomainException("工时计算方式" + trimmedMode + "有误!");
     }
 
-    this.sequence = sequence;
     this.operationId = operationId;
     this.operationName = trimmedName;
-    this.isOptional = isOptional;
-    this.isOutsourced = isOutsourced;
     this.workCenterId = workCenterId;
     this.workCenterName = trimmedWorkCenterName;
-    this.setupTime = setupTime;
-    this.runTime = runTime;
-    this.queueTime = queueTime;
-    this.rateId = rateId;
-    this.setupRate = setupRate;
-    this.runRate = runRate;
-    this.quantityRate = quantityRate;
-    this.timeFormula = trimmedFormula;
-    this.standardBatchSize = standardBatchSize;
-    this.reworkOperationId = reworkOperationId;
-    this.remark = remark;
+    this.timeMode = trimmedMode;
+    this.cycleTime = cycleTime;
+    this.sequence = sequence;
   }
 
   /**
@@ -674,31 +454,5 @@ public class WorkOrderOperation extends BaseDeleteEntity {
     if (quantity.signum() < 0) {
       throw new DomainException("计划数量不能为负数");
     }
-  }
-
-  /**
-   * 本道工序是否按批取时（取自路线快照）
-   *
-   * @return true 表示按批
-   */
-  private boolean isBatchFormula() {
-    return TimeFormulaEnum.BATCH.getCode().equals(this.timeFormula);
-  }
-
-  /**
-   * 批次数：按批取时时为 ⌈数量 ÷ 标准批量⌉，不足一批按一批算；按件取时恒为 1
-   *
-   * @param quantity 计划数量
-   * @return 批次数
-   * @throws DomainException 按批取时却没维护标准批量时抛出
-   */
-  private BigDecimal batchCount(BigDecimal quantity) {
-    if (!isBatchFormula()) {
-      return BigDecimal.ONE;
-    }
-    if (this.standardBatchSize == null || this.standardBatchSize.signum() <= 0) {
-      throw new DomainException("工序" + this.operationName + "按批计算工时，但未维护标准批量");
-    }
-    return quantity.divide(this.standardBatchSize, 0, RoundingMode.CEILING);
   }
 }

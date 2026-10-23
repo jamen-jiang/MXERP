@@ -1,8 +1,8 @@
 package com.mxerp.production.domain.bom;
 
+import com.mxerp.production.domain.routing.RoutingRepository;
 import com.mxerp.shared.domain.exception.DomainException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,46 +20,103 @@ public class BomDomainService {
   /** BOM 仓储 */
   private final BomRepository bomRepository;
 
+  /** 工艺路线仓储 */
+  private final RoutingRepository routingRepository;
+
   /**
    * 构造器注入
    *
    * @param bomFactory BOM 工厂
    * @param bomRepository BOM 仓储
+   * @param routingRepository 工艺路线仓储
    */
-  public BomDomainService(BomFactory bomFactory, BomRepository bomRepository) {
+  public BomDomainService(
+      BomFactory bomFactory,
+      BomRepository bomRepository,
+      RoutingRepository routingRepository) {
     this.bomFactory = bomFactory;
     this.bomRepository = bomRepository;
+    this.routingRepository = routingRepository;
   }
 
   /**
-   * 导入生成：BOM 存在则修改，不存在则创建
+   * 导入生成：父件SKU + 版本已存在则修改，不存在则创建
    *
-   * <p>导入只维护草稿版本：状态是发布/作废推进出来的，不接受 Excel 里填的状态，否则一份表就能把已发布
-   * 配方退回草稿、把冻结的版本改开。
-   *
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @return BOM 聚合
    */
   public Bom importGenerate(
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
+    requireRouting(routingId);
+
     // 按父件SKU + 版本查 BOM
-    Bom model = bomRepository.getByVariantIdAndVersion(variantId, version);
+    Bom model = bomRepository.getByMaterialIdAndVariantIdAndVersion(materialId, variantId, version);
 
     // 不存在则创建，存在则修改
     if (model == null) {
-      model = bomFactory.create(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
+      model =
+          bomFactory.create(
+              type,
+              code,
+              version,
+              materialId,
+              variantId,
+              routingId,
+              qty,
+              unitId,
+              startMode,
+              issueMode,
+              leadDays,
+              prepareDays,
+              batchSize,
+              disabled,
+              remark);
     } else {
-      modify(model, materialId, variantId, version, effectiveFrom, effectiveTo, remark);
+      modify(
+          model,
+          type,
+          code,
+          version,
+          materialId,
+          variantId,
+          routingId,
+          qty,
+          unitId,
+          startMode,
+          issueMode,
+          leadDays,
+          prepareDays,
+          batchSize,
+          disabled,
+          remark);
     }
 
     return model;
@@ -69,25 +126,59 @@ public class BomDomainService {
    * 修改 BOM 表头
    *
    * @param id BOM Id
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    * @return BOM 聚合
    * @throws DomainException BOM 不存在时抛出
    */
   public Bom modify(
       long id,
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
     Bom model = getExist(id);
-    modify(model, materialId, variantId, version, effectiveFrom, effectiveTo, remark);
+    modify(
+        model,
+        type,
+        code,
+        version,
+        materialId,
+        variantId,
+        routingId,
+        qty,
+        unitId,
+        startMode,
+        issueMode,
+        leadDays,
+        prepareDays,
+        batchSize,
+        disabled,
+        remark);
     return model;
   }
 
@@ -95,147 +186,126 @@ public class BomDomainService {
    * 修改 BOM 表头
    *
    * @param model BOM 聚合
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @throws DomainException 父件SKU + 版本与其它 BOM 冲突、或版本已不是草稿时抛出
+   * @throws DomainException 父件SKU + 版本与其它 BOM 冲突时抛出
    */
   public void modify(
       Bom model,
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
+    requireRouting(routingId);
     // 校验父件SKU + 版本唯一
-    if (bomRepository.isExistByVariantIdAndVersionExcludeId(variantId, version, model.getId())) {
+    if (bomRepository.isExistByMaterialIdAndVariantIdAndVersionExcludeId(
+        materialId, variantId, version, model.getId())) {
       throw new DomainException("该父件的 BOM 版本" + version + "已存在!");
     }
-    model.modify(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
-  }
-
-  // ==================== 版本与生效链 ====================
-
-  /**
-   * 发布版本，并按生效日期接力：生效更早的已发布版本自动收口到本版生效点
-   *
-   * <p>规则与 D365 的 BOM version 一致：同一父件任一时刻至多一个生效版本。所以发布前先跟其它已发布版本
-   * 比区间——本版落在更晚的未来版本之内要拒绝；本版生效时间比已有版本晚的，那一版到点到期。
-   *
-   * @param id BOM Id
-   * @return BOM 聚合
-   * @throws DomainException BOM 不存在、生效区间与同父件的已发布版本重叠时抛出
-   */
-  public Bom publish(long id) {
-    Bom model = getExist(id);
-    LocalDateTime effectiveFrom = model.getEffectiveFrom();
-    if (effectiveFrom == null) {
-      throw new DomainException("BOM 版本" + model.getVersion() + "没有生效时间，不能发布");
-    }
-
-    List<Bom> released =
-        bomRepository.getListByVariantId(model.getVariantId()).stream()
-            .filter(b -> !Objects.equals(b.getId(), model.getId()))
-            .filter(Bom::isReleased)
-            .toList();
-
-    // 1. 先全量校验：生效更早且覆盖本版起点的那一版由本版接棒，其余版本区间不许与本版交叠
-    List<Bom> predecessors = new ArrayList<>();
-    for (Bom other : released) {
-      LocalDateTime otherFrom = other.getEffectiveFrom();
-      if (otherFrom != null
-          && otherFrom.isBefore(effectiveFrom)
-          && other.isEffectiveAt(effectiveFrom)) {
-        predecessors.add(other);
-        continue;
-      }
-      if (other.overlaps(effectiveFrom, model.getEffectiveTo())) {
-        throw new DomainException(
-            "BOM 版本"
-                + model.getVersion()
-                + "的生效区间与版本"
-                + other.getVersion()
-                + "重叠!");
-      }
-    }
-
-    // 2. 前一版收口到本版生效点，区间既不留缝也不重叠
-    for (Bom predecessor : predecessors) {
-      predecessor.closeAt(effectiveFrom);
-    }
-
-    model.publish();
-    return model;
+    model.modify(
+        type,
+        code,
+        version,
+        materialId,
+        variantId,
+        routingId,
+        qty,
+        unitId,
+        startMode,
+        issueMode,
+        leadDays,
+        prepareDays,
+        batchSize,
+        disabled,
+        remark);
   }
 
   /**
-   * 作废版本
+   * 复制：把一份 BOM 的表头与用料行整体复制成新的一版
    *
-   * @param id BOM Id
-   * @return BOM 聚合
-   * @throws DomainException BOM 不存在、或不是已发布状态时抛出
-   */
-  public Bom obsolete(long id) {
-    Bom model = getExist(id);
-    model.obsolete();
-    return model;
-  }
-
-  /**
-   * 升版：把已发布版本的用料整单复制成一个新草稿
+   * <p>改配方不动老版本：老版本可能还挂着在制工单，复制出来换成新版本号再改，历史就还能按版本回溯。
    *
-   * <p>已发布版本冻结以后，改配方只能开新版本，复制是这一步唯一的省事办法：镜片一行子件常有十几列，
-   * 手工重录既慢又容易抄错损耗率。新草稿沿用父件与全部行，只换版本号和生效区间，改完再走发布。
-   *
-   * @param id 源 BOM Id（一般是被替换的那一版）
+   * @param id 源 BOM Id
    * @param version 新版本号
-   * @param effectiveFrom 新版本生效时间（可空，发布前必填）
-   * @param effectiveTo 新版本失效时间（可空）
    * @param remark 备注（可空）
-   * @return 新草稿 BOM（由调用方落库）
-   * @throws DomainException 源 BOM 不存在、源版本还是草稿、或新版本号已存在时抛出
+   * @return 新 BOM（由调用方落库）
+   * @throws DomainException 源 BOM 不存在、或新版本号已存在时抛出
    */
-  public Bom revise(
+  public Bom copy(
       long id,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
       @Nullable String remark) {
     Bom source = getExist(id);
-    if (source.isDraft()) {
-      throw new DomainException("BOM 版本" + source.getVersion() + "还是草稿，直接改就行，不必升版");
-    }
-
     Bom model =
         bomFactory.create(
+            source.getType(),
+            source.getCode(),
+            version,
             source.getMaterialId(),
             source.getVariantId(),
-            version,
-            effectiveFrom,
-            effectiveTo,
+            source.getRoutingId(),
+            source.getQty(),
+            source.getUnitId(),
+            source.getStartMode(),
+            source.getIssueMode(),
+            source.getLeadDays(),
+            source.getPrepareDays(),
+            source.getBatchSize(),
+            Boolean.TRUE.equals(source.getDisabled()),
             remark);
     for (BomLine line : source.getBomLines()) {
       model.addLine(
-          line.getSequence(),
           line.getMaterialId(),
           line.getVariantId(),
-          line.getQuantity(),
+          line.getQty(),
           line.getLossRate(),
           line.getUnitId(),
-          line.getIssueMode(),
-          line.getIssueTrigger(),
-          line.getWarehouseId(),
-          line.getIsKeyPart(),
-          line.getRemark());
+          line.getSequence(),
+          line.getOperationId());
     }
     return model;
   }
 
   // ==================== 私有 ====================
+
+  /**
+   * 校验引用的工艺路线存在（可空：为空表示下达时由工单指定）
+   *
+   * @param routingId 工艺路线Id（可空）
+   * @throws DomainException 工艺路线不存在时抛出
+   */
+  private void requireRouting(@Nullable Long routingId) {
+    if (routingId == null) {
+      return;
+    }
+    if (routingRepository.get(routingId) == null) {
+      throw new DomainException("工艺路线" + routingId + "不存在!");
+    }
+  }
 
   /**
    * 取 BOM，不存在则抛异常
@@ -257,7 +327,6 @@ public class BomDomainService {
    *
    * @param bom BOM 聚合
    * @param lines 目标用料行列表（可空，null 视为清空）
-   * @throws DomainException BOM 已不是草稿时抛出
    */
   public void syncLines(Bom bom, @Nullable List<BomLineData> lines) {
     List<BomLineData> target = lines == null ? List.of() : lines;
@@ -287,31 +356,23 @@ public class BomDomainService {
         // 存在：修改
         bom.modifyLine(
             id,
-            data.sequence(),
             data.materialId(),
             data.variantId(),
-            data.quantity(),
+            data.qty(),
             data.lossRate(),
             data.unitId(),
-            data.issueMode(),
-            data.issueTrigger(),
-            data.warehouseId(),
-            data.isKeyPart(),
-            data.remark());
+            data.sequence(),
+            data.operationId());
       } else {
         // 不存在：添加
         bom.addLine(
-            data.sequence(),
             data.materialId(),
             data.variantId(),
-            data.quantity(),
+            data.qty(),
             data.lossRate(),
             data.unitId(),
-            data.issueMode(),
-            data.issueTrigger(),
-            data.warehouseId(),
-            data.isKeyPart(),
-            data.remark());
+            data.sequence(),
+            data.operationId());
       }
     }
   }

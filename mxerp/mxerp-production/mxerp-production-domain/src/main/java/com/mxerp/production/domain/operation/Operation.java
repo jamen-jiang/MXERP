@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,10 +19,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * 工序（工艺字典）
  *
- * <p>只描述「这道工序本身是什么」，不描述它在某个物料上做多久、用哪台设备、是否外协、是否可选—— 那些都是「在一条具体路线里怎么用这道工序」的决策，属于 {@code
- * RoutingOperation}。
+ * <p>只描述「这道工序本身是什么」，不描述它在某个物料上做多久——那是「在一条具体路线里怎么用这道工序」的
+ * 决策，属于 {@code RoutingOperation}。
  *
- * <p>字段刻意保持精简（参考 ERPNext 的 Operation）：工序表一旦膨胀，工艺员维护不动， 最后一定退化成没人看的垃圾字段。
+ * <p>{@code workCenterId} 是默认工作中心：建路线时预填，路线里可以改。同一道「抛光」在 A 物料走 1 号机、
+ * 在 B 物料走 2 号机，默认值省得每条路线都选一遍。
+ *
+ * <p>字段刻意保持精简：工序表一旦膨胀，工艺员维护不动，最后一定退化成没人看的垃圾字段。
  */
 @NullMarked
 @Getter
@@ -49,17 +53,15 @@ public class Operation extends UpdateAggregateRoot {
   @Column(name = "Name", nullable = false, length = 100)
   private String name;
 
-  /** 工作中心：建路线时预填，路线里可改 */
-  @Column(name = "WorkCenterId", nullable = false)
+  /** 默认工作中心Id（可空，建路线时预填，路线里可改） */
+  @Column(name = "WorkCenterId")
+  @Nullable
   private Long workCenterId;
 
-  /** 是否返修工序：返修工单会走到这里 */
-  @Column(name = "IsCorrective", nullable = false)
-  private Boolean isCorrective;
-
-  /** 是否需要质检：报工后生成检验任务 */
-  @Column(name = "QualityInspectionRequired", nullable = false)
-  private Boolean qualityInspectionRequired;
+  /** 默认批量（可空）：一次能同时处理多少件，按批取时的路线工序没填时用它 */
+  @Column(name = "BatchSize", precision = 18, scale = 2)
+  @Nullable
+  private BigDecimal batchSize;
 
   /** 工序说明（可空） */
   @Nationalized
@@ -76,21 +78,19 @@ public class Operation extends UpdateAggregateRoot {
    *
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
    */
   Operation(
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
-    apply(code, name, workCenterId, isCorrective, qualityInspectionRequired, description, disabled);
+    apply(code, name, workCenterId, batchSize, description, disabled);
   }
 
   /**
@@ -98,21 +98,19 @@ public class Operation extends UpdateAggregateRoot {
    *
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
    */
   void modify(
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
-    apply(code, name, workCenterId, isCorrective, qualityInspectionRequired, description, disabled);
+    apply(code, name, workCenterId, batchSize, description, disabled);
   }
 
   /**
@@ -142,19 +140,17 @@ public class Operation extends UpdateAggregateRoot {
    *
    * @param code 工序代码
    * @param name 工序名称
-   * @param workCenterId 工作中心
-   * @param isCorrective 是否返修工序
-   * @param qualityInspectionRequired 是否需要质检
+   * @param workCenterId 默认工作中心Id（可空）
+   * @param batchSize 默认批量（可空）
    * @param description 工序说明（可空）
    * @param disabled 是否禁用
-   * @throws DomainException 代码或名称为空、工作中心为空时抛出
+   * @throws DomainException 代码或名称为空、工作中心Id非法、批量非正时抛出
    */
   private void apply(
       String code,
       String name,
-      long workCenterId,
-      boolean isCorrective,
-      boolean qualityInspectionRequired,
+      @Nullable Long workCenterId,
+      @Nullable BigDecimal batchSize,
       @Nullable String description,
       boolean disabled) {
     String trimmedCode = StringUtils.trimToNull(code);
@@ -165,15 +161,17 @@ public class Operation extends UpdateAggregateRoot {
     if (trimmedName == null) {
       throw new DomainException("工序名称不能为空");
     }
-    if (workCenterId <= 0) {
-      throw new DomainException("工序必须指定工作中心");
+    if (workCenterId != null && workCenterId <= 0) {
+      throw new DomainException("默认工作中心不能为空");
+    }
+    if (batchSize != null && batchSize.signum() <= 0) {
+      throw new DomainException("默认批量必须大于0");
     }
 
     this.code = trimmedCode;
     this.name = trimmedName;
     this.workCenterId = workCenterId;
-    this.isCorrective = isCorrective;
-    this.qualityInspectionRequired = qualityInspectionRequired;
+    this.batchSize = batchSize;
     this.description = description;
     this.disabled = disabled;
   }

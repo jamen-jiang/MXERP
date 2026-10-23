@@ -59,10 +59,6 @@ public class ProductionReportDomainService {
    *
    * <p>先让工单侧校验通过再建单——反过来的话，工单侧一抛异常就会留下一张「报了工但没汇总」的报工单。
    *
-   * <p>标了「报工倒冲」的用料不在这里触发：它要生成一张领料单，那张单得由应用层保存，与库存动账同理。
-   * 应用层在这一步之后调 {@code BackflushIssueDomainService.generate}，触发传报工倒冲、产出量传良品加报废即可；
-   * 发料仓取用料行上快照的那个（来自 BOM 行的发料仓）。
-   *
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
    * @param goodQuantity 本次良品数量
@@ -205,10 +201,6 @@ public class ProductionReportDomainService {
     }
     BigDecimal output = goodQuantity.add(scrapQuantity);
     BigDecimal minutes = operation.estimatedRunMinutes(output);
-    BigDecimal reported = operation.getCompletedQuantity().add(operation.getScrapQuantity());
-    if (reported.signum() == 0) {
-      minutes = minutes.add(operation.estimatedSetupMinutes(output));
-    }
     return minutes.setScale(MINUTE_SCALE, RoundingMode.HALF_UP);
   }
 

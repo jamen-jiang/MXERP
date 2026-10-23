@@ -32,20 +32,17 @@ import org.jspecify.annotations.Nullable;
 /**
  * 生产退料单
  *
- * <p>与生产领料单分开成两张：领料是「料往工单走」，退料是「料往仓库回」，方向相反、各自一套单号，纸面上不会混。
- * 金蝶云星空也是这么拆的（生产领料单 / 生产退料单）；用友与金蝶 K3 用红字出库单、SAP 用 262 移动类型，
- * 那是把退料当负向领料记，查询时还得靠正负号区分，拆开更省事。
+ * <p>与生产领料单分开成两张：领料是「料往工单走」，退料是「料往仓库回」，方向相反、各自一套单号，纸面上不会混。 金蝶云星空也是这么拆的（生产领料单 / 生产退料单）；用友与金蝶 K3
+ * 用红字出库单、SAP 用 262 移动类型， 那是把退料当负向领料记，查询时还得靠正负号区分，拆开更省事。
  *
  * <p>退料不是红冲：料是领对了的，只是没用完或不合格，退回仓库要留下这一来一回。红冲说的是「这张单开错了」，
  * 冲的是整张单的额度；退料不碰原生产领料单，也不占它的红冲额度，只减工单用料的已退数量、加仓库的库存。
  *
  * <p>生命周期与生产领料单同一套，只有两态：{@code DRAFT → POSTED}。退料那一下同时是审核：核定数量计入工单用料的
  * 已退数量、货回到仓库，三件事在同一个动作里完成。草稿不动库存也不动工单用料，直接删掉即可，所以没有作废状态。
- * 已退料的不在这张单上翻状态——货真回过仓库，冲它是在库存那边照原库存记录开一张红字单，本单停在已退料当历史
- * 记录。
+ * 已退料的不在这张单上翻状态——货真回过仓库，冲它是在库存那边照原库存记录开一张红字单，本单停在已退料当历史 记录。
  *
- * <p>库存那一半（回仓入库）不在这里做：本模块不依赖库存模块，应用层在退料这一步调 {@code StockDomainService}
- * 按行上的仓库与库位把货加回去。
+ * <p>库存那一半（回仓入库）不在这里做：本模块不依赖库存模块，应用层在退料这一步调 {@code StockDomainService} 按行上的仓库与库位把货加回去。
  */
 @NullMarked
 @Getter
@@ -69,11 +66,6 @@ public class ProductionReturn extends OrderAggregateRoot {
   @Column(name = "WorkOrderNumber", nullable = false, length = 30)
   private String workOrderNumber;
 
-  /** 状态：草稿、已退料 */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
-
   /** 经办人Id（可空，退料人） */
   @Column(name = "OperatorId")
   @Nullable
@@ -83,6 +75,11 @@ public class ProductionReturn extends OrderAggregateRoot {
   @Column(name = "ReturnTime")
   @Nullable
   private LocalDateTime returnTime;
+
+  /** 状态：草稿、已退料 */
+  @Nationalized
+  @Column(name = "Status", nullable = false, length = 50)
+  private String status;
 
   /** 备注（可空） */
   @Nationalized
@@ -212,8 +209,7 @@ public class ProductionReturn extends OrderAggregateRoot {
   /**
    * 核定：把仓管点收下来的数量逐行记上，状态仍是草稿
    *
-   * <p>没在审批清单里点到的行留待 {@link #confirm()} 按申请数照批。一条用料行只能给一个核定数，
-   * 重复提交说明调用方拼错了清单。
+   * <p>没在审批清单里点到的行留待 {@link #confirm()} 按申请数照批。一条用料行只能给一个核定数， 重复提交说明调用方拼错了清单。
    *
    * @param approvals 逐行核定清单
    * @throws DomainException 非草稿状态、用料行不在单内、或核定数量非法时抛出

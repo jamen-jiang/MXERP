@@ -3,11 +3,9 @@ package com.mxerp.production.domain.workorder;
 import com.mxerp.production.domain.bom.Bom;
 import com.mxerp.production.domain.bom.BomLine;
 import com.mxerp.production.domain.bom.BomRepository;
-import com.mxerp.production.domain.bom.IssueTriggerEnum;
+import com.mxerp.production.domain.bom.BomTypeEnum;
 import com.mxerp.production.domain.operation.Operation;
 import com.mxerp.production.domain.operation.OperationRepository;
-import com.mxerp.production.domain.operationrate.OperationRate;
-import com.mxerp.production.domain.operationrate.OperationRateRepository;
 import com.mxerp.production.domain.routing.Routing;
 import com.mxerp.production.domain.routing.RoutingOperation;
 import com.mxerp.production.domain.routing.RoutingRepository;
@@ -19,7 +17,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -54,9 +54,6 @@ public class WorkOrderDomainService {
   /** 工作中心仓储 */
   private final WorkCenterRepository workCenterRepository;
 
-  /** 工序费率卡仓储 */
-  private final OperationRateRepository operationRateRepository;
-
   /**
    * 构造器注入
    *
@@ -66,7 +63,6 @@ public class WorkOrderDomainService {
    * @param routingRepository 工艺路线仓储
    * @param operationRepository 工序仓储
    * @param workCenterRepository 工作中心仓储
-   * @param operationRateRepository 工序费率卡仓储
    */
   public WorkOrderDomainService(
       WorkOrderFactory workOrderFactory,
@@ -74,15 +70,13 @@ public class WorkOrderDomainService {
       BomRepository bomRepository,
       RoutingRepository routingRepository,
       OperationRepository operationRepository,
-      WorkCenterRepository workCenterRepository,
-      OperationRateRepository operationRateRepository) {
+      WorkCenterRepository workCenterRepository) {
     this.workOrderFactory = workOrderFactory;
     this.workOrderRepository = workOrderRepository;
     this.bomRepository = bomRepository;
     this.routingRepository = routingRepository;
     this.operationRepository = operationRepository;
     this.workCenterRepository = workCenterRepository;
-    this.operationRateRepository = operationRateRepository;
   }
 
   /**
@@ -191,74 +185,57 @@ public class WorkOrderDomainService {
    *
    * @param id 工单Id
    * @param routingId 本次下达使用的工艺路线（可空，为空时取工单上指定的，再为空取物料的主路线）
-   * @param releaseTime 下达时点：这一时刻落在生效区间的那一版 BOM、路线与费率卡才被快照
    * @return 工单聚合
    * @throws DomainException 工单不存在、物料没有生效的主路线、路线在该时点不生效、引用的工序、工作中心或
    *     费率卡不可用时抛出
    */
-  public WorkOrder release(long id, @Nullable Long routingId, LocalDateTime releaseTime) {
+  public WorkOrder release(long id, @Nullable Long routingId) {
     WorkOrder model = getExist(id);
 
-    // 1. 定路线：本次传入优先，其次用工单上指定的，最后取物料在该时点生效的主路线
-    Long resolvedRoutingId = routingId == null ? model.getRoutingId() : routingId;
-    Routing routing;
-    if (resolvedRoutingId == null) {
-      routing =
-          routingRepository.getEffectivePrimaryByMaterialIdAt(model.getMaterialId(), releaseTime);
-      if (routing == null) {
-        throw new DomainException(
-            "物料" + model.getMaterialId() + "在该时点没有生效的主工艺路线，不能下达");
-      }
-    } else {
-      routing = routingRepository.get(resolvedRoutingId);
-      if (routing == null) {
-        throw new DomainException("工艺路线" + resolvedRoutingId + "不存在!");
-      }
-    }
-    if (!routing.isEffectiveAt(releaseTime)) {
-      throw new DomainException(
-          "工艺路线" + routing.getCode() + "版本" + routing.getVersion() + "在该时点不生效，不能下达工单");
-    }
-
-    // 2. 定 BOM：工单指定优先，其次取该时点生效的已发布版本
+    // 1. 定 BOM：工单指定优先，其次取该父件未禁用的 BOM
     Long resolvedBomId = model.getBomId();
     Bom bom =
         resolvedBomId == null
-            ? bomRepository.getEffectiveByVariantIdAt(model.getVariantId(), releaseTime)
+            ? bomRepository.getEnabledByVariantId(model.getMaterialId(), model.getVariantId())
             : bomRepository.get(resolvedBomId);
     if (resolvedBomId != null && bom == null) {
       throw new DomainException("BOM" + resolvedBomId + "不存在!");
     }
-    if (bom != null && !bom.isEffectiveAt(releaseTime)) {
+    if (bom != null && Boolean.TRUE.equals(bom.getDisabled())) {
+      throw new DomainException("BOM" + bom.getId() + "已禁用，不能用于下达工单");
+    }
+
+    // 2. 定路线：本次传入优先，其次用工单上指定的，再次用 BOM 上指定的
+    Long resolvedRoutingId = routingId == null ? model.getRoutingId() : routingId;
+    if (resolvedRoutingId == null && bom != null) {
+      resolvedRoutingId = bom.getRoutingId();
+    }
+    if (resolvedRoutingId == null) {
+      throw new DomainException("工单" + model.getNumber() + "没有可用的工艺路线，不能下达");
+    }
+    Routing routing = routingRepository.get(resolvedRoutingId);
+    if (routing == null) {
+      throw new DomainException("工艺路线" + resolvedRoutingId + "不存在!");
+    }
+    if (Boolean.TRUE.equals(routing.getDisabled())) {
       throw new DomainException(
-          "BOM 版本" + bom.getVersion() + "在该时点不生效，不能用于下达工单");
+          "工艺路线" + routing.getCode() + "版本" + routing.getVersion() + "已禁用，不能用于下达工单");
     }
 
     // 3. 先全量校验外部引用，确认能装配再动手
-    List<OperationSnapshot> snapshots = resolveOperations(routing, releaseTime);
-    List<MaterialRequirement> requirements = resolveMaterials(model, bom);
+    List<OperationSnapshot> snapshots = resolveOperations(routing);
+    List<MaterialRequirement> requirements = resolveMaterials(model.getQuantity(), bom);
 
     // 4. 一次性装配并固化
     for (OperationSnapshot snapshot : snapshots) {
       model.addOperation(
-          snapshot.sequence(),
           snapshot.operationId(),
           snapshot.operationName(),
-          snapshot.isOptional(),
-          snapshot.isOutsourced(),
           snapshot.workCenterId(),
           snapshot.workCenterName(),
-          snapshot.setupTime(),
-          snapshot.runTime(),
-          snapshot.queueTime(),
-          snapshot.rateId(),
-          snapshot.setupRate(),
-          snapshot.runRate(),
-          snapshot.quantityRate(),
-          snapshot.timeFormula(),
-          snapshot.standardBatchSize(),
-          snapshot.reworkOperationId(),
-          snapshot.remark());
+          snapshot.timeMode(),
+          snapshot.cycleTime(),
+          snapshot.sequence());
     }
     for (MaterialRequirement requirement : requirements) {
       model.addMaterial(
@@ -266,13 +243,7 @@ public class WorkOrderDomainService {
           requirement.materialId(),
           requirement.variantId(),
           requirement.requiredQuantity(),
-          requirement.unitQuantity(),
-          requirement.unitId(),
-          requirement.issueMode(),
-          requirement.issueTrigger(),
-          requirement.isKeyPart(),
-          requirement.warehouseId(),
-          requirement.remark());
+          requirement.unitId());
     }
     model.release(
         bom == null ? null : bom.getId(),
@@ -315,15 +286,14 @@ public class WorkOrderDomainService {
   /**
    * 解析工艺路线，得到可直接快照成工单工序的行
    *
-   * <p>工序名、工作中心名、工时与费率、取时公式、可选与外协标识全部冗余存一份：路线或工序主数据后续改名改配置，
+   * <p>工序名、工作中心名、工时与计算方式全部冗余存一份：路线或工序主数据后续改名改配置，
    * 在制工单不受影响。这里先跑完整条路线再返回，任何一行引用失效都会在任何工序进工单之前抛出来。
    *
    * @param routing 工艺路线
-   * @param moment 取价时点
    * @return 有序、可装配的工序快照列表
    * @throws DomainException 引用的工序、工作中心或费率卡不可用、或工序顺序重复时抛出
    */
-  private List<OperationSnapshot> resolveOperations(Routing routing, LocalDateTime moment) {
+  private List<OperationSnapshot> resolveOperations(Routing routing) {
     List<RoutingOperation> items =
         routing.getRoutingOperations().stream()
             .filter(o -> !o.getIsDeleted())
@@ -344,145 +314,132 @@ public class WorkOrderDomainService {
       if (workCenter == null) {
         throw new DomainException("工作中心" + item.getWorkCenterId() + "不存在!");
       }
-      Price price = resolvePrice(routing, item, moment);
       result.add(
           new OperationSnapshot(
-              item.getSequence(),
               operation.getId(),
               operation.getName(),
-              Boolean.TRUE.equals(item.getIsOptional()),
-              Boolean.TRUE.equals(item.getIsOutsourced()),
               workCenter.getId(),
               workCenter.getName(),
-              item.getSetupTime(),
-              item.getRunTime(),
-              item.getQueueTime(),
-              price.rateId(),
-              price.setupRate(),
-              price.runRate(),
-              price.quantityRate(),
-              item.getTimeFormula(),
-              item.getStandardBatchSize(),
-              item.getReworkOperationId(),
-              item.getRemark()));
+              item.getTimeMode(),
+              item.getCycleTime(),
+              item.getSequence()));
     }
     return List.copyOf(result);
-  }
-
-  /**
-   * 取路线工序行在下达时点的费率
-   *
-   * <p>路线行引用的是费率卡，价格要按取价时点落在生效区间的那一张拿——这样调价只用激活新卡，路线一个字节都不改。
-   * 没挂费率卡的工序返回全零价（这道工序不计成本）；挂了卡却取不到生效价格就直接拒绝下达，不能悄悄按零成本开工。
-   *
-   * @param routing 工艺路线（只用于拼装错误提示）
-   * @param item 路线工序行
-   * @param moment 取价时点
-   * @return 可装配的价格快照
-   * @throws DomainException 费率卡不存在、或该时点没有生效价格时抛出
-   */
-  private Price resolvePrice(Routing routing, RoutingOperation item, LocalDateTime moment) {
-    Long rateId = item.getRateId();
-    if (rateId == null) {
-      return new Price(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
-    }
-    OperationRate anchor = operationRateRepository.get(rateId);
-    if (anchor == null) {
-      throw new DomainException("工艺路线" + routing.getCode() + "引用的费率卡" + rateId + "不存在!");
-    }
-    OperationRate effective =
-        operationRateRepository.getEffectiveByCodeAt(anchor.getCode(), moment);
-    if (effective == null) {
-      throw new DomainException("费率卡" + anchor.getCode() + "在该时点没有生效价格，不能下达工单");
-    }
-    return new Price(
-        effective.getId(),
-        effective.getSetupRate(),
-        effective.getRunRate(),
-        effective.getQuantityRate());
   }
 
   /**
    * 展开 BOM，得到可直接装配成工单用料的行
    *
-   * <p>当前只做单层展开：每一行子件都按「能从仓库领」处理，不判断它是不是自制件。真领不到的时候由库存那边拦——
-   * 出库时「该键没有库存行」就是答案。这里不做提前判定，是因为「自制」并不等于「不能从仓里领」：备库的半成品
-   * 本来就该能领；反过来外购件仓里没货照样领不到，类型标签也提醒不了什么。
+   * <p>遇到 {@code type = Phantom}（套件）的子件要穿透：套件本身不单独下工单，它只是一组子件的打包，
+   * 所以把它的 BOM 行按折算后的数量接到本单用料里，套件本身不占一行。普通自制件不穿透——它有自己的一张工单，
+   * 料发给它，不该在这张单上重复要。是否穿透只看子件自己的 BOM 是不是套件，不看它是不是自制件：真领不到的时候
+   * 由库存那边拦，出库时「该键没有库存行」就是答案。
+   *
+   * <p>展开按层递归，同一子件可能在多条套件路径下出现（毛坯同时用在两个套件里），最后按 SKU 合并数量，
+   * 否则领料时会看到两条同 SKU 的用料、分不清该领哪条。合并要求单位一致——BOM 行各自带单位，不做换算时
+   * 两个单位相加没有意义。
    *
    * <p>物料没有 BOM 时返回空列表——纯加工类工单不消耗物料，允许下达。
    *
-   * <p>倒冲设置、净单位用量与发料仓都在这里一次算好、快照到用料行：之后报工或入库开倒冲单只做工单上的乘法，
-   * 不再回头读 BOM，BOM 之后改版才不会把在制工单的领料量和发料仓改掉。
+   * <p>需求量在这里一次算好、快照到用料行：之后领料或退料只做工单上的加减，不再回头读 BOM，BOM 之后改版才不会
+   * 把在制工单的领料量改掉。
    *
-   * @param model 工单聚合
+   * @param quantity 工单计划数量
    * @param bom 展开所用的 BOM（可空，为空表示物料没有 BOM）
-   * @return 可装配的用料需求列表
+   * @return 可装配的用料需求列表（按 SKU 去重）
+   * @throws DomainException BOM 存在循环引用、或同一子件展开后单位不一致时抛出
    */
-  private List<MaterialRequirement> resolveMaterials(WorkOrder model, @Nullable Bom bom) {
+  List<MaterialRequirement> resolveMaterials(BigDecimal quantity, @Nullable Bom bom) {
     if (bom == null) {
       return List.of();
     }
-    List<BomLine> lines = bom.getBomLines().stream().filter(i -> !i.getIsDeleted()).toList();
-    List<MaterialRequirement> result = new ArrayList<>();
-    for (BomLine line : lines) {
-      boolean backflush = !IssueTriggerEnum.MANUAL.getCode().equals(line.getIssueTrigger());
-      result.add(
+    Map<Long, MaterialRequirement> merged = new LinkedHashMap<>();
+    Set<Long> path = new HashSet<>();
+    path.add(bom.getVariantId());
+    expand(bom, quantity, path, merged);
+    return List.copyOf(merged.values());
+  }
+
+  /**
+   * 递归展开一层 BOM，把用料写进累加表
+   *
+   * @param bom 当前这一层的 BOM
+   * @param parentQuantity 这一层 BOM 的产出物料需要多少个
+   * @param path 当前展开路径上的 SKU（用于发现循环引用）
+   * @param result 按 SKU 累加的结果表
+   * @throws DomainException BOM 存在循环引用、或同一子件单位不一致时抛出
+   */
+  private void expand(
+      Bom bom, BigDecimal parentQuantity, Set<Long> path, Map<Long, MaterialRequirement> result) {
+    for (BomLine line : bom.getBomLines()) {
+      if (line.getIsDeleted()) {
+        continue;
+      }
+      BigDecimal required = line.requiredQuantity(parentQuantity, bom.getQty());
+
+      // 子件若是套件，穿透到它的下一层；套件自己不成行
+      Bom childBom =
+          bomRepository.getEnabledByVariantId(line.getMaterialId(), line.getVariantId());
+      if (childBom != null && BomTypeEnum.PHANTOM.getCode().equals(childBom.getType())) {
+        if (!path.add(line.getVariantId())) {
+          throw new DomainException(
+              "BOM 存在循环引用：套件" + line.getVariantId() + "又回到了自身所在的层级");
+        }
+        expand(childBom, required, path, result);
+        path.remove(line.getVariantId());
+        continue;
+      }
+
+      merge(
+          result,
           new MaterialRequirement(
-              line.getId(),
-              line.getMaterialId(),
-              line.getVariantId(),
-              line.requiredQuantity(model.getQuantity()),
-              // 净单位用量只在倒冲行上快照：这一列的约定就是「有值才能按产出乘回去领料」
-              backflush ? line.netUnitQuantity() : null,
-              line.getUnitId(),
-              line.getIssueMode(),
-              line.getIssueTrigger(),
-              Boolean.TRUE.equals(line.getIsKeyPart()),
-              line.getWarehouseId(),
-              line.getRemark()));
+              line.getId(), line.getMaterialId(), line.getVariantId(), required, line.getUnitId()));
     }
-    return List.copyOf(result);
+  }
+
+  /**
+   * 把一条用料需求累加进结果表
+   *
+   * <p>同一 SKU 再次出现就把数量加上去，来源行 Id 保留第一次那条；单位不同则拒绝合并。
+   *
+   * @param result 按 SKU 累加的结果表
+   * @param item 待累加的用料需求
+   * @throws DomainException 同一子件两次出现但单位不同时抛出
+   */
+  private void merge(Map<Long, MaterialRequirement> result, MaterialRequirement item) {
+    MaterialRequirement existing = result.get(item.variantId());
+    if (existing == null) {
+      result.put(item.variantId(), item);
+      return;
+    }
+    if (!existing.unitId().equals(item.unitId())) {
+      throw new DomainException("子件" + item.variantId() + "展开后出现两个单位，无法合并");
+    }
+    result.put(
+        item.variantId(),
+        new MaterialRequirement(
+            existing.bomLineId() == null ? item.bomLineId() : existing.bomLineId(),
+            existing.materialId(),
+            existing.variantId(),
+            existing.requiredQuantity().add(item.requiredQuantity()),
+            existing.unitId()));
   }
 
   /** 待装配的工序快照，字段与 {@link WorkOrder#addOperation} 一一对应 */
   private record OperationSnapshot(
-      Integer sequence,
       Long operationId,
       String operationName,
-      boolean isOptional,
-      boolean isOutsourced,
       Long workCenterId,
       String workCenterName,
-      BigDecimal setupTime,
-      BigDecimal runTime,
-      BigDecimal queueTime,
-      @Nullable Long rateId,
-      BigDecimal setupRate,
-      BigDecimal runRate,
-      BigDecimal quantityRate,
-      String timeFormula,
-      @Nullable BigDecimal standardBatchSize,
-      @Nullable Long reworkOperationId,
-      @Nullable String remark) {}
-
-  /** 取价结果：实际用到那张费率卡的Id（可空）与三块费率 */
-  private record Price(
-      @Nullable Long rateId,
-      BigDecimal setupRate,
-      BigDecimal runRate,
-      BigDecimal quantityRate) {}
+      String timeMode,
+      BigDecimal cycleTime,
+      Integer sequence) {}
 
   /** 待装配的用料需求，字段与 {@link WorkOrder#addMaterial} 一一对应 */
-  private record MaterialRequirement(
+  record MaterialRequirement(
       @Nullable Long bomLineId,
       Long materialId,
       Long variantId,
       BigDecimal requiredQuantity,
-      @Nullable BigDecimal unitQuantity,
-      Long unitId,
-      String issueMode,
-      String issueTrigger,
-      boolean isKeyPart,
-      @Nullable Long warehouseId,
-      @Nullable String remark) {}
+      Long unitId) {}
 }

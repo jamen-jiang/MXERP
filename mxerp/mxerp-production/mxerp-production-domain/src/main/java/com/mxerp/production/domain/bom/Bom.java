@@ -2,6 +2,7 @@ package com.mxerp.production.domain.bom;
 
 import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.exception.DomainException;
+import com.mxerp.shared.domain.util.EnumUtils;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,19 +29,20 @@ import org.jspecify.annotations.Nullable;
 /**
  * 物料清单（BOM）
  *
- * <p>父件与子件都是 SKU，所以 BOM 本质是 SKU 对 SKU 的自关联：成品、毛坯、靶材、包装袋都挂在同一张
- * Variant 表上，谁有 BOM 谁就能被展开。多层 BOM 不需要额外字段——毛坯 SKU 自己再有一份 BOM 就是三层。
+ * <p>父件与子件都是 SKU，所以 BOM 本质是 SKU 对 SKU 的自关联：成品、毛坯、靶材、包装袋都挂在同一张 Variant 表上，谁有 BOM 谁就能被展开。多层 BOM
+ * 不需要额外字段——毛坯 SKU 自己再有一份 BOM 就是三层。
  *
- * <p>唯一键是 {@code variantId + version}，不用 {@code code}：BOM 是物料的附属数据，没有独立编码。
+ * <p>同一父件可以挂多条 BOM，靠版本号区分：版本号是配方自己的标识，升版就换一个号，历史工单回溯时按
+ * 「父件SKU + 版本号」定位到当时那一份。{@code disabled} 只表示停用（不再进工单选择），与版本无关；
+ * 停用的版本照样留着，因为按它下达过的工单还要能连回来。工单下达时取未停用的那一条，并把用到的表头与
+ * 用料行快照进工单，之后 BOM 怎么改都不影响在制工单。
  *
- * <p>{@code materialId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。物料类型
- * 不在这里存：它记在 {@code Variant} 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
+ * <p>产出批量：{@code qty} + {@code unitId} 说明这份配方是按「产出这么多父件」定义的，用料行里的
+ * 单位用量都是这一批量下的量（照 Odoo 的 {@code product_qty}/{@code product_uom_id}、ERPNext 的
+ * {@code quantity}/{@code uom}）。工单下达时按「工单数量 ÷ 产出数量」折算，不再假定 1:1。
  *
- * <p><b>版本与生效链。</b>同一父件可以并存多个版本，用生效日期接力：状态只有三条路——草稿可随便改，
- * 发布后冻结（要改就 {@code revise} 升版，把行复制到新草稿），作废只退出可选池。已发布版本必须带生效时间，
- * 且同一父件的生效区间不许重叠；发布新版时，生效更早的那一版自动收口到新版的生效点，所以任一时刻至多
- * 只有一个生效版本，工单下达按「时点」取版本而不是按「当前状态」，补单和回溯才不会拿错配方。口径与
- * Dynamics 365 的 BOM version（Active/Previous + Effective from/to）一致。
+ * <p>{@code materialId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。物料类型 不在这里存：它记在 {@code Variant}
+ * 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
  */
 @NullMarked
 @Getter
@@ -53,38 +54,76 @@ import org.jspecify.annotations.Nullable;
     indexes = {
       @Index(name = "IX_Bom_MaterialId", columnList = "MaterialId"),
       @Index(name = "IX_Bom_VariantId", columnList = "VariantId"),
-      @Index(name = "IX_Bom_Status", columnList = "Status")
+      @Index(name = "IX_Bom_Code", columnList = "Code"),
+      @Index(name = "IX_Bom_Type", columnList = "Type")
       // 注意：VariantId + Version 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Bom extends UpdateAggregateRoot {
+
+  /** BOM 类型编码，取值见 {@link BomTypeEnum} */
+  @Nationalized
+  @Column(name = "Type", nullable = false, length = 50)
+  private String type;
+
+  /** 参考号（可空，照 Odoo 的 code；只给人看，不是唯一键） */
+  @Nationalized
+  @Column(name = "Code", length = 50)
+  @Nullable
+  private String code;
+
+  /** 版本号：与父件SKU共同构成唯一键，升版就是换一个号 */
+  @Nationalized
+  @Column(name = "Version", nullable = false, length = 50)
+  private String version;
 
   /** 父件SPU（按系列查 BOM 用） */
   @Column(name = "MaterialId", nullable = false)
   private Long materialId;
 
-  /** 父件SKU */
-  @Column(name = "VariantId", nullable = false)
+  /** 父件SKU（可空，照 Odoo 的 product_id）：为空表示整系列共用，填了表示这个变体专用 */
+  @Column(name = "VariantId")
+  @Nullable
   private Long variantId;
 
-  /** 版本号：与父件SKU 共同构成唯一键，升版就是换一个号 */
-  @Nationalized
-  @Column(name = "Version", nullable = false, length = 50)
-  private String version;
-
-  /** 状态：草稿、已发布、已作废（只能由 {@link #publish()} 与 {@link #obsolete()} 推进，不是入参） */
-  @Nationalized
-  @Column(name = "Status", nullable = false, length = 50)
-  private String status;
-
-  /** 生效时间（可空，草稿期允许未定；发布必填） */
-  @Column(name = "EffectiveFrom")
+  /** 工艺路线Id（可空，照 ERPNext 的 BOM.routing）：这张 BOM 下达时用哪条路线，空表示由工单指定 */
+  @Column(name = "RoutingId")
   @Nullable
-  private LocalDateTime effectiveFrom;
+  private Long routingId;
 
-  /** 失效时间（可空，空表示无限期；发布下一版时由前一版自动收口） */
-  @Column(name = "EffectiveTo")
+  /** 产出数量：用料行里的单位用量都按这一批量计（照 Odoo 的 product_qty、ERPNext 的 quantity） */
+  @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal qty;
+
+  /** 产出数量对应的单位Id（照 Odoo 的 product_uom_id） */
+  @Column(name = "UnitId", nullable = false)
+  private Long unitId;
+
+  /** 开工方式编码，取值见 {@link BomStartModeEnum} */
+  @Nationalized
+  @Column(name = "StartMode", nullable = false, length = 50)
+  private String startMode;
+
+  /** 领料方式编码，取值见 {@link BomIssueModeEnum} */
+  @Nationalized
+  @Column(name = "IssueMode", nullable = false, length = 50)
+  private String issueMode;
+
+  /** 制造提前期（天，照 Odoo 的 produce_delay 标签 Manufacturing Lead Time）：从下达算起，平均多少天能做出来 */
+  @Column(name = "LeadDays", nullable = false)
+  private Integer leadDays = 0;
+
+  /** 提前多少天备料（照 Odoo 的 days_to_prepare_mo）：按交期倒推，提前这么多天把工单建出来，留时间补组件 */
+  @Column(name = "PrepareDays", nullable = false)
+  private Integer prepareDays = 0;
+
+  /** 自动生成工单的批量（可空，空表示不按批量；照 Odoo 的 batch_size） */
+  @Column(name = "BatchSize", precision = 18, scale = 2)
   @Nullable
-  private LocalDateTime effectiveTo;
+  private BigDecimal batchSize;
+
+  /** 是否禁用：禁用后下达工单不再选它，已按它下达的工单不受影响 */
+  @Column(name = "Disabled", nullable = false)
+  private Boolean disabled = false;
 
   /** 备注（可空） */
   @Nationalized
@@ -111,77 +150,131 @@ public class Bom extends UpdateAggregateRoot {
   }
 
   /**
-   * 构造器：新建的 BOM 一律是草稿
+   * 构造器
    *
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
   Bom(
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
-    apply(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
-    this.status = BomStatusEnum.DRAFT.getCode();
+    apply(
+        type,
+        code,
+        version,
+        materialId,
+        variantId,
+        routingId,
+        qty,
+        unitId,
+        startMode,
+        issueMode,
+        leadDays,
+        prepareDays,
+        batchSize,
+        disabled,
+        remark);
   }
 
   /**
    * 修改 BOM 表头
    *
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @throws DomainException 已发布或已作废时抛出
    */
   void modify(
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
-    checkDraft();
-    apply(materialId, variantId, version, effectiveFrom, effectiveTo, remark);
+    apply(
+        type,
+        code,
+        version,
+        materialId,
+        variantId,
+        routingId,
+        qty,
+        unitId,
+        startMode,
+        issueMode,
+        leadDays,
+        prepareDays,
+        batchSize,
+        disabled,
+        remark);
   }
 
   /**
    * 添加用料行
    *
-   * @param sequence 行号
    * @param materialId 子件SPU
    * @param variantId 子件SKU
-   * @param quantity 单位用量
+   * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
-   * @param issueMode 发料方式编码
-   * @param issueTrigger 发料触发编码
-   * @param warehouseId 发料仓库Id（可空）
-   * @param isKeyPart 是否关键件
-   * @param remark 备注（可空）
-   * @throws DomainException 已发布或已作废、行号或子件重复时抛出
+   * @param sequence 行号
+   * @param operationId 消耗工序Id（可空）
+   * @throws DomainException 行号或子件重复时抛出
    */
   public void addLine(
-      int sequence,
       long materialId,
       long variantId,
-      BigDecimal quantity,
+      BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      String issueMode,
-      String issueTrigger,
-      @Nullable Long warehouseId,
-      boolean isKeyPart,
-      @Nullable String remark) {
-    checkDraft();
+      int sequence,
+      @Nullable Long operationId) {
     if (isExistSequence(sequence, null)) {
       throw new DomainException("BOM 行号" + sequence + "已存在!");
     }
@@ -189,51 +282,31 @@ public class Bom extends UpdateAggregateRoot {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
     bomLines.add(
-        new BomLine(
-            sequence,
-            materialId,
-            variantId,
-            quantity,
-            lossRate,
-            unitId,
-            issueMode,
-            issueTrigger,
-            warehouseId,
-            isKeyPart,
-            remark));
+        new BomLine(materialId, variantId, qty, lossRate, unitId, sequence, operationId));
   }
 
   /**
    * 修改用料行
    *
    * @param bomLineId BOM 行Id
-   * @param sequence 行号
    * @param materialId 子件SPU
    * @param variantId 子件SKU
-   * @param quantity 单位用量
+   * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
-   * @param issueMode 发料方式编码
-   * @param issueTrigger 发料触发编码
-   * @param warehouseId 发料仓库Id（可空）
-   * @param isKeyPart 是否关键件
-   * @param remark 备注（可空）
-   * @throws DomainException 已发布或已作废、行不存在、行号或子件重复时抛出
+   * @param sequence 行号
+   * @param operationId 消耗工序Id（可空）
+   * @throws DomainException 行不存在、行号或子件重复时抛出
    */
   public void modifyLine(
       long bomLineId,
-      int sequence,
       long materialId,
       long variantId,
-      BigDecimal quantity,
+      BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      String issueMode,
-      String issueTrigger,
-      @Nullable Long warehouseId,
-      boolean isKeyPart,
-      @Nullable String remark) {
-    checkDraft();
+      int sequence,
+      @Nullable Long operationId) {
     BomLine target = findLine(bomLineId);
     if (target == null) {
       throw new DomainException("BOM 行不存在!");
@@ -244,28 +317,15 @@ public class Bom extends UpdateAggregateRoot {
     if (isExistComponent(variantId, bomLineId)) {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
-    target.modify(
-        sequence,
-        materialId,
-        variantId,
-        quantity,
-        lossRate,
-        unitId,
-        issueMode,
-        issueTrigger,
-        warehouseId,
-        isKeyPart,
-        remark);
+    target.modify(materialId, variantId, qty, lossRate, unitId, sequence, operationId);
   }
 
   /**
    * 删除用料行（逻辑删除）
    *
    * @param bomLineId BOM 行Id
-   * @throws DomainException 已发布或已作废时抛出
    */
   public void deleteLine(long bomLineId) {
-    checkDraft();
     BomLine target = findLine(bomLineId);
     if (target == null) {
       return;
@@ -287,167 +347,96 @@ public class Bom extends UpdateAggregateRoot {
         .orElse(null);
   }
 
-  /**
-   * 发布：草稿 → 已发布
-   *
-   * <p>发布即冻结：这一版的用料从此不能再动，要改走 {@code BomDomainService.revise} 升版。
-   *
-   * @throws DomainException 不是草稿状态、没有用料行、或没有生效时间时抛出
-   */
-  public void publish() {
-    if (!isDraft()) {
-      throw new DomainException("只有草稿状态的 BOM 才能发布");
-    }
-    if (bomLines.stream().noneMatch(i -> !i.getIsDeleted())) {
-      throw new DomainException("BOM 没有用料行，不能发布");
-    }
-    if (this.effectiveFrom == null) {
-      throw new DomainException("BOM 版本" + this.version + "没有生效时间，不能发布");
-    }
-    this.status = BomStatusEnum.RELEASED.getCode();
-  }
-
-  /**
-   * 作废：已发布 → 已作废
-   *
-   * <p>作废只影响新工单，已按此 BOM 展开的工单用料不受影响。
-   *
-   * @throws DomainException 不是已发布状态时抛出
-   */
-  public void obsolete() {
-    if (!isReleased()) {
-      throw new DomainException("只有已发布状态的 BOM 才能作废");
-    }
-    this.status = BomStatusEnum.OBSOLETE.getCode();
-  }
-
-  /**
-   * 收口生效区间：发布下一版时把本版的失效时间挪到下一版生效点
-   *
-   * <p>只有已发布的版本参与接力，收口不改状态——它仍是历史记录，只是不再覆盖之后的时点。
-   *
-   * @param moment 新的失效时间（下一版的生效时间）
-   * @throws DomainException 不是已发布状态、或收口时间不晚于本版生效时间时抛出
-   */
-  public void closeAt(LocalDateTime moment) {
-    if (!isReleased()) {
-      throw new DomainException("只有已发布状态的 BOM 才能收口生效区间");
-    }
-    if (this.effectiveFrom != null && !moment.isAfter(this.effectiveFrom)) {
-      throw new DomainException("失效时间必须晚于生效时间");
-    }
-    this.effectiveTo = moment;
-  }
-
-  /**
-   * 是否草稿
-   *
-   * @return true：草稿，可以改行
-   */
-  public boolean isDraft() {
-    return BomStatusEnum.DRAFT.getCode().equals(this.status);
-  }
-
-  /**
-   * 是否已发布
-   *
-   * @return true：已发布（含已收口的历史版本）
-   */
-  public boolean isReleased() {
-    return BomStatusEnum.RELEASED.getCode().equals(this.status);
-  }
-
-  /**
-   * 判断指定时点本版本是否生效
-   *
-   * <p>生效区间左闭右开：{@code effectiveFrom <= moment < effectiveTo}，失效时间为空表示无限期。
-   * 未发布的版本对任何时点都不生效。
-   *
-   * @param moment 判定时点（由调用方传入，领域层不取当前时间）
-   * @return true：该时点可以用这一版展开工单
-   */
-  public boolean isEffectiveAt(LocalDateTime moment) {
-    if (!isReleased()) {
-      return false;
-    }
-    if (this.effectiveFrom == null || this.effectiveFrom.isAfter(moment)) {
-      return false;
-    }
-    return this.effectiveTo == null || moment.isBefore(this.effectiveTo);
-  }
-
-  /**
-   * 判断生效区间是否与给定区间重叠
-   *
-   * <p>两个左闭右开区间有交集即算重叠；开区间端（{@code null}）视为无穷。同一父件的已发布版本必须
-   * 互不重叠，否则「按时点取版本」会取出两条，领料和成本都对不上。
-   *
-   * @param from 待比较区间的生效时间（可空，空视为无起始）
-   * @param to 待比较区间的失效时间（可空，空视为无限期）
-   * @return true：区间重叠
-   */
-  public boolean overlaps(@Nullable LocalDateTime from, @Nullable LocalDateTime to) {
-    if (this.effectiveFrom != null && to != null && !this.effectiveFrom.isBefore(to)) {
-      return false;
-    }
-    return from == null || this.effectiveTo == null || from.isBefore(this.effectiveTo);
-  }
-
   // ==================== 私有：校验与赋值 ====================
-
-  /**
-   * 已发布或已作废的版本不许再改
-   *
-   * <p>版本化的意义就在这一步：在制的工单、已算出的成本要能回溯到当时那一版，改行等于改写历史。
-   *
-   * @throws DomainException 状态不是草稿时抛出
-   */
-  private void checkDraft() {
-    if (!isDraft()) {
-      throw new DomainException("BOM 版本" + this.version + "已不是草稿，不能修改，请升版");
-    }
-  }
 
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * <p>状态不在这里赋值：它由 {@link #publish()} 与 {@link #obsolete()} 推进，不接受外部入参，
-   * 否则导入或改表头就能把已发布版本悄悄退回草稿。
-   *
-   * @param materialId 父件SPU
-   * @param variantId 父件SKU
+   * @param type BOM 类型编码
+   * @param code 参考号（可空）
    * @param version 版本号
-   * @param effectiveFrom 生效时间（可空）
-   * @param effectiveTo 失效时间（可空）
+   * @param materialId 父件SPU
+   * @param variantId 父件SKU（可空）
+   * @param routingId 工艺路线Id（可空）
+   * @param qty 产出数量
+   * @param unitId 产出单位Id
+   * @param startMode 开工方式编码
+   * @param issueMode 领料方式编码
+   * @param leadDays 制造提前期（天）
+   * @param prepareDays 提前备料天数
+   * @param batchSize 自动生成工单的批量（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
-   * @throws DomainException SPU 或 SKU 为空、版本为空、生效区间倒挂时抛出
+   * @throws DomainException SPU、SKU、产出数量、单位、版本为空、类型/开工/领料编码非法或天数为负时抛出
    */
   private void apply(
-      long materialId,
-      long variantId,
+      String type,
+      @Nullable String code,
       String version,
-      @Nullable LocalDateTime effectiveFrom,
-      @Nullable LocalDateTime effectiveTo,
+      long materialId,
+      @Nullable Long variantId,
+      @Nullable Long routingId,
+      BigDecimal qty,
+      long unitId,
+      String startMode,
+      String issueMode,
+      int leadDays,
+      int prepareDays,
+      @Nullable BigDecimal batchSize,
+      boolean disabled,
       @Nullable String remark) {
     if (materialId <= 0) {
       throw new DomainException("父件SPU不能为空");
     }
-    if (variantId <= 0) {
+    if (variantId != null && variantId <= 0) {
       throw new DomainException("父件不能为空");
+    }
+    if (routingId != null && routingId <= 0) {
+      throw new DomainException("工艺路线不能为空");
+    }
+    if (qty.signum() <= 0) {
+      throw new DomainException("产出数量必须大于0");
+    }
+    if (unitId <= 0) {
+      throw new DomainException("产出单位不能为空");
     }
     String trimmedVersion = StringUtils.trimToNull(version);
     if (trimmedVersion == null) {
       throw new DomainException("版本号不能为空");
     }
-    if (effectiveFrom != null && effectiveTo != null && !effectiveTo.isAfter(effectiveFrom)) {
-      throw new DomainException("失效时间必须晚于生效时间");
+    if (EnumUtils.fromCode(BomTypeEnum.class, type) == null) {
+      throw new DomainException("BOM 类型" + type + "有误!");
+    }
+    if (EnumUtils.fromCode(BomStartModeEnum.class, startMode) == null) {
+      throw new DomainException("开工方式" + startMode + "有误!");
+    }
+    if (EnumUtils.fromCode(BomIssueModeEnum.class, issueMode) == null) {
+      throw new DomainException("领料方式" + issueMode + "有误!");
+    }
+    if (leadDays < 0) {
+      throw new DomainException("制造提前期不能为负数");
+    }
+    if (prepareDays < 0) {
+      throw new DomainException("备料天数不能为负数");
+    }
+    if (batchSize != null && batchSize.signum() <= 0) {
+      throw new DomainException("批量必须大于0");
     }
 
+    this.type = type;
+    this.code = StringUtils.trimToNull(code);
+    this.version = trimmedVersion;
     this.materialId = materialId;
     this.variantId = variantId;
-    this.version = trimmedVersion;
-    this.effectiveFrom = effectiveFrom;
-    this.effectiveTo = effectiveTo;
+    this.routingId = routingId;
+    this.qty = qty;
+    this.unitId = unitId;
+    this.startMode = startMode;
+    this.issueMode = issueMode;
+    this.leadDays = leadDays;
+    this.prepareDays = prepareDays;
+    this.batchSize = batchSize;
+    this.disabled = disabled;
     this.remark = remark;
   }
 
