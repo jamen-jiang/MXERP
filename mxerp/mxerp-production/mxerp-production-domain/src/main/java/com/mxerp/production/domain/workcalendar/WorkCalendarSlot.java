@@ -1,6 +1,7 @@
 package com.mxerp.production.domain.workcalendar;
 
 import com.mxerp.shared.domain.entity.BaseDeleteEntity;
+import com.mxerp.shared.domain.enums.DayOfWeekEnum;
 import com.mxerp.shared.domain.exception.DomainException;
 import com.mxerp.shared.domain.util.EnumUtils;
 import jakarta.persistence.Column;
@@ -108,9 +109,7 @@ public class WorkCalendarSlot extends BaseDeleteEntity {
    * @throws DomainException 星期编码非法、或下班时间不晚于上班时间时抛出
    */
   private void apply(String dayOfWeek, LocalTime startTime, LocalTime endTime) {
-    if (EnumUtils.fromCode(DayOfWeekEnum.class, dayOfWeek) == null) {
-      throw new DomainException("星期" + dayOfWeek + "有误!");
-    }
+    this.dayOfWeek = EnumUtils.getCode(DayOfWeekEnum.class, dayOfWeek, "星期");
     if (startTime == null || endTime == null) {
       throw new DomainException("上下班时间不能为空");
     }
@@ -118,7 +117,6 @@ public class WorkCalendarSlot extends BaseDeleteEntity {
       throw new DomainException("下班时间必须晚于上班时间");
     }
 
-    this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
     this.endTime = endTime;
   }

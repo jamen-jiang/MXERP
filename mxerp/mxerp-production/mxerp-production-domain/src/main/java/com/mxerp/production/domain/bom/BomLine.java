@@ -54,6 +54,11 @@ public class BomLine extends BaseDeleteEntity {
   @Column(name = "VariantId", nullable = false)
   private Long variantId;
 
+  /** 消耗在哪道路线工序（可空，直接指 RoutingOperation 那一行） */
+  @Column(name = "RoutingOperationId")
+  @Nullable
+  private Long routingOperationId;
+
   /** 单位用量（生产 1 个父件消耗的子件数量） */
   @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
   private BigDecimal qty;
@@ -70,31 +75,26 @@ public class BomLine extends BaseDeleteEntity {
   @Column(name = "Sequence", nullable = false)
   private Integer sequence;
 
-  /** 消耗在哪道工序（可空，照 Odoo 的 operation_id） */
-  @Column(name = "OperationId")
-  @Nullable
-  private Long operationId;
-
   /**
    * 构造器
    *
    * @param materialId 子件SPU
    * @param variantId 子件SKU
+   * @param routingOperationId 消耗的路线工序Id（可空）
    * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
    * @param sequence 行号
-   * @param operationId 消耗工序Id（可空）
    */
   BomLine(
       long materialId,
       long variantId,
+      @Nullable Long routingOperationId,
       BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      int sequence,
-      @Nullable Long operationId) {
-    apply(materialId, variantId, qty, lossRate, unitId, sequence, operationId);
+      int sequence) {
+    apply(materialId, variantId, routingOperationId, qty, lossRate, unitId, sequence);
   }
 
   /**
@@ -102,21 +102,21 @@ public class BomLine extends BaseDeleteEntity {
    *
    * @param materialId 子件SPU
    * @param variantId 子件SKU
+   * @param routingOperationId 消耗的路线工序Id（可空）
    * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
    * @param sequence 行号
-   * @param operationId 消耗工序Id（可空）
    */
   void modify(
       long materialId,
       long variantId,
+      @Nullable Long routingOperationId,
       BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      int sequence,
-      @Nullable Long operationId) {
-    apply(materialId, variantId, qty, lossRate, unitId, sequence, operationId);
+      int sequence) {
+    apply(materialId, variantId, routingOperationId, qty, lossRate, unitId, sequence);
   }
 
   /**
@@ -125,20 +125,20 @@ public class BomLine extends BaseDeleteEntity {
    * <p>单位用量 × (父件数量 ÷ BOM 产出数量) × (1 + 损耗率 / 100)。单位用量是「BOM 产出数量」这一批量下的量，
    * 所以先折算成单件，再乘工单数量。
    *
-   * @param parentQuantity 父件生产数量
+   * @param parentQty 父件生产数量
    * @param outputQty BOM 的产出数量
    * @return 需求数量
    * @throws DomainException 父件数量为负、或产出数量非正时抛出
    */
-  public BigDecimal requiredQuantity(BigDecimal parentQuantity, BigDecimal outputQty) {
-    if (parentQuantity.signum() < 0) {
+  public BigDecimal requiredQty(BigDecimal parentQty, BigDecimal outputQty) {
+    if (parentQty.signum() < 0) {
       throw new DomainException("父件数量不能为负数");
     }
     if (outputQty.signum() <= 0) {
       throw new DomainException("BOM 产出数量必须大于0");
     }
     return this.qty
-        .multiply(parentQuantity)
+        .multiply(parentQty)
         .divide(outputQty, 6, RoundingMode.HALF_UP)
         .multiply(lossFactor())
         .setScale(2, RoundingMode.HALF_UP);
@@ -161,21 +161,21 @@ public class BomLine extends BaseDeleteEntity {
    *
    * @param materialId 子件SPU
    * @param variantId 子件SKU
+   * @param routingOperationId 消耗的路线工序Id（可空）
    * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
    * @param sequence 行号
-   * @param operationId 消耗工序Id（可空）
    * @throws DomainException 行号、SPU、子件、用量、单位或损耗率非法时抛出
    */
   private void apply(
       long materialId,
       long variantId,
+      @Nullable Long routingOperationId,
       BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      int sequence,
-      @Nullable Long operationId) {
+      int sequence) {
     if (sequence <= 0) {
       throw new DomainException("BOM 行号必须大于0");
     }
@@ -197,10 +197,10 @@ public class BomLine extends BaseDeleteEntity {
 
     this.materialId = materialId;
     this.variantId = variantId;
+    this.routingOperationId = routingOperationId;
     this.qty = qty;
     this.lossRate = lossRate;
     this.unitId = unitId;
     this.sequence = sequence;
-    this.operationId = operationId;
   }
 }

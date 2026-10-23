@@ -87,12 +87,12 @@ public class ProductionReport extends OrderAggregateRoot {
   private BigDecimal workTime;
 
   /** 本次良品数量 */
-  @Column(name = "GoodQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal goodQuantity;
+  @Column(name = "GoodQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal goodQty;
 
   /** 本次报废数量 */
-  @Column(name = "ScrapQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal scrapQuantity;
+  @Column(name = "LossQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal lossQty;
 
   /** 作废时间（为空表示这笔报工还算数） */
   @Column(name = "VoidedTime")
@@ -117,8 +117,8 @@ public class ProductionReport extends OrderAggregateRoot {
    * @param workCenterName 工作中心名称（快照）
    * @param operatorId 操作人Id（可空）
    * @param workTime 本次工时（分钟）
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
+   * @param goodQty 本次良品数量
+   * @param lossQty 本次报废数量
    * @param remark 备注（可空）
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
@@ -132,8 +132,8 @@ public class ProductionReport extends OrderAggregateRoot {
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
+      BigDecimal goodQty,
+      BigDecimal lossQty,
       @Nullable String remark,
       String number) {
     super(number);
@@ -147,8 +147,8 @@ public class ProductionReport extends OrderAggregateRoot {
         workCenterName,
         operatorId,
         workTime,
-        goodQuantity,
-        scrapQuantity,
+        goodQty,
+        lossQty,
         remark);
   }
 
@@ -212,8 +212,8 @@ public class ProductionReport extends OrderAggregateRoot {
    * @param workCenterName 工作中心名称（快照）
    * @param operatorId 操作人Id（可空）
    * @param workTime 本次工时（分钟）
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
+   * @param goodQty 本次良品数量
+   * @param lossQty 本次报废数量
    * @param remark 备注（可空）
    * @throws DomainException 工单/工序/工作中心为空、工时或数量为负、良品与报废同时为0时抛出
    */
@@ -227,8 +227,8 @@ public class ProductionReport extends OrderAggregateRoot {
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
+      BigDecimal goodQty,
+      BigDecimal lossQty,
       @Nullable String remark) {
     if (workOrderId <= 0) {
       throw new DomainException("工单不能为空");
@@ -245,13 +245,13 @@ public class ProductionReport extends OrderAggregateRoot {
     if (workTime.signum() < 0) {
       throw new DomainException("工时不能为负数");
     }
-    if (goodQuantity.signum() < 0) {
+    if (goodQty.signum() < 0) {
       throw new DomainException("良品数量不能为负数");
     }
-    if (scrapQuantity.signum() < 0) {
+    if (lossQty.signum() < 0) {
       throw new DomainException("报废数量不能为负数");
     }
-    if (goodQuantity.signum() == 0 && scrapQuantity.signum() == 0) {
+    if (goodQty.signum() == 0 && lossQty.signum() == 0) {
       throw new DomainException("良品数量与报废数量不能同时为0");
     }
     String trimmedWorkOrderNumber = StringUtils.trimToNull(workOrderNumber);
@@ -276,8 +276,8 @@ public class ProductionReport extends OrderAggregateRoot {
     this.workCenterName = trimmedWorkCenterName;
     this.operatorId = operatorId;
     this.workTime = workTime;
-    this.goodQuantity = goodQuantity;
-    this.scrapQuantity = scrapQuantity;
+    this.goodQty = goodQty;
+    this.lossQty = lossQty;
     this.remark = remark;
   }
 }

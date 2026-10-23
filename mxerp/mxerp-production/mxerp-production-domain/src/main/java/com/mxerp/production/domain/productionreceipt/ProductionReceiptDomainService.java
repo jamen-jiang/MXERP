@@ -52,7 +52,7 @@ public class ProductionReceiptDomainService {
    * 报工还没做完，货就还没做出来。
    *
    * @param workOrderId 工单Id
-   * @param quantity 申报入库数量（可空，空即取工单还没入库的完工数）
+   * @param qty 申报入库数量（可空，空即取工单还没入库的完工数）
    * @param warehouseId 入库仓库Id（可空，空即取工单上的收货仓）
    * @param locationId 库位Id（可空）
    * @param remark 备注（可空）
@@ -61,15 +61,15 @@ public class ProductionReceiptDomainService {
    */
   public ProductionReceipt create(
       long workOrderId,
-      @Nullable BigDecimal quantity,
+      @Nullable BigDecimal qty,
       @Nullable Long warehouseId,
       @Nullable Long locationId,
       @Nullable String remark) {
     WorkOrder workOrder = requireWorkOrder(workOrderId);
-    BigDecimal applied = quantity == null ? workOrder.unreceivedQuantity() : quantity;
+    BigDecimal applied = qty == null ? workOrder.unproducedQty() : qty;
     if (applied.signum() <= 0) {
       throw new DomainException(
-          "工单" + workOrder.getNumber() + "没有可入库的数量，已完工" + workOrder.getCompletedQuantity());
+          "工单" + workOrder.getNumber() + "没有可入库的数量，已完工" + workOrder.getCompletedQty());
     }
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return productionReceiptFactory.create(
@@ -93,7 +93,7 @@ public class ProductionReceiptDomainService {
    *
    * @param id 入库单Id
    * @param workOrderId 工单Id
-   * @param quantity 申报入库数量
+   * @param qty 申报入库数量
    * @param warehouseId 入库仓库Id（可空，空即取工单上的收货仓）
    * @param locationId 库位Id（可空）
    * @param remark 备注（可空）
@@ -103,7 +103,7 @@ public class ProductionReceiptDomainService {
   public ProductionReceipt modify(
       long id,
       long workOrderId,
-      BigDecimal quantity,
+      BigDecimal qty,
       @Nullable Long warehouseId,
       @Nullable Long locationId,
       @Nullable String remark) {
@@ -117,7 +117,7 @@ public class ProductionReceiptDomainService {
         workOrder.getUnitId(),
         resolveWarehouse(workOrder, warehouseId),
         locationId,
-        quantity,
+        qty,
         remark);
     return model;
   }
@@ -131,18 +131,18 @@ public class ProductionReceiptDomainService {
    * <p>货进成品仓由应用层在同一事务里调库存服务完成，本方法只管单据与工单这一半。
    *
    * @param id 入库单Id
-   * @param receivedQuantity 实收数量（可空，空即照批申报数量；短装时给实际点到的数）
+   * @param receivedQty 实收数量（可空，空即照批申报数量；短装时给实际点到的数）
    * @param time 入库时间
    * @return 生产入库单聚合
    * @throws DomainException 入库单或工单不存在、已入库过、或入库超过已完工数量时抛出
    */
   public ProductionReceipt post(
-      long id, @Nullable BigDecimal receivedQuantity, LocalDateTime time) {
+      long id, @Nullable BigDecimal receivedQty, LocalDateTime time) {
     ProductionReceipt model = getExist(id);
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
-    model.approve(receivedQuantity);
+    model.approve(receivedQty);
     model.post(time);
-    workOrder.receiveOutput(model.getReceivedQuantity());
+    workOrder.receiveOutput(model.getReceivedQty());
     return model;
   }
 
@@ -155,24 +155,24 @@ public class ProductionReceiptDomainService {
    * <p>可以分次冲，每次只传这次冲掉的量；累计上限由库存那边管，这里只管单次不超本单实收数。
    *
    * @param id 入库单Id
-   * @param quantity 本次冲回数量（正数）
+   * @param qty 本次冲回数量（正数）
    * @return 生产入库单聚合
    * @throws DomainException 入库单或工单不存在、单据不是已入库状态、或数量非法时抛出
    */
-  public ProductionReceipt reverse(long id, BigDecimal quantity) {
+  public ProductionReceipt reverse(long id, BigDecimal qty) {
     ProductionReceipt model = getExist(id);
     if (!model.isPosted()) {
       throw new DomainException("入库单" + model.getNumber() + "还没入库，删掉重开就行，不用红冲");
     }
-    if (quantity.signum() <= 0) {
+    if (qty.signum() <= 0) {
       throw new DomainException("冲回数量必须大于0");
     }
-    if (quantity.compareTo(model.getReceivedQuantity()) > 0) {
+    if (qty.compareTo(model.getReceivedQty()) > 0) {
       throw new DomainException(
-          "冲回数量" + quantity + "不能大于本单实收数量" + model.getReceivedQuantity());
+          "冲回数量" + qty + "不能大于本单实收数量" + model.getReceivedQty());
     }
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
-    workOrder.unreceiveOutput(quantity);
+    workOrder.unreceiveOutput(qty);
     return model;
   }
 

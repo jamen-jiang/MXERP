@@ -78,8 +78,8 @@ public class CurrentUserImpl implements CurrentUser {
    * @return 应用列表
    */
   @Override
-  public Set<Long> getAppIds() {
-    return loginUser().getAppIds();
+  public Set<Long> getMenuIds() {
+    return loginUser().getMenuIds();
   }
 
   /**
@@ -118,8 +118,8 @@ public class CurrentUserImpl implements CurrentUser {
    * @return 岗位Id列表
    */
   @Override
-  public Set<Long> getPostIds() {
-    return loginUser().getPostIds();
+  public Set<Long> getPositionIds() {
+    return loginUser().getPositionIds();
   }
 
   /**

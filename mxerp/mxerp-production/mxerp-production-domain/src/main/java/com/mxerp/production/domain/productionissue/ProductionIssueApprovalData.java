@@ -7,7 +7,7 @@ import org.jspecify.annotations.NullMarked;
  * 生产领料单审核时逐行给定的核定数量
  *
  * @param workOrderMaterialId 工单用料行Id
- * @param approvedQuantity 核定数量
+ * @param approvedQty 核定数量
  */
 @NullMarked
-public record ProductionIssueApprovalData(Long workOrderMaterialId, BigDecimal approvedQuantity) {}
+public record ProductionIssueApprovalData(Long workOrderMaterialId, BigDecimal approvedQty) {}

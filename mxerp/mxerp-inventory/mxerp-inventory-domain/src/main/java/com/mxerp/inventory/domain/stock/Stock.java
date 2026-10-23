@@ -26,11 +26,11 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>库位这一维可空：没分拣到货架时数量只记到仓库，LocationId 留空；一旦要按位置拣货再落到具体库位。
  *
- * <p>两个数量各说一件事：{@code Quantity} 是「架上现在有多少」，{@code ReservedQuantity} 是「其中已经答应给
+ * <p>两个数量各说一件事：{@code Qty} 是「架上现在有多少」，{@code ReservedQty} 是「其中已经答应给
  * 某张单、还没发出的有多少」。后者是**派生的合计**——名记在领料行自己身上（批了多少、发没发），这边只是把
  * 没发完的加起来，为的是别每次查可用量都去翻所有未过账的领料单；随时能按领料行重算核对，对不上就是回写漏了。
- * 金蝶的即时库存锁库量、Odoo 的 {@code stock.quant.reserved_quantity}、ERPNext 的 {@code Bin.reserved_qty}
- * 都是这种"存着的派生数"。可用量不存，{@link #availableQuantity()} 现算。
+ * 金蝶的即时库存锁库量、Odoo 的 {@code stock.quant.reserved_qty}、ERPNext 的 {@code Bin.reserved_qty}
+ * 都是这种"存着的派生数"。可用量不存，{@link #availableQty()} 现算。
  *
  * <p>状态走维度而不是走列或走仓：D365 把库存状态当存储维度组里的一维，金蝶把它放在数量行上、仓库只限定
  * 允许哪些状态。SAP 那种「非限制/质检/冻结」各占一列的写法，多一种状态就要加一列改一遍程序；靠建仓或建库位
@@ -72,18 +72,18 @@ public class Stock extends UpdateAggregateRoot {
   @Nullable
   private Long locationId;
 
-  /** 库存状态编码（定位键的一维，见 {@link StockStatusEnum}） */
+  /** 库存状态编码，取值见 {@link StockStatusEnum}（定位库存行的一维） */
   @Nationalized
   @Column(name = "StockStatus", nullable = false, length = 50)
   private String stockStatus;
 
   /** 在库数量（SKU基本单位） */
-  @Column(name = "Quantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal quantity;
+  @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal qty;
 
   /** 预留数量（已答应给某张需求单、还没发出的部分，是未发完需求量的合计） */
-  @Column(name = "ReservedQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal reservedQuantity;
+  @Column(name = "ReservedQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal reservedQty;
 
   /**
    * 构造器，新建的行数量为零，之后由入库动作累加
@@ -113,18 +113,14 @@ public class Stock extends UpdateAggregateRoot {
     if (locationId != null && locationId <= 0) {
       throw new DomainException("库位" + locationId + "有误!");
     }
-    String trimmedStatus = StringUtils.trimToNull(stockStatus);
-    if (trimmedStatus == null || EnumUtils.fromCode(StockStatusEnum.class, trimmedStatus) == null) {
-      throw new DomainException("库存状态" + stockStatus + "有误!");
-    }
+    this.stockStatus = EnumUtils.getCode(StockStatusEnum.class, stockStatus, "库存状态");
 
     this.materialId = materialId;
     this.variantId = variantId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;
-    this.stockStatus = trimmedStatus;
-    this.quantity = BigDecimal.ZERO;
-    this.reservedQuantity = BigDecimal.ZERO;
+    this.qty = BigDecimal.ZERO;
+    this.reservedQty = BigDecimal.ZERO;
   }
 
   // ==================== 数量变动 ====================
@@ -132,12 +128,12 @@ public class Stock extends UpdateAggregateRoot {
   /**
    * 入库：在库数量增加（采购收货、完工入库、盘盈都走这里）
    *
-   * @param quantity 入库数量，必须为正数
+   * @param qty 入库数量，必须为正数
    * @throws DomainException 数量不为正数时抛出
    */
-  public void inbound(BigDecimal quantity) {
-    validatePositive("入库数量", quantity);
-    this.quantity = this.quantity.add(quantity);
+  public void inbound(BigDecimal qty) {
+    validatePositive("入库数量", qty);
+    this.qty = this.qty.add(qty);
   }
 
   /**
@@ -153,16 +149,16 @@ public class Stock extends UpdateAggregateRoot {
    * <p>「不够能不能照样发」按仓放行（金蝶的「按仓库控制负库存」）：允许负库存的<b>可用行</b>跳过这两道闸，
    * 在库数变负、等入库补回——「先领后补」只发生在能领的货上。待检、冻结、废品那些行没有这个说法，照样卡死。
    *
-   * @param quantity 出库数量，必须为正数
+   * @param qty 出库数量，必须为正数
    * @param allowNegativeStock 该仓是否允许负库存出库
    * @throws DomainException 出库量不为正数，或在库 / 可用不足且该仓不允许负库存时抛出
    */
-  public void outbound(BigDecimal quantity, boolean allowNegativeStock) {
-    validatePositive("出库数量", quantity);
+  public void outbound(BigDecimal qty, boolean allowNegativeStock) {
+    validatePositive("出库数量", qty);
     if (!allowNegativeStock || !isAvailable()) {
-      validateEnough(quantity);
+      validateEnough(qty);
     }
-    this.quantity = this.quantity.subtract(quantity);
+    this.qty = this.qty.subtract(qty);
   }
 
   /**
@@ -171,32 +167,32 @@ public class Stock extends UpdateAggregateRoot {
    * <p>只有可用那一行能被占。状态管「能不能动用」，预留管「答应给谁」：待检、冻结、废品的数量谈不上
    * 答应给谁，那些行的预留恒为零。
    *
-   * @param quantity 预留数量，必须为正数
+   * @param qty 预留数量，必须为正数
    * @throws DomainException 不是可用状态、数量不为正数、或可用量不足时抛出
    */
-  public void reserve(BigDecimal quantity) {
+  public void reserve(BigDecimal qty) {
     validateAvailableForReservation();
-    validatePositive("预留数量", quantity);
-    if (availableQuantity().compareTo(quantity) < 0) {
-      throw new DomainException("可用库存不足，当前" + availableQuantity() + "，不能预留" + quantity);
+    validatePositive("预留数量", qty);
+    if (availableQty().compareTo(qty) < 0) {
+      throw new DomainException("可用库存不足，当前" + availableQty() + "，不能预留" + qty);
     }
-    this.reservedQuantity = this.reservedQuantity.add(quantity);
+    this.reservedQty = this.reservedQty.add(qty);
   }
 
   /**
    * 取消预留：把先前答应的数量放回可用量（发料过账、单据作废、批准量调小时调）
    *
-   * @param quantity 取消预留数量，必须为正数
+   * @param qty 取消预留数量，必须为正数
    * @throws DomainException 不是可用状态、数量不为正数、或超过已预留时抛出
    */
-  public void unreserve(BigDecimal quantity) {
+  public void unreserve(BigDecimal qty) {
     validateAvailableForReservation();
-    validatePositive("取消预留数量", quantity);
-    if (this.reservedQuantity.compareTo(quantity) < 0) {
+    validatePositive("取消预留数量", qty);
+    if (this.reservedQty.compareTo(qty) < 0) {
       throw new DomainException(
-          "预留数量不足，当前" + this.reservedQuantity + "，不能取消预留" + quantity);
+          "预留数量不足，当前" + this.reservedQty + "，不能取消预留" + qty);
     }
-    this.reservedQuantity = this.reservedQuantity.subtract(quantity);
+    this.reservedQty = this.reservedQty.subtract(qty);
   }
 
   // ==================== 查询 ====================
@@ -218,8 +214,8 @@ public class Stock extends UpdateAggregateRoot {
    *
    * @return 还能被预留或领用的数量
    */
-  public BigDecimal availableQuantity() {
-    return quantity.subtract(reservedQuantity);
+  public BigDecimal availableQty() {
+    return qty.subtract(reservedQty);
   }
 
   // ==================== 私有：校验 ====================
@@ -229,24 +225,24 @@ public class Stock extends UpdateAggregateRoot {
    *
    * <p>两种不足分开报：架上不够是缺货，架上够但已答应别人是抢单，处理办法完全不同。
    *
-   * @param quantity 出库数量
+   * @param qty 出库数量
    * @throws DomainException 任何一种不够时抛出
    */
-  private void validateEnough(BigDecimal quantity) {
-    if (this.quantity.compareTo(quantity) < 0) {
-      throw new DomainException("在库数量不足，当前" + this.quantity + "，不能出库" + quantity);
+  private void validateEnough(BigDecimal qty) {
+    if (this.qty.compareTo(qty) < 0) {
+      throw new DomainException("在库数量不足，当前" + this.qty + "，不能出库" + qty);
     }
-    BigDecimal available = availableQuantity();
-    if (quantity.compareTo(available) > 0) {
+    BigDecimal available = availableQty();
+    if (qty.compareTo(available) > 0) {
       throw new DomainException(
           "可用数量不足，当前"
               + available
               + "（在库"
-              + this.quantity
+              + this.qty
               + "，其中"
-              + this.reservedQuantity
+              + this.reservedQty
               + "已答应给别的单据还没发），不能出库"
-              + quantity);
+              + qty);
     }
   }
 

@@ -64,19 +64,19 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
   @Nullable
   private Long locationId;
 
-  /** 转出状态编码 */
+  /** 转出状态编码，取值见 {@link StockStatusEnum} */
   @Nationalized
   @Column(name = "FromStockStatus", nullable = false, length = 50)
   private String fromStockStatus;
 
-  /** 转入状态编码 */
+  /** 转入状态编码，取值见 {@link StockStatusEnum} */
   @Nationalized
   @Column(name = "ToStockStatus", nullable = false, length = 50)
   private String toStockStatus;
 
   /** 挪动数量（永远为正数，往回挪请开反向单） */
-  @Column(name = "Quantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal quantity;
+  @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal qty;
 
   /** 备注（可空） */
   @Nationalized
@@ -93,7 +93,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
    * @param locationId 库位Id（可空）
    * @param fromStockStatus 转出状态编码
    * @param toStockStatus 转入状态编码
-   * @param quantity 挪动数量（正数）
+   * @param qty 挪动数量（正数）
    * @param remark 备注（可空）
    * @throws DomainException 定位维度非法、状态不在枚举内、转出与转入相同、或数量不为正数时抛出
    */
@@ -104,7 +104,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,
-      BigDecimal quantity,
+      BigDecimal qty,
       @Nullable String remark) {
     if (materialId <= 0) {
       throw new DomainException("物料不能为空");
@@ -120,16 +120,12 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
     }
     String trimmedFrom = StringUtils.trimToNull(fromStockStatus);
     String trimmedTo = StringUtils.trimToNull(toStockStatus);
-    if (trimmedFrom == null || EnumUtils.fromCode(StockStatusEnum.class, trimmedFrom) == null) {
-      throw new DomainException("转出状态" + fromStockStatus + "有误!");
-    }
-    if (trimmedTo == null || EnumUtils.fromCode(StockStatusEnum.class, trimmedTo) == null) {
-      throw new DomainException("转入状态" + toStockStatus + "有误!");
-    }
+    this.fromStockStatus = EnumUtils.getCode(StockStatusEnum.class, fromStockStatus, "转出状态");
+    this.toStockStatus = EnumUtils.getCode(StockStatusEnum.class, toStockStatus, "转入状态");
     if (trimmedFrom.equals(trimmedTo)) {
       throw new DomainException("转出状态与转入状态相同，这一行是在原地不动");
     }
-    if (quantity.signum() <= 0) {
+    if (qty.signum() <= 0) {
       throw new DomainException("挪动数量必须大于零，往回挪请开一张反向的转换单");
     }
 
@@ -137,9 +133,7 @@ public class StockStatusChangeLine extends BaseDeleteEntity {
     this.variantId = variantId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;
-    this.fromStockStatus = trimmedFrom;
-    this.toStockStatus = trimmedTo;
-    this.quantity = quantity;
+    this.qty = qty;
     this.remark = remark;
   }
 }

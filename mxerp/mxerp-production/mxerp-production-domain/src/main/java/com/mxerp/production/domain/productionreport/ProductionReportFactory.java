@@ -33,8 +33,8 @@ public class ProductionReportFactory {
    * @param workCenterName 工作中心名称（快照）
    * @param operatorId 操作人Id（可空）
    * @param workTime 本次工时（分钟）
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
+   * @param goodQty 本次良品数量
+   * @param lossQty 本次报废数量
    * @param remark 备注（可空）
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器分配）
    * @return 报工单聚合
@@ -50,8 +50,8 @@ public class ProductionReportFactory {
       String workCenterName,
       @Nullable Long operatorId,
       BigDecimal workTime,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
+      BigDecimal goodQty,
+      BigDecimal lossQty,
       @Nullable String remark,
       String number) {
     // 单号非空时才校验唯一，空串代表尚未分配
@@ -68,8 +68,8 @@ public class ProductionReportFactory {
         workCenterName,
         operatorId,
         workTime,
-        goodQuantity,
-        scrapQuantity,
+        goodQty,
+        lossQty,
         remark,
         number);
   }

@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
     })
 public class SignInLog extends LogAggregateRoot {
 
-  /** 登录类型 */
+  /** 登录类型编码，取值见 {@link SignEntryTypeEnum} */
   @Nationalized
   @Column(name = "Type", nullable = false, length = 50)
   private String type;
@@ -143,7 +143,7 @@ public class SignInLog extends LogAggregateRoot {
         isSuccess,
         errorMessage,
         exception);
-    this.type = validateType(type);
+    this.type = EnumUtils.getCode(SignEntryTypeEnum.class, type, "登录类型");
     this.userCode = StringUtils.trimToNull(userCode);
     this.token = StringUtils.trimToNull(token);
     this.refreshToken = StringUtils.trimToNull(refreshToken);
@@ -153,22 +153,5 @@ public class SignInLog extends LogAggregateRoot {
     this.userAgent = StringUtils.trimToNull(userAgent);
     this.browser = StringUtils.trimToNull(browser);
     this.os = StringUtils.trimToNull(os);
-  }
-
-  // ==================== 私有：校验 ====================
-
-  /**
-   * 校验登录类型
-   *
-   * @param type 登录类型
-   * @return 校验并 trim 后的类型
-   * @throws DomainException 类型为空或不在枚举范围内时抛出
-   */
-  private static String validateType(String type) {
-    String trimmed = StringUtils.trimToNull(type);
-    if (trimmed == null || EnumUtils.fromCode(SignEntryTypeEnum.class, trimmed) == null) {
-      throw new DomainException("登录类型" + type + "有误!");
-    }
-    return trimmed;
   }
 }

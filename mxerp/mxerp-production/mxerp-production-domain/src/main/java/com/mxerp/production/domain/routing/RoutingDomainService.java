@@ -132,7 +132,7 @@ public class RoutingDomainService {
       model.addOperation(
           operation.getOperationId(),
           operation.getWorkCenterId(),
-          operation.getTimeMode(),
+          operation.getCycleTimeMode(),
           operation.getCycleTime(),
           operation.getSequence());
     }
@@ -194,7 +194,7 @@ public class RoutingDomainService {
             id,
             data.operationId(),
             data.workCenterId(),
-            data.timeMode(),
+            data.cycleTimeMode(),
             data.cycleTime(),
             data.sequence());
       } else {
@@ -202,7 +202,7 @@ public class RoutingDomainService {
         routing.addOperation(
             data.operationId(),
             data.workCenterId(),
-            data.timeMode(),
+            data.cycleTimeMode(),
             data.cycleTime(),
             data.sequence());
       }

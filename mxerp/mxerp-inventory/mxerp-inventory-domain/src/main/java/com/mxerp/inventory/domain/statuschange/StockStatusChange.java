@@ -62,7 +62,7 @@ import org.jspecify.annotations.Nullable;
     })
 public class StockStatusChange extends OrderAggregateRoot {
 
-  /** 来源单据类型编码（可空，检验单还没建时手工开单就留空） */
+  /** 来源单据类型编码，取值见 {@link SerialNumberTypeEnum}（可空，还没对应单据时手工开单就留空） */
   @Nationalized
   @Column(name = "SourceType", length = 50)
   @Nullable
@@ -161,7 +161,7 @@ public class StockStatusChange extends OrderAggregateRoot {
    * @param locationId 库位Id（可空）
    * @param fromStockStatus 转出状态编码
    * @param toStockStatus 转入状态编码
-   * @param quantity 挪动数量（正数）
+   * @param qty 挪动数量（正数）
    * @param remark 备注（可空）
    * @throws DomainException 非草稿状态，或同一格上同一对状态已在单内时抛出
    */
@@ -172,7 +172,7 @@ public class StockStatusChange extends OrderAggregateRoot {
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,
-      BigDecimal quantity,
+      BigDecimal qty,
       @Nullable String remark) {
     ensureDraft();
     if (findLine(variantId, warehouseId, locationId, fromStockStatus, toStockStatus) != null) {
@@ -186,7 +186,7 @@ public class StockStatusChange extends OrderAggregateRoot {
             locationId,
             fromStockStatus,
             toStockStatus,
-            quantity,
+            qty,
             remark));
   }
 
@@ -279,14 +279,11 @@ public class StockStatusChange extends OrderAggregateRoot {
     if (trimmedSourceType == null || sourceId == null) {
       throw new DomainException("来源要么整填、要么整空：只填一半就查不回是哪张单让这批货挪的状态");
     }
-    if (EnumUtils.fromCode(SerialNumberTypeEnum.class, trimmedSourceType) == null) {
-      throw new DomainException("来源单据类型" + trimmedSourceType + "有误!");
-    }
+    this.sourceType = EnumUtils.getCode(SerialNumberTypeEnum.class, trimmedSourceType, "来源单据类型");
     if (sourceId <= 0) {
       throw new DomainException("来源单据Id有误!");
     }
 
-    this.sourceType = trimmedSourceType;
     this.sourceId = sourceId;
     this.sourceNumber = trimmedSourceNumber;
   }

@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param materialId 物料SPU
  * @param variantId 物料SKU
- * @param quantity 数量（正数）
+ * @param qty 数量（正数）
  * @param warehouseId 仓库Id
  * @param locationId 库位Id（可空，空表示数量记到仓库这一层）
  * @param stockStatus 库存状态编码（见 {@code StockStatusEnum}，不动的仓就填可用）
@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 public record StockRecordLineData(
     Long materialId,
     Long variantId,
-    BigDecimal quantity,
+    BigDecimal qty,
     Long warehouseId,
     @Nullable Long locationId,
     String stockStatus,

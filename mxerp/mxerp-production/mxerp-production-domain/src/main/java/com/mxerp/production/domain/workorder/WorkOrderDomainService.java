@@ -82,45 +82,45 @@ public class WorkOrderDomainService {
   /**
    * 创建工单（草稿）
    *
-   * @param materialId 产出SPU
-   * @param variantId 产出SKU
-   * @param quantity 计划数量
-   * @param unitId 单位Id
    * @param sourceType 来源类型编码
    * @param sourceId 来源单据Id（可空，库存补货时为空）
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param materialId 产出SPU
+   * @param variantId 产出SKU
    * @param dueTime 交期（可空，承诺的完工时间，生产侧只读不写）
+   * @param planQty 计划数量
+   * @param unitId 单位Id
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @return 工单聚合
    */
   public WorkOrder create(
-      long materialId,
-      long variantId,
-      BigDecimal quantity,
-      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      long materialId,
+      long variantId,
       @Nullable LocalDateTime dueTime,
+      BigDecimal planQty,
+      long unitId,
       @Nullable Long warehouseId,
       @Nullable String remark) {
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return workOrderFactory.create(
-        materialId,
-        variantId,
-        quantity,
-        unitId,
         sourceType,
         sourceId,
         sourceNumber,
         bomId,
         routingId,
+        materialId,
+        variantId,
         dueTime,
+        planQty,
+        unitId,
         warehouseId,
         remark,
         "");
@@ -130,16 +130,16 @@ public class WorkOrderDomainService {
    * 修改工单（仅草稿可改）
    *
    * @param id 工单Id
-   * @param materialId 产出SPU
-   * @param variantId 产出SKU
-   * @param quantity 计划数量
-   * @param unitId 单位Id
    * @param sourceType 来源类型编码
    * @param sourceId 来源单据Id（可空，库存补货时为空）
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param materialId 产出SPU
+   * @param variantId 产出SKU
    * @param dueTime 交期（可空，承诺的完工时间，生产侧只读不写）
+   * @param planQty 计划数量
+   * @param unitId 单位Id
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @return 工单聚合
@@ -147,30 +147,30 @@ public class WorkOrderDomainService {
    */
   public WorkOrder modify(
       long id,
-      long materialId,
-      long variantId,
-      BigDecimal quantity,
-      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      long materialId,
+      long variantId,
       @Nullable LocalDateTime dueTime,
+      BigDecimal planQty,
+      long unitId,
       @Nullable Long warehouseId,
       @Nullable String remark) {
     WorkOrder model = getExist(id);
     model.modify(
-        materialId,
-        variantId,
-        quantity,
-        unitId,
         sourceType,
         sourceId,
         sourceNumber,
         bomId,
         routingId,
+        materialId,
+        variantId,
         dueTime,
+        planQty,
+        unitId,
         warehouseId,
         remark);
     return model;
@@ -224,7 +224,7 @@ public class WorkOrderDomainService {
 
     // 3. 先全量校验外部引用，确认能装配再动手
     List<OperationSnapshot> snapshots = resolveOperations(routing);
-    List<MaterialRequirement> requirements = resolveMaterials(model.getQuantity(), bom);
+    List<MaterialRequirement> requirements = resolveMaterials(model.getPlanQty(), bom);
 
     // 4. 一次性装配并固化
     for (OperationSnapshot snapshot : snapshots) {
@@ -233,7 +233,6 @@ public class WorkOrderDomainService {
           snapshot.operationName(),
           snapshot.workCenterId(),
           snapshot.workCenterName(),
-          snapshot.timeMode(),
           snapshot.cycleTime(),
           snapshot.sequence());
     }
@@ -242,14 +241,11 @@ public class WorkOrderDomainService {
           requirement.bomLineId(),
           requirement.materialId(),
           requirement.variantId(),
-          requirement.requiredQuantity(),
+          requirement.routingOperationId(),
+          requirement.requiredQty(),
           requirement.unitId());
     }
-    model.release(
-        bom == null ? null : bom.getId(),
-        bom == null ? null : bom.getVersion(),
-        routing.getId(),
-        routing.getVersion());
+    model.release(bom == null ? null : bom.getId(), routing.getId());
     return model;
   }
 
@@ -320,7 +316,6 @@ public class WorkOrderDomainService {
               operation.getName(),
               workCenter.getId(),
               workCenter.getName(),
-              item.getTimeMode(),
               item.getCycleTime(),
               item.getSequence()));
     }
@@ -344,19 +339,19 @@ public class WorkOrderDomainService {
    * <p>需求量在这里一次算好、快照到用料行：之后领料或退料只做工单上的加减，不再回头读 BOM，BOM 之后改版才不会
    * 把在制工单的领料量改掉。
    *
-   * @param quantity 工单计划数量
+   * @param qty 工单计划数量
    * @param bom 展开所用的 BOM（可空，为空表示物料没有 BOM）
    * @return 可装配的用料需求列表（按 SKU 去重）
    * @throws DomainException BOM 存在循环引用、或同一子件展开后单位不一致时抛出
    */
-  List<MaterialRequirement> resolveMaterials(BigDecimal quantity, @Nullable Bom bom) {
+  List<MaterialRequirement> resolveMaterials(BigDecimal qty, @Nullable Bom bom) {
     if (bom == null) {
       return List.of();
     }
     Map<Long, MaterialRequirement> merged = new LinkedHashMap<>();
     Set<Long> path = new HashSet<>();
     path.add(bom.getVariantId());
-    expand(bom, quantity, path, merged);
+    expand(bom, qty, path, merged);
     return List.copyOf(merged.values());
   }
 
@@ -364,18 +359,18 @@ public class WorkOrderDomainService {
    * 递归展开一层 BOM，把用料写进累加表
    *
    * @param bom 当前这一层的 BOM
-   * @param parentQuantity 这一层 BOM 的产出物料需要多少个
+   * @param parentQty 这一层 BOM 的产出物料需要多少个
    * @param path 当前展开路径上的 SKU（用于发现循环引用）
    * @param result 按 SKU 累加的结果表
    * @throws DomainException BOM 存在循环引用、或同一子件单位不一致时抛出
    */
   private void expand(
-      Bom bom, BigDecimal parentQuantity, Set<Long> path, Map<Long, MaterialRequirement> result) {
+      Bom bom, BigDecimal parentQty, Set<Long> path, Map<Long, MaterialRequirement> result) {
     for (BomLine line : bom.getBomLines()) {
       if (line.getIsDeleted()) {
         continue;
       }
-      BigDecimal required = line.requiredQuantity(parentQuantity, bom.getQty());
+      BigDecimal required = line.requiredQty(parentQty, bom.getQty());
 
       // 子件若是套件，穿透到它的下一层；套件自己不成行
       Bom childBom =
@@ -393,7 +388,12 @@ public class WorkOrderDomainService {
       merge(
           result,
           new MaterialRequirement(
-              line.getId(), line.getMaterialId(), line.getVariantId(), required, line.getUnitId()));
+              line.getId(),
+              line.getMaterialId(),
+              line.getVariantId(),
+              line.getRoutingOperationId(),
+              required,
+              line.getUnitId()));
     }
   }
 
@@ -421,7 +421,10 @@ public class WorkOrderDomainService {
             existing.bomLineId() == null ? item.bomLineId() : existing.bomLineId(),
             existing.materialId(),
             existing.variantId(),
-            existing.requiredQuantity().add(item.requiredQuantity()),
+            existing.routingOperationId() == null
+                ? item.routingOperationId()
+                : existing.routingOperationId(),
+            existing.requiredQty().add(item.requiredQty()),
             existing.unitId()));
   }
 
@@ -431,7 +434,6 @@ public class WorkOrderDomainService {
       String operationName,
       Long workCenterId,
       String workCenterName,
-      String timeMode,
       BigDecimal cycleTime,
       Integer sequence) {}
 
@@ -440,6 +442,7 @@ public class WorkOrderDomainService {
       @Nullable Long bomLineId,
       Long materialId,
       Long variantId,
-      BigDecimal requiredQuantity,
+      @Nullable Long routingOperationId,
+      BigDecimal requiredQty,
       Long unitId) {}
 }

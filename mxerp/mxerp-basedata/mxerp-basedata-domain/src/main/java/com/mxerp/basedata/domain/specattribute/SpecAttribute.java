@@ -70,12 +70,12 @@ public class SpecAttribute extends UpdateAggregateRoot {
   @Column(name = "Label", nullable = false, length = 100)
   private String label;
 
-  /** 输入类型：数字输入框、文本框、下拉框、复选框、开关 */
+  /** 输入类型编码，取值见 {@link InputTypeEnum} */
   @Nationalized
   @Column(name = "InputType", nullable = false, length = 50)
   private String inputType;
 
-  /** 数据类型：数值型、文本型、枚举型、布尔型 */
+  /** 数据类型编码，取值见 {@link DataTypeEnum} */
   @Nationalized
   @Column(name = "DataType", nullable = false, length = 50)
   private String dataType;
@@ -157,12 +157,11 @@ public class SpecAttribute extends UpdateAggregateRoot {
     if (trimmedCode == null) {
       throw new DomainException("规格属性代码不能为空");
     }
-    validateDataType(dataType);
+    this.dataType = EnumUtils.getCode(DataTypeEnum.class, dataType, "数据类型");
 
     // 不可变字段：所属分类、代码、数据类型创建后不允许修改，只在构造时赋值
     this.categoryId = categoryId;
     this.code = trimmedCode;
-    this.dataType = dataType;
 
     // 可变字段交给 apply 统一处理
     apply(label, inputType, isFilter, sequence, remark);
@@ -312,39 +311,12 @@ public class SpecAttribute extends UpdateAggregateRoot {
     if (trimmedLabel == null) {
       throw new DomainException("规格属性标签不能为空");
     }
-    validateInputType(inputType);
+    this.inputType = EnumUtils.getCode(InputTypeEnum.class, inputType, "输入类型");
 
     this.label = trimmedLabel;
-    this.inputType = inputType;
     this.isFilter = isFilter;
     this.sequence = sequence;
     this.remark = remark;
-  }
-
-  // ==================== 私有：校验 ====================
-
-  /**
-   * 校验输入类型是否合法
-   *
-   * @param inputType 输入类型代码（数字输入框、文本框、下拉框等）
-   * @throws DomainException 类型不在 {@link InputTypeEnum} 范围内时抛出
-   */
-  private void validateInputType(String inputType) {
-    if (EnumUtils.fromCode(InputTypeEnum.class, inputType) == null) {
-      throw new DomainException("输入类型" + inputType + "有误!");
-    }
-  }
-
-  /**
-   * 校验数据类型是否合法
-   *
-   * @param dataType 数据类型代码（数值型、文本型、枚举型、布尔型）
-   * @throws DomainException 类型不在 {@link DataTypeEnum} 范围内时抛出
-   */
-  private void validateDataType(String dataType) {
-    if (EnumUtils.fromCode(DataTypeEnum.class, dataType) == null) {
-      throw new DomainException("数据类型" + dataType + "有误!");
-    }
   }
 
   // ==================== 私有：查找与存在性判断 ====================

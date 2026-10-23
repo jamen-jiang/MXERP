@@ -76,7 +76,7 @@ public class Material extends UpdateAggregateRoot {
   @Column(name = "CategoryId", nullable = false)
   private Long categoryId;
 
-  /** 物料类型：库存料、消耗品、服务，见 {@link MaterialTypeEnum} */
+  /** 物料类型编码，取值见 {@link MaterialTypeEnum} */
   @Nationalized
   @Column(name = "Type", nullable = false, length = 50)
   private String type;
@@ -386,7 +386,7 @@ public class Material extends UpdateAggregateRoot {
     if (categoryId <= 0) {
       throw new DomainException("物料分类不能为空");
     }
-    validateType(type);
+    this.type = EnumUtils.getCode(MaterialTypeEnum.class, type, "物料类型");
     if (salesPrice != null && salesPrice.signum() < 0) {
       throw new DomainException("销售价不能为负数");
     }
@@ -395,7 +395,6 @@ public class Material extends UpdateAggregateRoot {
     }
 
     this.categoryId = categoryId;
-    this.type = type;
     this.code = code;
     this.name = name;
     this.description = description;
@@ -409,21 +408,5 @@ public class Material extends UpdateAggregateRoot {
     this.salesTaxRateId = salesTaxRateId;
     this.disabled = disabled;
     this.remark = remark;
-  }
-
-  // ==================== 私有：校验 ====================
-
-  /**
-   * 校验物料类型
-   *
-   * <p>管不管库存不再单独设开关，所以这里只有一件事：类型必须是 {@link MaterialTypeEnum} 里的一个值。
-   *
-   * @param type 物料类型
-   * @throws DomainException 类型不在枚举内时抛出
-   */
-  private void validateType(String type) {
-    if (EnumUtils.fromCode(MaterialTypeEnum.class, type) == null) {
-      throw new DomainException("物料类型" + type + "有误!");
-    }
   }
 }

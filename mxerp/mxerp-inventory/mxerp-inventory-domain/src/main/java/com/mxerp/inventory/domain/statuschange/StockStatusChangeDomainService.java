@@ -85,7 +85,7 @@ public class StockStatusChangeDomainService {
           data.locationId(),
           data.fromStockStatus(),
           data.toStockStatus(),
-          data.quantity(),
+          data.qty(),
           data.remark());
     }
     return model;
@@ -111,7 +111,7 @@ public class StockStatusChangeDomainService {
               line.getLocationId(),
               line.getFromStockStatus(),
               line.getToStockStatus(),
-              line.getQuantity()));
+              line.getQty()));
     }
     model.post(time);
     return moved;

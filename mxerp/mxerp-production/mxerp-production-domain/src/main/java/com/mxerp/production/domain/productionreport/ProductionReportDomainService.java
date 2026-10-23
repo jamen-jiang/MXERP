@@ -61,8 +61,8 @@ public class ProductionReportDomainService {
    *
    * @param workOrderId 工单Id
    * @param workOrderOperationId 工单工序Id
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
+   * @param goodQty 本次良品数量
+   * @param lossQty 本次报废数量
    * @param workTime 本次工时（分钟），传空则按工序标准时间算
    * @param remark 备注（可空）
    * @return 报工单聚合
@@ -71,14 +71,14 @@ public class ProductionReportDomainService {
   public ProductionReport create(
       long workOrderId,
       long workOrderOperationId,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
+      BigDecimal goodQty,
+      BigDecimal lossQty,
       @Nullable BigDecimal workTime,
       @Nullable String remark) {
     WorkOrder workOrder = requireWorkOrder(workOrderId);
     WorkOrderOperation operation = requireOperation(workOrder, workOrderOperationId);
-    BigDecimal minutes = resolveWorkTime(operation, goodQuantity, scrapQuantity, workTime);
-    workOrder.reportOperation(operation.getId(), goodQuantity, scrapQuantity, minutes);
+    BigDecimal minutes = resolveWorkTime(operation, goodQty, lossQty, workTime);
+    workOrder.reportOperation(operation.getId(), goodQty, lossQty, minutes);
     // 传空串：单号交给 OrderAddedEvent 的监听器分配
     return productionReportFactory.create(
         workOrder.getId(),
@@ -88,10 +88,10 @@ public class ProductionReportDomainService {
         operation.getOperationName(),
         operation.getWorkCenterId(),
         operation.getWorkCenterName(),
-        operation.getOperatorId(),
+        null,
         minutes,
-        goodQuantity,
-        scrapQuantity,
+        goodQty,
+        lossQty,
         remark,
         "");
   }
@@ -118,8 +118,8 @@ public class ProductionReportDomainService {
     WorkOrder workOrder = requireWorkOrder(model.getWorkOrderId());
     workOrder.unreportOperation(
         model.getWorkOrderOperationId(),
-        model.getGoodQuantity(),
-        model.getScrapQuantity(),
+        model.getGoodQty(),
+        model.getLossQty(),
         model.getWorkTime());
 
     model.voidReport(moment);
@@ -185,21 +185,21 @@ public class ProductionReportDomainService {
    * 准备工时只会算一次。
    *
    * @param operation 工单工序行
-   * @param goodQuantity 本次良品数量
-   * @param scrapQuantity 本次报废数量
+   * @param goodQty 本次良品数量
+   * @param lossQty 本次报废数量
    * @param workTime 现场填报工时（可空）
    * @return 本次工时（分钟）
    * @throws DomainException 按批取时却没有标准批量时抛出
    */
   private BigDecimal resolveWorkTime(
       WorkOrderOperation operation,
-      BigDecimal goodQuantity,
-      BigDecimal scrapQuantity,
+      BigDecimal goodQty,
+      BigDecimal lossQty,
       @Nullable BigDecimal workTime) {
     if (workTime != null) {
       return workTime;
     }
-    BigDecimal output = goodQuantity.add(scrapQuantity);
+    BigDecimal output = goodQty.add(lossQty);
     BigDecimal minutes = operation.estimatedRunMinutes(output);
     return minutes.setScale(MINUTE_SCALE, RoundingMode.HALF_UP);
   }

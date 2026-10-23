@@ -224,9 +224,7 @@ public class WorkCenter extends UpdateAggregateRoot {
     if (trimmedName == null) {
       throw new DomainException("工作中心名称不能为空");
     }
-    if (EnumUtils.fromCode(WorkCenterTypeEnum.class, type) == null) {
-      throw new DomainException("工作中心类型" + type + "有误!");
-    }
+    this.type = EnumUtils.getCode(WorkCenterTypeEnum.class, type, "工作中心类型");
     if (sequence <= 0) {
       throw new DomainException("排序必须大于0");
     }
@@ -249,7 +247,6 @@ public class WorkCenter extends UpdateAggregateRoot {
       throw new DomainException("工作日历不能为空");
     }
 
-    this.type = type;
     this.code = trimmedCode;
     this.name = trimmedName;
     this.workCalendarId = workCalendarId;

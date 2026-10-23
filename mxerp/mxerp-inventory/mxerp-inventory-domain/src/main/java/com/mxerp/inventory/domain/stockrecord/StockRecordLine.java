@@ -52,8 +52,8 @@ public class StockRecordLine extends BaseDeleteEntity {
   private Long variantId;
 
   /** 数量（SKU基本单位；红字行为负） */
-  @Column(name = "Quantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal quantity;
+  @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal qty;
 
   /** 仓库Id */
   @Column(name = "WarehouseId", nullable = false)
@@ -80,7 +80,7 @@ public class StockRecordLine extends BaseDeleteEntity {
    *
    * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU
-   * @param quantity 数量（红字行为负）
+   * @param qty 数量（红字行为负）
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
    * @param stockStatus 库存状态编码
@@ -90,7 +90,7 @@ public class StockRecordLine extends BaseDeleteEntity {
   StockRecordLine(
       long materialId,
       long variantId,
-      BigDecimal quantity,
+      BigDecimal qty,
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
@@ -101,7 +101,7 @@ public class StockRecordLine extends BaseDeleteEntity {
     if (variantId <= 0) {
       throw new DomainException("物料不能为空");
     }
-    if (quantity.signum() == 0) {
+    if (qty.signum() == 0) {
       throw new DomainException("数量不能为零");
     }
     if (warehouseId <= 0) {
@@ -116,7 +116,7 @@ public class StockRecordLine extends BaseDeleteEntity {
     }
     this.materialId = materialId;
     this.variantId = variantId;
-    this.quantity = quantity;
+    this.qty = qty;
     this.warehouseId = warehouseId;
     this.locationId = locationId;
     this.stockStatus = trimmedStatus;

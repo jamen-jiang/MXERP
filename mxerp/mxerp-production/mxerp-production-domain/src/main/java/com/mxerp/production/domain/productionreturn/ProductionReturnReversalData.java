@@ -9,7 +9,7 @@ import org.jspecify.annotations.NullMarked;
  * <p>数量一律为正，与红字库存单上填的数一致；负号只在库存那边落。
  *
  * @param workOrderMaterialId 工单用料行Id
- * @param quantity 本次冲回数量（正数）
+ * @param qty 本次冲回数量（正数）
  */
 @NullMarked
-public record ProductionReturnReversalData(Long workOrderMaterialId, BigDecimal quantity) {}
+public record ProductionReturnReversalData(Long workOrderMaterialId, BigDecimal qty) {}

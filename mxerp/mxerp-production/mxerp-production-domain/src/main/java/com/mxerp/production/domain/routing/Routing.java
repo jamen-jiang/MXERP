@@ -135,22 +135,22 @@ public class Routing extends UpdateAggregateRoot {
    *
    * @param operationId 工序Id
    * @param workCenterId 工作中心Id
-   * @param timeMode 工时计算方式编码
-   * @param cycleTime 单次循环工时（分钟）
+   * @param cycleTimeMode 周期时间计算方式编码
+   * @param cycleTime 周期时间（分钟）
    * @param sequence 工序顺序
    * @throws DomainException 工序顺序重复时抛出
    */
   public void addOperation(
       long operationId,
       long workCenterId,
-      String timeMode,
+      String cycleTimeMode,
       BigDecimal cycleTime,
       int sequence) {
     if (isExistSequence(sequence, null)) {
       throw new DomainException("工序顺序" + sequence + "已存在!");
     }
     routingOperations.add(
-        new RoutingOperation(operationId, workCenterId, timeMode, cycleTime, sequence));
+        new RoutingOperation(operationId, workCenterId, cycleTimeMode, cycleTime, sequence));
   }
 
   /**
@@ -159,8 +159,8 @@ public class Routing extends UpdateAggregateRoot {
    * @param routingOperationId 路线工序Id
    * @param operationId 工序Id
    * @param workCenterId 工作中心Id
-   * @param timeMode 工时计算方式编码
-   * @param cycleTime 单次循环工时（分钟）
+   * @param cycleTimeMode 周期时间计算方式编码
+   * @param cycleTime 周期时间（分钟）
    * @param sequence 工序顺序
    * @throws DomainException 路线工序不存在、工序顺序重复时抛出
    */
@@ -168,7 +168,7 @@ public class Routing extends UpdateAggregateRoot {
       long routingOperationId,
       long operationId,
       long workCenterId,
-      String timeMode,
+      String cycleTimeMode,
       BigDecimal cycleTime,
       int sequence) {
     RoutingOperation target = findOperation(routingOperationId);
@@ -178,7 +178,7 @@ public class Routing extends UpdateAggregateRoot {
     if (isExistSequence(sequence, routingOperationId)) {
       throw new DomainException("工序顺序" + sequence + "已存在!");
     }
-    target.modify(operationId, workCenterId, timeMode, cycleTime, sequence);
+    target.modify(operationId, workCenterId, cycleTimeMode, cycleTime, sequence);
   }
 
   /**

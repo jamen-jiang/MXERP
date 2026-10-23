@@ -49,12 +49,12 @@ public class RoutingOperation extends BaseDeleteEntity {
   @Column(name = "WorkCenterId", nullable = false)
   private Long workCenterId;
 
-  /** 工时计算方式：固定=用手工填的工时；按历史计算=取最近若干张工单的平均工时 */
+  /** 周期时间计算方式编码，取值见 {@link CycleTimeModeEnum}：固定=手填工时；按历史=取最近若干张工单平均 */
   @Nationalized
-  @Column(name = "TimeMode", nullable = false, length = 50)
-  private String timeMode;
+  @Column(name = "CycleTimeMode", nullable = false, length = 50)
+  private String cycleTimeMode;
 
-  /** 单次循环工时（分钟，照 Odoo 的 time_cycle_manual）：一次加工循环的时长 */
+  /** 周期时间（分钟）：做一次加工循环要多久 */
   @Column(name = "CycleTime", nullable = false, precision = 18, scale = 2)
   private BigDecimal cycleTime;
 
@@ -67,13 +67,13 @@ public class RoutingOperation extends BaseDeleteEntity {
    *
    * @param operationId 工序Id
    * @param workCenterId 工作中心Id
-   * @param timeMode 工时计算方式编码
-   * @param cycleTime 单次循环工时（分钟）
+   * @param cycleTimeMode 周期时间计算方式编码
+   * @param cycleTime 周期时间（分钟）
    * @param sequence 工序顺序
    */
   RoutingOperation(
-      long operationId, long workCenterId, String timeMode, BigDecimal cycleTime, int sequence) {
-    apply(operationId, workCenterId, timeMode, cycleTime, sequence);
+      long operationId, long workCenterId, String cycleTimeMode, BigDecimal cycleTime, int sequence) {
+    apply(operationId, workCenterId, cycleTimeMode, cycleTime, sequence);
   }
 
   /**
@@ -81,13 +81,13 @@ public class RoutingOperation extends BaseDeleteEntity {
    *
    * @param operationId 工序Id
    * @param workCenterId 工作中心Id
-   * @param timeMode 工时计算方式编码
-   * @param cycleTime 单次循环工时（分钟）
+   * @param cycleTimeMode 周期时间计算方式编码
+   * @param cycleTime 周期时间（分钟）
    * @param sequence 工序顺序
    */
   void modify(
-      long operationId, long workCenterId, String timeMode, BigDecimal cycleTime, int sequence) {
-    apply(operationId, workCenterId, timeMode, cycleTime, sequence);
+      long operationId, long workCenterId, String cycleTimeMode, BigDecimal cycleTime, int sequence) {
+    apply(operationId, workCenterId, cycleTimeMode, cycleTime, sequence);
   }
 
   // ==================== 私有：校验与赋值 ====================
@@ -99,13 +99,13 @@ public class RoutingOperation extends BaseDeleteEntity {
    *
    * @param operationId 工序Id
    * @param workCenterId 工作中心Id
-   * @param timeMode 工时计算方式编码
-   * @param cycleTime 单次循环工时（分钟）
+   * @param cycleTimeMode 周期时间计算方式编码
+   * @param cycleTime 周期时间（分钟）
    * @param sequence 工序顺序
    * @throws DomainException 工序、工作中心、计算方式、工时或顺序非法时抛出
    */
   private void apply(
-      long operationId, long workCenterId, String timeMode, BigDecimal cycleTime, int sequence) {
+      long operationId, long workCenterId, String cycleTimeMode, BigDecimal cycleTime, int sequence) {
     if (sequence <= 0) {
       throw new DomainException("工序顺序必须大于0");
     }
@@ -115,18 +115,15 @@ public class RoutingOperation extends BaseDeleteEntity {
     if (workCenterId <= 0) {
       throw new DomainException("工作中心不能为空");
     }
-    validateNonNegative("循环工时", cycleTime);
-    String trimmedMode = StringUtils.trimToNull(timeMode);
+    validateNonNegative("周期时间", cycleTime);
+    String trimmedMode = StringUtils.trimToNull(cycleTimeMode);
     if (trimmedMode == null) {
-      throw new DomainException("工时计算方式不能为空");
+      throw new DomainException("周期时间计算方式不能为空");
     }
-    if (EnumUtils.fromCode(TimeModeEnum.class, trimmedMode) == null) {
-      throw new DomainException("工时计算方式" + trimmedMode + "有误!");
-    }
+    this.cycleTimeMode = EnumUtils.getCode(CycleTimeModeEnum.class, trimmedMode, "周期时间计算方式");
 
     this.operationId = operationId;
     this.workCenterId = workCenterId;
-    this.timeMode = trimmedMode;
     this.cycleTime = cycleTime;
     this.sequence = sequence;
   }

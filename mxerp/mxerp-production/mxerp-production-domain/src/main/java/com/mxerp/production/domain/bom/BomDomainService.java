@@ -52,8 +52,8 @@ public class BomDomainService {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数（天）
+   * @param prepareDays 备料天数（天）
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -136,8 +136,8 @@ public class BomDomainService {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数（天）
+   * @param prepareDays 备料天数（天）
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -196,8 +196,8 @@ public class BomDomainService {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数（天）
+   * @param prepareDays 备料天数（天）
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -281,11 +281,11 @@ public class BomDomainService {
       model.addLine(
           line.getMaterialId(),
           line.getVariantId(),
+          line.getRoutingOperationId(),
           line.getQty(),
           line.getLossRate(),
           line.getUnitId(),
-          line.getSequence(),
-          line.getOperationId());
+          line.getSequence());
     }
     return model;
   }
@@ -358,21 +358,21 @@ public class BomDomainService {
             id,
             data.materialId(),
             data.variantId(),
+            data.routingOperationId(),
             data.qty(),
             data.lossRate(),
             data.unitId(),
-            data.sequence(),
-            data.operationId());
+            data.sequence());
       } else {
         // 不存在：添加
         bom.addLine(
             data.materialId(),
             data.variantId(),
+            data.routingOperationId(),
             data.qty(),
             data.lossRate(),
             data.unitId(),
-            data.sequence(),
-            data.operationId());
+            data.sequence());
       }
     }
   }

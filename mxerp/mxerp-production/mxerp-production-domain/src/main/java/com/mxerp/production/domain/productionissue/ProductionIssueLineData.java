@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * @param workOrderMaterialId 工单用料行Id
  * @param materialId 物料SPU
  * @param variantId 物料SKU
- * @param appliedQuantity 申请数量
+ * @param appliedQty 申请数量
  * @param unitId 单位Id
  * @param warehouseId 发料仓库Id
  * @param locationId 库位Id（可空，空表示从仓库这一层发）
@@ -21,7 +21,7 @@ public record ProductionIssueLineData(
     Long workOrderMaterialId,
     Long materialId,
     Long variantId,
-    BigDecimal appliedQuantity,
+    BigDecimal appliedQty,
     Long unitId,
     Long warehouseId,
     @Nullable Long locationId,

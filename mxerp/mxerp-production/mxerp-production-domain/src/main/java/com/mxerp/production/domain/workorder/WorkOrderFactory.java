@@ -25,16 +25,16 @@ public class WorkOrderFactory {
   /**
    * 创建工单
    *
-   * @param materialId 产出SPU
-   * @param variantId 产出SKU
-   * @param quantity 计划数量
-   * @param unitId 单位Id
    * @param sourceType 来源类型编码
    * @param sourceId 来源单据Id（可空，库存补货时为空）
    * @param sourceNumber 来源单号（可空，冗余存储便于追溯与展示）
    * @param bomId 指定BOM（可空，为空时下达自动取生效版本）
    * @param routingId 指定工艺路线（可空，为空时下达自动取生效版本）
+   * @param materialId 产出SPU
+   * @param variantId 产出SKU
    * @param dueTime 交期（可空，承诺的完工时间，生产侧只读不写）
+   * @param planQty 计划数量
+   * @param unitId 单位Id
    * @param warehouseId 仓库Id（可空，完工入库单没指定仓库时的默认收货仓）
    * @param remark 备注（可空）
    * @param number 工单号（传空串表示由 OrderAddedEvent 的监听器分配）
@@ -42,16 +42,16 @@ public class WorkOrderFactory {
    * @throws DomainException 单号已存在时抛出
    */
   public WorkOrder create(
-      long materialId,
-      long variantId,
-      BigDecimal quantity,
-      long unitId,
       String sourceType,
       @Nullable Long sourceId,
       @Nullable String sourceNumber,
       @Nullable Long bomId,
       @Nullable Long routingId,
+      long materialId,
+      long variantId,
       @Nullable LocalDateTime dueTime,
+      BigDecimal planQty,
+      long unitId,
       @Nullable Long warehouseId,
       @Nullable String remark,
       String number) {
@@ -60,16 +60,16 @@ public class WorkOrderFactory {
       throw new DomainException("工单号" + number + "已存在!");
     }
     return new WorkOrder(
-        materialId,
-        variantId,
-        quantity,
-        unitId,
         sourceType,
         sourceId,
         sourceNumber,
         bomId,
         routingId,
+        materialId,
+        variantId,
         dueTime,
+        planQty,
+        unitId,
         warehouseId,
         remark,
         number);

@@ -81,7 +81,7 @@ public class StockRecordDomainService {
       model.addLine(
           data.materialId(),
           data.variantId(),
-          data.quantity(),
+          data.qty(),
           data.warehouseId(),
           data.locationId(),
           data.stockStatus(),
@@ -153,19 +153,19 @@ public class StockRecordDomainService {
             "",
             origin.getId());
     for (StockRecordLineData data : lines) {
-      if (data.quantity().signum() <= 0) {
+      if (data.qty().signum() <= 0) {
         throw new DomainException("冲多少要填正数，负号由单子自己落");
       }
       StockRecordLine originLine = getOriginLine(origin, data);
-      BigDecimal remained = getRemainedQuantity(originLine, reversals);
-      if (data.quantity().compareTo(remained) > 0) {
+      BigDecimal remained = getRemainedQty(originLine, reversals);
+      if (data.qty().compareTo(remained) > 0) {
         throw new DomainException(
-            "物料" + data.variantId() + "在原单上只剩" + remained + "能冲，填了" + data.quantity());
+            "物料" + data.variantId() + "在原单上只剩" + remained + "能冲，填了" + data.qty());
       }
       model.addLine(
           data.materialId(),
           data.variantId(),
-          data.quantity().negate(),
+          data.qty().negate(),
           data.warehouseId(),
           data.locationId(),
           data.stockStatus(),
@@ -244,7 +244,7 @@ public class StockRecordDomainService {
    * @param reversals 该原单名下已开出来的红字单（含草稿，含已作废）
    * @return 还能冲掉的量
    */
-  private BigDecimal getRemainedQuantity(
+  private BigDecimal getRemainedQty(
       StockRecordLine originLine, List<StockRecord> reversals) {
     BigDecimal reversed = BigDecimal.ZERO;
     for (StockRecord reversal : reversals) {
@@ -253,11 +253,11 @@ public class StockRecordDomainService {
       }
       for (StockRecordLine line : reversal.getStockRecordLines()) {
         if (isSamePosition(line, originLine)) {
-          reversed = reversed.add(line.getQuantity());
+          reversed = reversed.add(line.getQty());
         }
       }
     }
-    return originLine.getQuantity().add(reversed);
+    return originLine.getQty().add(reversed);
   }
 
   /**

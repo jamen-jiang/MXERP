@@ -27,7 +27,7 @@ public class EmployeeFactory {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -58,7 +58,7 @@ public class EmployeeFactory {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -90,7 +90,7 @@ public class EmployeeFactory {
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,

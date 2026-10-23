@@ -12,14 +12,14 @@ import org.jspecify.annotations.Nullable;
  *
  * @param operationId 工序Id
  * @param workCenterId 工作中心Id
- * @param timeMode 工时计算方式编码
- * @param cycleTime 单次循环工时（分钟）
+ * @param cycleTimeMode 周期时间计算方式编码
+ * @param cycleTime 周期时间（分钟）
  * @param sequence 工序顺序
  */
 @NullMarked
 public record RoutingOperationData(
     Long operationId,
     Long workCenterId,
-    String timeMode,
+    String cycleTimeMode,
     BigDecimal cycleTime,
     Integer sequence) {}

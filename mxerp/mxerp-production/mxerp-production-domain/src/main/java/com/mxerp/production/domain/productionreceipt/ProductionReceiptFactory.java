@@ -31,7 +31,7 @@ public class ProductionReceiptFactory {
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
-   * @param appliedQuantity 申报入库数量
+   * @param appliedQty 申报入库数量
    * @param remark 备注（可空）
    * @param number 入库单号（传空串表示由 OrderAddedEvent 的监听器分配）
    * @return 生产入库单聚合
@@ -45,7 +45,7 @@ public class ProductionReceiptFactory {
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       @Nullable String remark,
       String number) {
     // 单号非空时才校验唯一，空串代表尚未分配
@@ -60,7 +60,7 @@ public class ProductionReceiptFactory {
         unitId,
         warehouseId,
         locationId,
-        appliedQuantity,
+        appliedQty,
         remark,
         number);
   }

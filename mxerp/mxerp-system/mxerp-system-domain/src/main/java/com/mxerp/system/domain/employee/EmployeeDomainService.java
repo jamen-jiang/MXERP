@@ -3,7 +3,7 @@ package com.mxerp.system.domain.employee;
 import com.mxerp.shared.domain.exception.DomainException;
 import com.mxerp.system.domain.company.CompanyRepository;
 import com.mxerp.system.domain.department.DepartmentRepository;
-import com.mxerp.system.domain.post.PostRepository;
+import com.mxerp.system.domain.position.PositionRepository;
 import com.mxerp.system.domain.user.UserRepository;
 import java.time.LocalDate;
 import org.jspecify.annotations.NullMarked;
@@ -26,7 +26,7 @@ public class EmployeeDomainService {
   private final DepartmentRepository departmentRepository;
 
   /** 岗位仓储 */
-  private final PostRepository postRepository;
+  private final PositionRepository postRepository;
 
   /** 用户仓储 */
   private final UserRepository userRepository;
@@ -46,7 +46,7 @@ public class EmployeeDomainService {
       EmployeeRepository employeeRepository,
       CompanyRepository companyRepository,
       DepartmentRepository departmentRepository,
-      PostRepository postRepository,
+      PositionRepository postRepository,
       UserRepository userRepository) {
     this.employeeFactory = employeeFactory;
     this.employeeRepository = employeeRepository;
@@ -62,7 +62,7 @@ public class EmployeeDomainService {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -93,7 +93,7 @@ public class EmployeeDomainService {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -117,12 +117,12 @@ public class EmployeeDomainService {
       @Nullable String departureReason,
       String status,
       @Nullable String remark) {
-    validateReferences(companyId, departmentId, postId, userId);
+    validateReferences(companyId, departmentId, positionId, userId);
     return employeeFactory.create(
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,
@@ -154,7 +154,7 @@ public class EmployeeDomainService {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -185,7 +185,7 @@ public class EmployeeDomainService {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -219,7 +219,7 @@ public class EmployeeDomainService {
               type,
               companyId,
               departmentId,
-              postId,
+              positionId,
               userId,
               number,
               name,
@@ -249,7 +249,7 @@ public class EmployeeDomainService {
           type,
           companyId,
           departmentId,
-          postId,
+          positionId,
           userId,
           number,
           name,
@@ -284,7 +284,7 @@ public class EmployeeDomainService {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -316,7 +316,7 @@ public class EmployeeDomainService {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -351,7 +351,7 @@ public class EmployeeDomainService {
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,
@@ -385,7 +385,7 @@ public class EmployeeDomainService {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -416,7 +416,7 @@ public class EmployeeDomainService {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -441,7 +441,7 @@ public class EmployeeDomainService {
       String status,
       @Nullable String remark) {
     // 1. 引用的主数据要存在
-    validateReferences(companyId, departmentId, postId, userId);
+    validateReferences(companyId, departmentId, positionId, userId);
     // 2. 校验员工编号唯一（排除自身）
     if (employeeRepository.isExistByNumberExcludeId(number, employee.getId())) {
       throw new DomainException("员工编号" + number + "已存在!");
@@ -451,7 +451,7 @@ public class EmployeeDomainService {
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,
@@ -486,20 +486,20 @@ public class EmployeeDomainService {
    *
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @throws DomainException 任一引用的主数据不存在时抛出
    */
   private void validateReferences(
-      long companyId, long departmentId, @Nullable Long postId, @Nullable Long userId) {
+      long companyId, long departmentId, @Nullable Long positionId, @Nullable Long userId) {
     if (companyRepository.get(companyId) == null) {
       throw new DomainException("公司" + companyId + "不存在!");
     }
     if (departmentRepository.get(departmentId) == null) {
       throw new DomainException("部门" + departmentId + "不存在!");
     }
-    if (postId != null && postRepository.get(postId) == null) {
-      throw new DomainException("岗位" + postId + "不存在!");
+    if (positionId != null && postRepository.get(positionId) == null) {
+      throw new DomainException("岗位" + positionId + "不存在!");
     }
     if (userId != null && userRepository.get(userId) == null) {
       throw new DomainException("账号" + userId + "不存在!");

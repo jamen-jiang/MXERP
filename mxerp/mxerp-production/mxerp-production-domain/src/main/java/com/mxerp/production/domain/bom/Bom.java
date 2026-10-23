@@ -39,7 +39,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>产出批量：{@code qty} + {@code unitId} 说明这份配方是按「产出这么多父件」定义的，用料行里的
  * 单位用量都是这一批量下的量（照 Odoo 的 {@code product_qty}/{@code product_uom_id}、ERPNext 的
- * {@code quantity}/{@code uom}）。工单下达时按「工单数量 ÷ 产出数量」折算，不再假定 1:1。
+ * {@code qty}/{@code uom}）。工单下达时按「工单数量 ÷ 产出数量」折算，不再假定 1:1。
  *
  * <p>{@code materialId} 是父件所属的 SPU，由调用方随 SKU 一起提交，只当「按系列浏览 BOM」的分组列用。物料类型 不在这里存：它记在 {@code Variant}
  * 主数据上，BOM 再抄一份就成了两处说法，筛选时按 SPU 分组即可。
@@ -90,7 +90,7 @@ public class Bom extends UpdateAggregateRoot {
   @Nullable
   private Long routingId;
 
-  /** 产出数量：用料行里的单位用量都按这一批量计（照 Odoo 的 product_qty、ERPNext 的 quantity） */
+  /** 产出数量：用料行里的单位用量都按这一批量计（照 Odoo 的 product_qty、ERPNext 的 qty） */
   @Column(name = "Qty", nullable = false, precision = 18, scale = 2)
   private BigDecimal qty;
 
@@ -108,11 +108,19 @@ public class Bom extends UpdateAggregateRoot {
   @Column(name = "IssueMode", nullable = false, length = 50)
   private String issueMode;
 
-  /** 制造提前期（天，照 Odoo 的 produce_delay 标签 Manufacturing Lead Time）：从下达算起，平均多少天能做出来 */
+  /**
+   * 制造天数：从下达工单那天算起，把货做出来平均要多少天。
+   *
+   * <p>排产时「最晚哪天下单」就按它倒推：想要 20 号交货、做要 5 天，19 号之后下单就来不及了。
+   */
   @Column(name = "LeadDays", nullable = false)
   private Integer leadDays = 0;
 
-  /** 提前多少天备料（照 Odoo 的 days_to_prepare_mo）：按交期倒推，提前这么多天把工单建出来，留时间补组件 */
+  /**
+   * 备料天数：比开工日再往前推这么多天，先把工单建出来、把料备齐。
+   *
+   * <p>料没到位机器开不了——做要 5 天、料还得 3 天，那就提前 3 天建单领料，别等到开工那天才发现料没到。
+   */
   @Column(name = "PrepareDays", nullable = false)
   private Integer prepareDays = 0;
 
@@ -162,8 +170,8 @@ public class Bom extends UpdateAggregateRoot {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数：从下达算起把货做出来平均要多少天
+   * @param prepareDays 备料天数：比开工日再往前推这么多天建单备料
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -215,8 +223,8 @@ public class Bom extends UpdateAggregateRoot {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数：从下达算起把货做出来平均要多少天
+   * @param prepareDays 备料天数：比开工日再往前推这么多天建单备料
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -260,21 +268,21 @@ public class Bom extends UpdateAggregateRoot {
    *
    * @param materialId 子件SPU
    * @param variantId 子件SKU
+   * @param routingOperationId 消耗的路线工序Id（可空）
    * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
    * @param sequence 行号
-   * @param operationId 消耗工序Id（可空）
    * @throws DomainException 行号或子件重复时抛出
    */
   public void addLine(
       long materialId,
       long variantId,
+      @Nullable Long routingOperationId,
       BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      int sequence,
-      @Nullable Long operationId) {
+      int sequence) {
     if (isExistSequence(sequence, null)) {
       throw new DomainException("BOM 行号" + sequence + "已存在!");
     }
@@ -282,7 +290,7 @@ public class Bom extends UpdateAggregateRoot {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
     bomLines.add(
-        new BomLine(materialId, variantId, qty, lossRate, unitId, sequence, operationId));
+        new BomLine(materialId, variantId, routingOperationId, qty, lossRate, unitId, sequence));
   }
 
   /**
@@ -291,22 +299,22 @@ public class Bom extends UpdateAggregateRoot {
    * @param bomLineId BOM 行Id
    * @param materialId 子件SPU
    * @param variantId 子件SKU
+   * @param routingOperationId 消耗的路线工序Id（可空）
    * @param qty 单位用量
    * @param lossRate 损耗率（百分比）
    * @param unitId 单位Id
    * @param sequence 行号
-   * @param operationId 消耗工序Id（可空）
    * @throws DomainException 行不存在、行号或子件重复时抛出
    */
   public void modifyLine(
       long bomLineId,
       long materialId,
       long variantId,
+      @Nullable Long routingOperationId,
       BigDecimal qty,
       BigDecimal lossRate,
       long unitId,
-      int sequence,
-      @Nullable Long operationId) {
+      int sequence) {
     BomLine target = findLine(bomLineId);
     if (target == null) {
       throw new DomainException("BOM 行不存在!");
@@ -317,7 +325,7 @@ public class Bom extends UpdateAggregateRoot {
     if (isExistComponent(variantId, bomLineId)) {
       throw new DomainException("子件已存在于当前 BOM 中!");
     }
-    target.modify(materialId, variantId, qty, lossRate, unitId, sequence, operationId);
+    target.modify(materialId, variantId, routingOperationId, qty, lossRate, unitId, sequence);
   }
 
   /**
@@ -362,8 +370,8 @@ public class Bom extends UpdateAggregateRoot {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
-   * @param prepareDays 提前备料天数
+   * @param leadDays 制造天数：从下达算起把货做出来平均要多少天
+   * @param prepareDays 备料天数：比开工日再往前推这么多天建单备料
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用
    * @param remark 备注（可空）
@@ -404,17 +412,11 @@ public class Bom extends UpdateAggregateRoot {
     if (trimmedVersion == null) {
       throw new DomainException("版本号不能为空");
     }
-    if (EnumUtils.fromCode(BomTypeEnum.class, type) == null) {
-      throw new DomainException("BOM 类型" + type + "有误!");
-    }
-    if (EnumUtils.fromCode(BomStartModeEnum.class, startMode) == null) {
-      throw new DomainException("开工方式" + startMode + "有误!");
-    }
-    if (EnumUtils.fromCode(BomIssueModeEnum.class, issueMode) == null) {
-      throw new DomainException("领料方式" + issueMode + "有误!");
-    }
+    this.type = EnumUtils.getCode(BomTypeEnum.class, type, "BOM 类型");
+    this.startMode = EnumUtils.getCode(BomStartModeEnum.class, startMode, "开工方式");
+    this.issueMode = EnumUtils.getCode(BomIssueModeEnum.class, issueMode, "领料方式");
     if (leadDays < 0) {
-      throw new DomainException("制造提前期不能为负数");
+      throw new DomainException("制造天数不能为负数");
     }
     if (prepareDays < 0) {
       throw new DomainException("备料天数不能为负数");
@@ -423,7 +425,6 @@ public class Bom extends UpdateAggregateRoot {
       throw new DomainException("批量必须大于0");
     }
 
-    this.type = type;
     this.code = StringUtils.trimToNull(code);
     this.version = trimmedVersion;
     this.materialId = materialId;
@@ -431,8 +432,6 @@ public class Bom extends UpdateAggregateRoot {
     this.routingId = routingId;
     this.qty = qty;
     this.unitId = unitId;
-    this.startMode = startMode;
-    this.issueMode = issueMode;
     this.leadDays = leadDays;
     this.prepareDays = prepareDays;
     this.batchSize = batchSize;

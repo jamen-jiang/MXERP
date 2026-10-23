@@ -62,19 +62,25 @@ class WorkOrderDomainServiceTest {
       model.addLine(
           line.materialId(),
           line.variantId(),
+          line.routingOperationId(),
           line.qty(),
           line.lossRate(),
           line.unitId(),
-          line.sequence(),
-          line.operationId());
+          line.sequence());
     }
     return model;
   }
 
   /** 一条用料：子件 SPU = SKU = variantId */
-  private static BomLineData line(long variantId, String quantity, int sequence) {
+  private static BomLineData line(long variantId, String qty, int sequence) {
     return new BomLineData(
-        variantId, variantId, new BigDecimal(quantity), BigDecimal.ZERO, UNIT, sequence, null);
+        variantId,
+        variantId,
+        null,
+        new BigDecimal(qty),
+        BigDecimal.ZERO,
+        UNIT,
+        sequence);
   }
 
   @Test
@@ -87,7 +93,7 @@ class WorkOrderDomainServiceTest {
 
     assertEquals(1, result.size());
     assertEquals(2L, result.getFirst().variantId());
-    assertEquals(0, new BigDecimal("30").compareTo(result.getFirst().requiredQuantity()));
+    assertEquals(0, new BigDecimal("30").compareTo(result.getFirst().requiredQty()));
   }
 
   @Test
@@ -105,7 +111,7 @@ class WorkOrderDomainServiceTest {
 
     assertEquals(1, result.size(), "套件自己不该成行");
     assertEquals(3L, result.getFirst().variantId());
-    assertEquals(0, new BigDecimal("40").compareTo(result.getFirst().requiredQuantity()));
+    assertEquals(0, new BigDecimal("40").compareTo(result.getFirst().requiredQty()));
   }
 
   @Test
@@ -124,7 +130,7 @@ class WorkOrderDomainServiceTest {
 
     assertEquals(1, result.size(), "同一 SKU 应合成一行");
     assertEquals(9L, result.getFirst().variantId());
-    assertEquals(0, new BigDecimal("4").compareTo(result.getFirst().requiredQuantity()));
+    assertEquals(0, new BigDecimal("4").compareTo(result.getFirst().requiredQty()));
   }
 
   @Test
@@ -163,8 +169,8 @@ class WorkOrderDomainServiceTest {
                 null,
                 false,
                 null);
-    root.addLine(9L, 9L, BigDecimal.ONE, BigDecimal.ZERO, 2L, 1, null);
-    root.addLine(2L, 2L, BigDecimal.ONE, BigDecimal.ZERO, UNIT, 2, null);
+    root.addLine(9L, 9L, null, BigDecimal.ONE, BigDecimal.ZERO, 2L, 1);
+    root.addLine(2L, 2L, null, BigDecimal.ONE, BigDecimal.ZERO, UNIT, 2);
 
     assertThrows(
         DomainException.class, () -> service.resolveMaterials(BigDecimal.ONE, root));

@@ -76,7 +76,7 @@ public class ProductionIssue extends OrderAggregateRoot {
   @Nullable
   private LocalDateTime issueTime;
 
-  /** 状态：草稿、已发料 */
+  /** 状态编码，取值见 {@link ProductionIssueStatusEnum} */
   @Nationalized
   @Column(name = "Status", nullable = false, length = 50)
   private String status;
@@ -159,7 +159,7 @@ public class ProductionIssue extends OrderAggregateRoot {
    * @param workOrderMaterialId 工单用料行Id
    * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
-   * @param appliedQuantity 申请数量
+   * @param appliedQty 申请数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 发料仓库Id
    * @param locationId 库位Id（可空）
@@ -170,7 +170,7 @@ public class ProductionIssue extends OrderAggregateRoot {
       long workOrderMaterialId,
       long materialId,
       long variantId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
@@ -184,7 +184,7 @@ public class ProductionIssue extends OrderAggregateRoot {
             workOrderMaterialId,
             materialId,
             variantId,
-            appliedQuantity,
+            appliedQty,
             unitId,
             warehouseId,
             locationId,
@@ -225,7 +225,7 @@ public class ProductionIssue extends OrderAggregateRoot {
       if (line == null) {
         throw new DomainException("工单用料" + data.workOrderMaterialId() + "不在本单中!");
       }
-      line.approve(data.approvedQuantity());
+      line.approve(data.approvedQty());
     }
   }
 
@@ -245,7 +245,7 @@ public class ProductionIssue extends OrderAggregateRoot {
     }
     for (ProductionIssueLine line : productionIssueLines) {
       if (line.isNotApproved()) {
-        line.approve(line.getAppliedQuantity());
+        line.approve(line.getAppliedQty());
       }
     }
     this.status = ProductionIssueStatusEnum.POSTED.getCode();

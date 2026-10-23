@@ -76,7 +76,7 @@ public class StockRecord extends OrderAggregateRoot {
   @Column(name = "SourceNumber", nullable = false, length = 30)
   private String sourceNumber;
 
-  /** 出入方向编码（整张单一个方向） */
+  /** 出入方向编码，取值见 {@link StockRecordDirectionEnum}（整张单一个方向） */
   @Nationalized
   @Column(name = "Direction", nullable = false, length = 50)
   private String direction;
@@ -119,10 +119,10 @@ public class StockRecord extends OrderAggregateRoot {
   /**
    * 构造器
    *
-   * @param sourceType 来源单据类型编码
+   * @param sourceType 来源单据类型编码，取值见 {@link SerialNumberTypeEnum}
    * @param sourceId 来源单据Id
    * @param sourceNumber 来源单据号（快照）
-   * @param direction 出入方向编码（整张单一个方向）
+   * @param direction 出入方向编码，取值见 {@link StockRecordDirectionEnum}（整张单一个方向）
    * @param operatorId 经办人Id（可空）
    * @param remark 备注（可空）
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
@@ -174,7 +174,7 @@ public class StockRecord extends OrderAggregateRoot {
    *
    * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU
-   * @param quantity 数量（普通单为正，红字单为负）
+   * @param qty 数量（普通单为正，红字单为负）
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
    * @param stockStatus 库存状态编码
@@ -184,16 +184,16 @@ public class StockRecord extends OrderAggregateRoot {
   public void addLine(
       long materialId,
       long variantId,
-      BigDecimal quantity,
+      BigDecimal qty,
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
       @Nullable String remark) {
     ensureDraft();
-    if (this.reversalOfRecordId == null && quantity.signum() < 0) {
+    if (this.reversalOfRecordId == null && qty.signum() < 0) {
       throw new DomainException("只有红字单能开负数数量，要撤销已过账的单请走红冲");
     }
-    if (this.reversalOfRecordId != null && quantity.signum() > 0) {
+    if (this.reversalOfRecordId != null && qty.signum() > 0) {
       throw new DomainException("红字单的数量要往回冲，正数请开普通单");
     }
     if (findLine(variantId, warehouseId, locationId, stockStatus) != null) {
@@ -201,7 +201,7 @@ public class StockRecord extends OrderAggregateRoot {
     }
     stockRecordLines.add(
         new StockRecordLine(
-            materialId, variantId, quantity, warehouseId, locationId, stockStatus, remark));
+            materialId, variantId, qty, warehouseId, locationId, stockStatus, remark));
   }
 
   /**
@@ -282,7 +282,7 @@ public class StockRecord extends OrderAggregateRoot {
    * @param sourceType 来源单据类型编码
    * @param sourceId 来源单据Id
    * @param sourceNumber 来源单据号（快照）
-   * @param direction 出入方向编码（整张单一个方向）
+   * @param direction 出入方向编码，取值见 {@link StockRecordDirectionEnum}（整张单一个方向）
    * @param operatorId 经办人Id（可空）
    * @param remark 备注（可空）
    * @throws DomainException 来源单据类型、Id、号或方向非法时抛出
@@ -295,9 +295,7 @@ public class StockRecord extends OrderAggregateRoot {
       @Nullable Long operatorId,
       @Nullable String remark) {
     String trimmedSourceType = StringUtils.trimToEmpty(sourceType);
-    if (EnumUtils.fromCode(SerialNumberTypeEnum.class, trimmedSourceType) == null) {
-      throw new DomainException("来源单据类型" + trimmedSourceType + "有误!");
-    }
+    this.sourceType = EnumUtils.getCode(SerialNumberTypeEnum.class, trimmedSourceType, "来源单据类型");
     if (sourceId <= 0) {
       throw new DomainException("来源单据不能为空");
     }
@@ -305,13 +303,9 @@ public class StockRecord extends OrderAggregateRoot {
       throw new DomainException("来源单据号不能为空");
     }
     String trimmedDirection = StringUtils.trimToEmpty(direction);
-    if (EnumUtils.fromCode(StockRecordDirectionEnum.class, trimmedDirection) == null) {
-      throw new DomainException("方向" + trimmedDirection + "有误!");
-    }
-    this.sourceType = trimmedSourceType;
+    this.direction = EnumUtils.getCode(StockRecordDirectionEnum.class, trimmedDirection, "方向");
     this.sourceId = sourceId;
     this.sourceNumber = sourceNumber;
-    this.direction = trimmedDirection;
     this.operatorId = operatorId;
     this.remark = remark;
   }

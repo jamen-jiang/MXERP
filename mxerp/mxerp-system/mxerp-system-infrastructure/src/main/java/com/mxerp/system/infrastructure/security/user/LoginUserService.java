@@ -81,10 +81,10 @@ public class LoginUserService implements UserDetailsService {
         null,
         model.getEmail(),
         permission.superAdmin,
-        permission.appIds,
+        permission.menuIds,
         permission.licenses,
         permission.companyIds,
         permission.departmentIds,
-        permission.postIds);
+        permission.positionIds);
   }
 }

@@ -34,7 +34,7 @@ public class BomFactory {
    * @param unitId 产出单位Id
    * @param startMode 开工方式编码
    * @param issueMode 领料方式编码
-   * @param leadDays 制造提前期（天）
+   * @param leadDays 制造天数（天）
    * @param prepareDays 提前备料天数
    * @param batchSize 自动生成工单的批量（可空）
    * @param disabled 是否禁用

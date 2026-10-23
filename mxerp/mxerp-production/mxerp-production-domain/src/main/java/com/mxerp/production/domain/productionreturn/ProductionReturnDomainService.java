@@ -76,7 +76,7 @@ public class ProductionReturnDomainService {
           data.workOrderMaterialId(),
           data.materialId(),
           data.variantId(),
-          data.appliedQuantity(),
+          data.appliedQty(),
           data.unitId(),
           data.warehouseId(),
           data.locationId(),
@@ -121,7 +121,7 @@ public class ProductionReturnDomainService {
         data.workOrderMaterialId(),
         data.materialId(),
         data.variantId(),
-        data.appliedQuantity(),
+        data.appliedQty(),
         data.unitId(),
         data.warehouseId(),
         data.locationId(),
@@ -164,7 +164,7 @@ public class ProductionReturnDomainService {
     model.approve(approvals);
     model.post(time);
     for (ProductionReturnLine line : model.getProductionReturnLines()) {
-      workOrder.returnMaterial(line.getWorkOrderMaterialId(), line.getApprovedQuantity());
+      workOrder.returnMaterial(line.getWorkOrderMaterialId(), line.getApprovedQty());
     }
     return model;
   }
@@ -197,20 +197,20 @@ public class ProductionReturnDomainService {
         throw new DomainException("工单用料" + data.workOrderMaterialId() + "重复冲回!");
       }
       ProductionReturnLine line = requireLine(model, data.workOrderMaterialId());
-      BigDecimal quantity = data.quantity();
-      if (quantity.signum() <= 0) {
+      BigDecimal qty = data.qty();
+      if (qty.signum() <= 0) {
         throw new DomainException("冲回数量必须大于0");
       }
-      if (quantity.compareTo(line.getApprovedQuantity()) > 0) {
+      if (qty.compareTo(line.getApprovedQty()) > 0) {
         throw new DomainException(
             "物料"
                 + line.getVariantId()
                 + "冲回数量"
-                + quantity
+                + qty
                 + "不能大于本单核定数量"
-                + line.getApprovedQuantity());
+                + line.getApprovedQty());
       }
-      workOrder.unreturnMaterial(line.getWorkOrderMaterialId(), quantity);
+      workOrder.unreturnMaterial(line.getWorkOrderMaterialId(), qty);
     }
     return model;
   }

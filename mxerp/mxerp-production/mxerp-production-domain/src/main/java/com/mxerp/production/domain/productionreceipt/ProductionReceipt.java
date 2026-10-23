@@ -76,19 +76,19 @@ public class ProductionReceipt extends OrderAggregateRoot {
   private Long locationId;
 
   /** 申报入库数量（车间报上来的数，不填就取工单还没入库的完工数） */
-  @Column(name = "AppliedQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal appliedQuantity;
+  @Column(name = "AppliedQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal appliedQty;
 
   /** 实收数量（审核时落定，0 表示尚未核定） */
-  @Column(name = "ReceivedQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal receivedQuantity;
+  @Column(name = "ReceivedQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal receivedQty;
 
   /** 入库时间（可空，转入已入库时写入） */
   @Column(name = "ReceiptTime")
   @Nullable
   private LocalDateTime receiptTime;
 
-  /** 状态：草稿、已入库 */
+  /** 状态编码，取值见 {@link ProductionReceiptStatusEnum} */
   @Nationalized
   @Column(name = "Status", nullable = false, length = 50)
   private String status;
@@ -109,7 +109,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
-   * @param appliedQuantity 申报入库数量
+   * @param appliedQty 申报入库数量
    * @param remark 备注（可空）
    * @param number 单号（传空串表示由 OrderAddedEvent 的监听器后续分配）
    */
@@ -121,7 +121,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       @Nullable String remark,
       String number) {
     super(number);
@@ -133,7 +133,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
         unitId,
         warehouseId,
         locationId,
-        appliedQuantity,
+        appliedQty,
         remark);
     this.status = ProductionReceiptStatusEnum.DRAFT.getCode();
   }
@@ -160,7 +160,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
-   * @param appliedQuantity 申报入库数量
+   * @param appliedQty 申报入库数量
    * @param remark 备注（可空）
    * @throws DomainException 已入库时抛出
    */
@@ -172,7 +172,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       @Nullable String remark) {
     ensureDraft();
     apply(
@@ -183,7 +183,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
         unitId,
         warehouseId,
         locationId,
-        appliedQuantity,
+        appliedQty,
         remark);
   }
 
@@ -192,22 +192,22 @@ public class ProductionReceipt extends OrderAggregateRoot {
    *
    * <p>仓管点货只会比车间申报的少不会多：短装就体现在这对数字上，要多收得回去改申报数。
    *
-   * @param quantity 实收数量，传 {@code null} 表示照批申报数量
+   * @param qty 实收数量，传 {@code null} 表示照批申报数量
    * @throws DomainException 已入库时抛出
    */
-  public void approve(@Nullable BigDecimal quantity) {
+  public void approve(@Nullable BigDecimal qty) {
     ensureDraft();
-    if (quantity == null) {
-      this.receivedQuantity = this.appliedQuantity;
+    if (qty == null) {
+      this.receivedQty = this.appliedQty;
       return;
     }
-    if (quantity.signum() <= 0) {
+    if (qty.signum() <= 0) {
       throw new DomainException("实收数量必须大于0");
     }
-    if (quantity.compareTo(this.appliedQuantity) > 0) {
-      throw new DomainException("实收数量" + quantity + "不能大于申报数量" + this.appliedQuantity);
+    if (qty.compareTo(this.appliedQty) > 0) {
+      throw new DomainException("实收数量" + qty + "不能大于申报数量" + this.appliedQty);
     }
-    this.receivedQuantity = quantity;
+    this.receivedQty = qty;
   }
 
   /**
@@ -221,8 +221,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
    */
   public void post(LocalDateTime time) {
     ensureDraft();
-    if (this.receivedQuantity.signum() == 0) {
-      this.receivedQuantity = this.appliedQuantity;
+    if (this.receivedQty.signum() == 0) {
+      this.receivedQty = this.appliedQty;
     }
     this.status = ProductionReceiptStatusEnum.POSTED.getCode();
     this.receiptTime = time;
@@ -258,7 +258,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
    * @param unitId 单位Id（快照）
    * @param warehouseId 入库仓库Id
    * @param locationId 库位Id（可空）
-   * @param appliedQuantity 申报入库数量
+   * @param appliedQty 申报入库数量
    * @param remark 备注（可空）
    * @throws DomainException 工单、快照字段、仓库非法或申报数量不为正时抛出
    */
@@ -270,7 +270,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       @Nullable String remark) {
     if (workOrderId <= 0) {
       throw new DomainException("工单不能为空");
@@ -294,7 +294,7 @@ public class ProductionReceipt extends OrderAggregateRoot {
     if (locationId != null && locationId <= 0) {
       throw new DomainException("库位" + locationId + "有误!");
     }
-    if (appliedQuantity.signum() <= 0) {
+    if (appliedQty.signum() <= 0) {
       throw new DomainException("申报入库数量必须大于0");
     }
 
@@ -305,8 +305,8 @@ public class ProductionReceipt extends OrderAggregateRoot {
     this.unitId = unitId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;
-    this.appliedQuantity = appliedQuantity;
-    this.receivedQuantity = BigDecimal.ZERO;
+    this.appliedQty = appliedQty;
+    this.receivedQty = BigDecimal.ZERO;
     this.remark = remark;
   }
 

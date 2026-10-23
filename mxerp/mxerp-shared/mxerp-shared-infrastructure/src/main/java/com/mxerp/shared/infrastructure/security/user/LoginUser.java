@@ -40,8 +40,8 @@ public class LoginUser implements UserDetails, Serializable {
   /** 是否超级管理员 */
   private final boolean superAdmin;
 
-  /** 应用Id列表 */
-  @NonNull private final Set<Long> appIds;
+  /** 菜单Id列表 */
+  @NonNull private final Set<Long> menuIds;
 
   /** 许可证列表（即权限列表），构造器中兜底为空集合 */
   @NonNull private final Set<String> licenses;
@@ -53,7 +53,7 @@ public class LoginUser implements UserDetails, Serializable {
   @NonNull private final Set<Long> departmentIds;
 
   /** 岗位Id列表，构造器中兜底为空集合 */
-  @NonNull private final Set<Long> postIds;
+  @NonNull private final Set<Long> positionIds;
 
   /**
    * 全参构造器
@@ -65,11 +65,11 @@ public class LoginUser implements UserDetails, Serializable {
    * @param mobilePhone 手机号（可空）
    * @param email 邮箱（可空）
    * @param superAdmin 是否超级管理员
-   * @param appIds 应用Id列表（可空）
+   * @param menuIds 菜单Id列表（可空）
    * @param licenses 许可证列表（可空）
    * @param companyIds 公司Id列表（可空）
    * @param departmentIds 部门Id列表（可空）
-   * @param postIds 岗位Id列表（可空）
+   * @param positionIds 岗位Id列表（可空）
    */
   public LoginUser(
       @NonNull Long userId,
@@ -79,11 +79,11 @@ public class LoginUser implements UserDetails, Serializable {
       @Nullable String mobilePhone,
       @Nullable String email,
       boolean superAdmin,
-      @Nullable Set<Long> appIds,
+      @Nullable Set<Long> menuIds,
       @Nullable Set<String> licenses,
       @Nullable Set<Long> companyIds,
       @Nullable Set<Long> departmentIds,
-      @Nullable Set<Long> postIds) {
+      @Nullable Set<Long> positionIds) {
     this.userId = userId;
     this.userName = userName;
     this.password = password;
@@ -91,11 +91,11 @@ public class LoginUser implements UserDetails, Serializable {
     this.mobilePhone = mobilePhone;
     this.email = email;
     this.superAdmin = superAdmin;
-    this.appIds = appIds == null ? Set.of() : appIds;
+    this.menuIds = menuIds == null ? Set.of() : menuIds;
     this.licenses = licenses == null ? Set.of() : licenses;
     this.companyIds = companyIds == null ? Set.of() : companyIds;
     this.departmentIds = departmentIds == null ? Set.of() : departmentIds;
-    this.postIds = postIds == null ? Set.of() : postIds;
+    this.positionIds = positionIds == null ? Set.of() : positionIds;
   }
 
   /**

@@ -13,12 +13,13 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /** 基于 Apache Commons Net 的 FTP 客户端实现 */
+@NullMarked
 @Service
 public class ApacheFtpClient implements FtpClient {
 
@@ -60,8 +61,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 文件内容（可空），文件不存在返回 null
    */
   @Override
-  @Nullable
-  public byte[] get(@NonNull String path) {
+  public byte @Nullable [] get(String path) {
     FTPClient client = connect();
     try (InputStream stream = client.retrieveFileStream(path)) {
       if (stream == null) {
@@ -85,7 +85,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 上传是否成功
    */
   @Override
-  public boolean upload(@NonNull InputStream stream, @NonNull String remotePath) {
+  public boolean upload(InputStream stream, String remotePath) {
     FTPClient client = connect();
     try {
       ensureDirectory(client, remotePath);
@@ -105,7 +105,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 上传是否成功
    */
   @Override
-  public boolean upload(byte[] buffer, @NonNull String remotePath) {
+  public boolean upload(byte[] buffer, String remotePath) {
     try (InputStream stream = new ByteArrayInputStream(buffer)) {
       return upload(stream, remotePath);
     } catch (IOException e) {
@@ -121,7 +121,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 上传是否成功
    */
   @Override
-  public boolean upload(@NonNull String localPath, @NonNull String remotePath) {
+  public boolean upload(String localPath, String remotePath) {
     try (InputStream stream = new FileInputStream(localPath)) {
       return upload(stream, remotePath);
     } catch (IOException e) {
@@ -135,7 +135,7 @@ public class ApacheFtpClient implements FtpClient {
    * @param path FTP 文件路径
    */
   @Override
-  public void remove(@NonNull String path) {
+  public void remove(String path) {
     FTPClient client = connect();
     try {
       client.deleteFile(path);
@@ -152,7 +152,7 @@ public class ApacheFtpClient implements FtpClient {
    * @param path FTP 目录路径
    */
   @Override
-  public void createDirectory(@NonNull String path) {
+  public void createDirectory(String path) {
     FTPClient client = connect();
     try {
       client.makeDirectory(path);
@@ -170,7 +170,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 文件是否存在
    */
   @Override
-  public boolean fileExists(@NonNull String path) {
+  public boolean fileExists(String path) {
     FTPClient client = connect();
     try {
       FTPFile[] files = client.listFiles(path);
@@ -189,7 +189,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 目录是否存在
    */
   @Override
-  public boolean directoryExists(@NonNull String path) {
+  public boolean directoryExists(String path) {
     FTPClient client = connect();
     try {
       return client.changeWorkingDirectory(path);
@@ -207,7 +207,7 @@ public class ApacheFtpClient implements FtpClient {
    * @return 文件列表
    */
   @Override
-  public @NonNull List<FtpFile> getFtpFiles(@NonNull String path) {
+  public List<FtpFile> getFtpFiles(String path) {
     FTPClient client = connect();
     try {
       FTPFile[] files = client.listFiles(path);

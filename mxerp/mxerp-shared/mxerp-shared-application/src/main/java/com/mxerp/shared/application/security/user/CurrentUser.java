@@ -48,11 +48,11 @@ public interface CurrentUser {
   boolean isSuperAdmin();
 
   /**
-   * 获取应用Id列表
+   * 获取菜单Id列表
    *
-   * @return 应用Id列表
+   * @return 菜单Id列表
    */
-  Set<Long> getAppIds();
+  Set<Long> getMenuIds();
 
   /**
    * 获取许可证列表
@@ -80,5 +80,5 @@ public interface CurrentUser {
    *
    * @return 岗位Id列表
    */
-  Set<Long> getPostIds();
+  Set<Long> getPositionIds();
 }

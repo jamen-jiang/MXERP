@@ -13,11 +13,11 @@ import java.util.Set;
  * @param mobilePhone 手机号（可空）
  * @param email 邮箱（可空）
  * @param isSuperAdmin 是否超级管理员
- * @param apps 应用Id列表（可空）
+ * @param apps 菜单Id列表（可空）
  * @param licenses 许可证列表（可空）
  * @param companyIds 公司Id列表（可空）
  * @param departmentIds 部门Id列表（可空）
- * @param postIds 岗位Id列表（可空）
+ * @param positionIds 岗位Id列表（可空）
  */
 public record LoginUserCacheData(
     @NonNull Long userId,
@@ -30,7 +30,7 @@ public record LoginUserCacheData(
     Set<String> licenses,
     Set<Long> companyIds,
     Set<Long> departmentIds,
-    Set<Long> postIds) {
+    Set<Long> positionIds) {
 
   /** 从 LoginUser 构建缓存数据（丢密码） */
   public static LoginUserCacheData from(@NonNull LoginUser u) {
@@ -41,11 +41,11 @@ public record LoginUserCacheData(
         u.getMobilePhone(),
         u.getEmail(),
         u.isSuperAdmin(),
-        u.getAppIds(),
+        u.getMenuIds(),
         u.getLicenses(),
         u.getCompanyIds(),
         u.getDepartmentIds(),
-        u.getPostIds());
+        u.getPositionIds());
   }
 
   /** 还原为 LoginUser（密码为 null） */
@@ -63,6 +63,6 @@ public record LoginUserCacheData(
         licenses,
         companyIds,
         departmentIds,
-        postIds);
+        positionIds);
   }
 }

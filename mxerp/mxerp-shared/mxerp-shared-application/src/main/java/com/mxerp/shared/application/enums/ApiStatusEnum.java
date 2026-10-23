@@ -1,9 +1,11 @@
 package com.mxerp.shared.application.enums;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /** Api 状态 */
+@NullMarked
 @Getter
 public enum ApiStatusEnum {
 
@@ -32,7 +34,7 @@ public enum ApiStatusEnum {
   FAIL_APP_SHOW_TIP(100, "应用程序错误提示");
 
   /** 状态码 */
-  private final int code;
+  private final Integer code;
 
   /** 标签 */
   private final String label;

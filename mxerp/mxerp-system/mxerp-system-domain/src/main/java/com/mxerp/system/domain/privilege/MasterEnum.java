@@ -19,7 +19,7 @@ public enum MasterEnum implements BaseEnum {
   DEPARTMENT("Department", "部门"),
 
   /** 岗位 */
-  POST("Post", "岗位");
+  POSITION("Position", "岗位");
 
   /** 编码 */
   private final String code;

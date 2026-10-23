@@ -57,12 +57,12 @@ public class ProductionIssueLine extends BaseDeleteEntity {
   private Long variantId;
 
   /** 申请数量 */
-  @Column(name = "AppliedQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal appliedQuantity;
+  @Column(name = "AppliedQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal appliedQty;
 
   /** 核定数量（审核时落定，0 表示尚未核定） */
-  @Column(name = "ApprovedQuantity", nullable = false, precision = 18, scale = 2)
-  private BigDecimal approvedQuantity;
+  @Column(name = "ApprovedQty", nullable = false, precision = 18, scale = 2)
+  private BigDecimal approvedQty;
 
   /** 单位Id（快照） */
   @Column(name = "UnitId", nullable = false)
@@ -89,7 +89,7 @@ public class ProductionIssueLine extends BaseDeleteEntity {
    * @param workOrderMaterialId 工单用料行Id
    * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
-   * @param appliedQuantity 申请数量
+   * @param appliedQty 申请数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 发料仓库Id
    * @param locationId 库位Id（可空）
@@ -100,7 +100,7 @@ public class ProductionIssueLine extends BaseDeleteEntity {
       long workOrderMaterialId,
       long materialId,
       long variantId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
@@ -114,7 +114,7 @@ public class ProductionIssueLine extends BaseDeleteEntity {
     if (variantId <= 0) {
       throw new DomainException("物料不能为空");
     }
-    if (appliedQuantity.signum() <= 0) {
+    if (appliedQty.signum() <= 0) {
       throw new DomainException("申请数量必须大于0");
     }
     if (unitId <= 0) {
@@ -129,8 +129,8 @@ public class ProductionIssueLine extends BaseDeleteEntity {
     this.workOrderMaterialId = workOrderMaterialId;
     this.materialId = materialId;
     this.variantId = variantId;
-    this.appliedQuantity = appliedQuantity;
-    this.approvedQuantity = BigDecimal.ZERO;
+    this.appliedQty = appliedQty;
+    this.approvedQty = BigDecimal.ZERO;
     this.unitId = unitId;
     this.warehouseId = warehouseId;
     this.locationId = locationId;
@@ -142,18 +142,18 @@ public class ProductionIssueLine extends BaseDeleteEntity {
    *
    * <p>批得比申请多没有业务依据：申请数是车间报的，审核只会往下压或照批，要多领得回去改申请。
    *
-   * @param quantity 核定数量
+   * @param qty 核定数量
    * @throws DomainException 数量不为正、或大于申请数量时抛出
    */
-  public void approve(BigDecimal quantity) {
-    if (quantity.signum() <= 0) {
+  public void approve(BigDecimal qty) {
+    if (qty.signum() <= 0) {
       throw new DomainException("核定数量必须大于0");
     }
-    if (quantity.compareTo(this.appliedQuantity) > 0) {
+    if (qty.compareTo(this.appliedQty) > 0) {
       throw new DomainException(
-          "物料" + this.variantId + "核定数量" + quantity + "不能大于申请数量" + this.appliedQuantity);
+          "物料" + this.variantId + "核定数量" + qty + "不能大于申请数量" + this.appliedQty);
     }
-    this.approvedQuantity = quantity;
+    this.approvedQty = qty;
   }
 
   /**
@@ -162,6 +162,6 @@ public class ProductionIssueLine extends BaseDeleteEntity {
    * @return true 表示核定数量还是 0
    */
   public boolean isNotApproved() {
-    return this.approvedQuantity.signum() == 0;
+    return this.approvedQty.signum() == 0;
   }
 }

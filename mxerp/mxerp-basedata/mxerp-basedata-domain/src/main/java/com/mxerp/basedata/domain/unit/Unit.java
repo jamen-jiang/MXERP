@@ -160,23 +160,23 @@ public class Unit extends UpdateAggregateRoot {
    * 中间保留 12 位，最后按**目标单位**的步长落数。两组不同直接报错，不给「米换公斤」留口子。
    *
    * @param target 目标单位
-   * @param quantity 原数量
+   * @param qty 原数量
    * @return 换算后的数量
    * @throws DomainException 两个单位不在同一组、或数量为负时抛出
    */
-  public BigDecimal convertTo(Unit target, BigDecimal quantity) {
+  public BigDecimal convertTo(Unit target, BigDecimal qty) {
     if (!this.groupId.equals(target.getGroupId())) {
       throw new DomainException(
           "单位" + this.code + "与" + target.getCode() + "不在同一个单位组，不能换算");
     }
-    if (quantity.signum() < 0) {
-      throw new DomainException("换算数量不能是负数，当前" + quantity);
+    if (qty.signum() < 0) {
+      throw new DomainException("换算数量不能是负数，当前" + qty);
     }
     BigDecimal amount =
-        quantity
+        qty
             .multiply(this.factor)
             .divide(target.getFactor(), CALC_SCALE, RoundingMode.HALF_UP);
-    return target.roundQuantity(amount);
+    return target.roundQty(amount);
   }
 
   /**
@@ -188,12 +188,12 @@ public class Unit extends UpdateAggregateRoot {
    * <p>先把「数量 ÷ 步长」在 6 位小数上四舍五入再进位：换算率是小数，{@code 3根 = 1公斤} 只能存成
    * 0.333333333333，3 根折成公斤会得到 0.999999999999，直接进位就成了 1.01。
    *
-   * @param quantity 数量
+   * @param qty 数量
    * @return 落数后的数量
    */
-  public BigDecimal roundQuantity(BigDecimal quantity) {
+  public BigDecimal roundQty(BigDecimal qty) {
     BigDecimal steps =
-        quantity
+        qty
             .divide(this.rounding, SNAP_SCALE, RoundingMode.HALF_UP)
             .setScale(0, RoundingMode.UP);
     return steps.multiply(this.rounding);

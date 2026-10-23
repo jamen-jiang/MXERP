@@ -63,7 +63,7 @@ class UnitTest {
   void roundsUpToTargetRounding() {
     Unit piece = unit(3L, "PC3", "1", "1", true);
 
-    assertEquals(0, new BigDecimal("145").compareTo(piece.roundQuantity(new BigDecimal("144.2"))));
+    assertEquals(0, new BigDecimal("145").compareTo(piece.roundQty(new BigDecimal("144.2"))));
   }
 
   @Test
@@ -92,7 +92,7 @@ class UnitTest {
 
   @Test
   @DisplayName("数量为负报错")
-  void negativeQuantityRejected() {
+  void negativeQtyRejected() {
     Unit metre = unit(9L, "M9", "1", "0.001", true);
     Unit centimetre = unit(9L, "CM9", "0.01", "0.1", false);
 

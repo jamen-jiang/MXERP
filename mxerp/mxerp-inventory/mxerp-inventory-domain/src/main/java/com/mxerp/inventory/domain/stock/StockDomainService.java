@@ -44,7 +44,7 @@ public class StockDomainService {
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空，空表示数量记到仓库这一层）
    * @param stockStatus 库存状态编码
-   * @param quantity 入库数量
+   * @param qty 入库数量
    * @return 库存行（新建的为未落库实体，由调用方保存）
    */
   public Stock inbound(
@@ -53,12 +53,12 @@ public class StockDomainService {
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
-      BigDecimal quantity) {
+      BigDecimal qty) {
     Stock model = stockRepository.getByKey(variantId, warehouseId, locationId, stockStatus);
     if (model == null) {
       model = new Stock(materialId, variantId, warehouseId, locationId, stockStatus);
     }
-    model.inbound(quantity);
+    model.inbound(qty);
     return model;
   }
 
@@ -76,7 +76,7 @@ public class StockDomainService {
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
    * @param stockStatus 库存状态编码
-   * @param quantity 出库数量
+   * @param qty 出库数量
    * @return 库存行
    * @throws DomainException 该键没有库存行、仓库不存在、或在库与可用都不足且该仓不允许负库存时抛出
    */
@@ -85,9 +85,9 @@ public class StockDomainService {
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
-      BigDecimal quantity) {
+      BigDecimal qty) {
     Stock model = getExist(variantId, warehouseId, locationId, stockStatus);
-    model.outbound(quantity, isNegativeStockAllowed(warehouseId));
+    model.outbound(qty, isNegativeStockAllowed(warehouseId));
     return model;
   }
 
@@ -98,7 +98,7 @@ public class StockDomainService {
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
    * @param stockStatus 库存状态编码
-   * @param quantity 预留数量
+   * @param qty 预留数量
    * @return 库存行
    * @throws DomainException 该键没有库存行、状态不可动用、或可用量不足时抛出
    */
@@ -107,9 +107,9 @@ public class StockDomainService {
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
-      BigDecimal quantity) {
+      BigDecimal qty) {
     Stock model = getExist(variantId, warehouseId, locationId, stockStatus);
-    model.reserve(quantity);
+    model.reserve(qty);
     return model;
   }
 
@@ -120,7 +120,7 @@ public class StockDomainService {
    * @param warehouseId 仓库Id
    * @param locationId 库位Id（可空）
    * @param stockStatus 库存状态编码
-   * @param quantity 取消预留数量
+   * @param qty 取消预留数量
    * @return 库存行
    * @throws DomainException 该键没有库存行、状态不可动用、或超过已预留时抛出
    */
@@ -129,9 +129,9 @@ public class StockDomainService {
       long warehouseId,
       @Nullable Long locationId,
       String stockStatus,
-      BigDecimal quantity) {
+      BigDecimal qty) {
     Stock model = getExist(variantId, warehouseId, locationId, stockStatus);
-    model.unreserve(quantity);
+    model.unreserve(qty);
     return model;
   }
 
@@ -151,7 +151,7 @@ public class StockDomainService {
    * @param locationId 库位Id（可空）
    * @param fromStockStatus 转出状态编码
    * @param toStockStatus 转入状态编码
-   * @param quantity 挪动数量
+   * @param qty 挪动数量
    * @return 挪完的两行库存（转出那行、转入那行），由调用方保存
    * @throws DomainException 转出与转入相同、或转出那行不够时抛出
    */
@@ -162,13 +162,13 @@ public class StockDomainService {
       @Nullable Long locationId,
       String fromStockStatus,
       String toStockStatus,
-      BigDecimal quantity) {
+      BigDecimal qty) {
     if (fromStockStatus.equals(toStockStatus)) {
       throw new DomainException("转出状态与转入状态相同，没东西可挪");
     }
     Stock from = getExist(variantId, warehouseId, locationId, fromStockStatus);
-    from.outbound(quantity, false);
-    Stock to = inbound(materialId, variantId, warehouseId, locationId, toStockStatus, quantity);
+    from.outbound(qty, false);
+    Stock to = inbound(materialId, variantId, warehouseId, locationId, toStockStatus, qty);
     return List.of(from, to);
   }
 

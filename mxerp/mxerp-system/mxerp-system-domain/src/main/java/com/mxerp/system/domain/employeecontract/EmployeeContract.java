@@ -55,7 +55,7 @@ import org.jspecify.annotations.Nullable;
     })
 public class EmployeeContract extends UpdateAggregateRoot {
 
-  /** 合同期限类型（EmployeeContractTypeEnum 的 code） */
+  /** 合同期限类型编码，取值见 {@link EmployeeContractTypeEnum} */
   @Nationalized
   @Column(name = "Type", nullable = false, length = 50)
   private String type;

@@ -9,8 +9,8 @@ import org.jspecify.annotations.NullMarked;
 @Getter
 public enum AccessEnum implements BaseEnum {
 
-  /** 应用 */
-  APP("App", "应用"),
+  /** 菜单 */
+  MENU("Menu", "菜单"),
 
   /** 资源 */
   RESOURCE("Resource", "资源");

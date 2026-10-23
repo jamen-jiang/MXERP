@@ -3,23 +3,26 @@ package com.mxerp.shared.application.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mxerp.shared.application.enums.ApiStatusEnum;
 import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * 统一响应包装
  *
  * @param <T> 数据类型
  */
+@NullMarked
 @Getter
 public class ApiDataResponse<T> {
 
   /** 状态码 */
-  private final int status;
+  private final Integer status;
 
   /** 信息（可空） */
-  private String message;
+  private @Nullable String message;
 
   /** 结果集（可空） */
-  private T data;
+  private @Nullable T data;
 
   /** 默认构造器；状态码取 SUCCESS */
   public ApiDataResponse() {

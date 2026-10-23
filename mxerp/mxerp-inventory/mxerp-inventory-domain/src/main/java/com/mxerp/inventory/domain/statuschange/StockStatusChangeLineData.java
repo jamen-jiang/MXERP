@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * @param locationId 库位Id（可空）
  * @param fromStockStatus 转出状态编码
  * @param toStockStatus 转入状态编码
- * @param quantity 挪动数量（正数）
+ * @param qty 挪动数量（正数）
  * @param remark 备注（可空）
  */
 @NullMarked
@@ -24,5 +24,5 @@ public record StockStatusChangeLineData(
     @Nullable Long locationId,
     String fromStockStatus,
     String toStockStatus,
-    BigDecimal quantity,
+    BigDecimal qty,
     @Nullable String remark) {}

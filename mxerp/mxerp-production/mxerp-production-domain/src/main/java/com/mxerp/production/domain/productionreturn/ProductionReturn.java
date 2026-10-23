@@ -76,7 +76,7 @@ public class ProductionReturn extends OrderAggregateRoot {
   @Nullable
   private LocalDateTime returnTime;
 
-  /** 状态：草稿、已退料 */
+  /** 状态编码，取值见 {@link ProductionReturnStatusEnum} */
   @Nationalized
   @Column(name = "Status", nullable = false, length = 50)
   private String status;
@@ -159,7 +159,7 @@ public class ProductionReturn extends OrderAggregateRoot {
    * @param workOrderMaterialId 工单用料行Id
    * @param materialId 物料SPU（快照）
    * @param variantId 物料SKU（快照）
-   * @param appliedQuantity 申请退料数量
+   * @param appliedQty 申请退料数量
    * @param unitId 单位Id（快照）
    * @param warehouseId 退料仓库Id
    * @param locationId 库位Id（可空）
@@ -170,7 +170,7 @@ public class ProductionReturn extends OrderAggregateRoot {
       long workOrderMaterialId,
       long materialId,
       long variantId,
-      BigDecimal appliedQuantity,
+      BigDecimal appliedQty,
       long unitId,
       long warehouseId,
       @Nullable Long locationId,
@@ -184,7 +184,7 @@ public class ProductionReturn extends OrderAggregateRoot {
             workOrderMaterialId,
             materialId,
             variantId,
-            appliedQuantity,
+            appliedQty,
             unitId,
             warehouseId,
             locationId,
@@ -209,7 +209,7 @@ public class ProductionReturn extends OrderAggregateRoot {
   /**
    * 核定：把仓管点收下来的数量逐行记上，状态仍是草稿
    *
-   * <p>没在审批清单里点到的行留待 {@link #confirm()} 按申请数照批。一条用料行只能给一个核定数， 重复提交说明调用方拼错了清单。
+   * <p>没在审批清单里点到的行留待 {@link #post(LocalDateTime)} 按申请数照批。一条用料行只能给一个核定数， 重复提交说明调用方拼错了清单。
    *
    * @param approvals 逐行核定清单
    * @throws DomainException 非草稿状态、用料行不在单内、或核定数量非法时抛出
@@ -225,7 +225,7 @@ public class ProductionReturn extends OrderAggregateRoot {
       if (line == null) {
         throw new DomainException("工单用料" + data.workOrderMaterialId() + "不在本单中!");
       }
-      line.approve(data.approvedQuantity());
+      line.approve(data.approvedQty());
     }
   }
 
@@ -245,7 +245,7 @@ public class ProductionReturn extends OrderAggregateRoot {
     }
     for (ProductionReturnLine line : productionReturnLines) {
       if (line.isNotApproved()) {
-        line.approve(line.getAppliedQuantity());
+        line.approve(line.getAppliedQty());
       }
     }
     this.status = ProductionReturnStatusEnum.POSTED.getCode();

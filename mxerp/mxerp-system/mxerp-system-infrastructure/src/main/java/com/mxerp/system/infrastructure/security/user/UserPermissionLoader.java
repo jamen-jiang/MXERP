@@ -1,17 +1,17 @@
 package com.mxerp.system.infrastructure.security.user;
 
-import com.mxerp.system.domain.app.App;
-import com.mxerp.system.domain.app.AppTypeEnum;
+import com.mxerp.system.domain.menu.Menu;
+import com.mxerp.system.domain.menu.MenuTypeEnum;
 import com.mxerp.system.domain.department.Department;
 import com.mxerp.system.domain.employee.Employee;
-import com.mxerp.system.domain.post.Post;
+import com.mxerp.system.domain.position.Position;
 import com.mxerp.system.domain.privilege.Privilege;
 import com.mxerp.system.domain.user.User;
 import com.mxerp.system.domain.user.UserRole;
-import com.mxerp.system.infrastructure.app.AppJpa;
+import com.mxerp.system.infrastructure.menu.MenuJpa;
 import com.mxerp.system.infrastructure.department.DepartmentJpa;
 import com.mxerp.system.infrastructure.employee.EmployeeJpa;
-import com.mxerp.system.infrastructure.post.PostJpa;
+import com.mxerp.system.infrastructure.position.PositionJpa;
 import com.mxerp.system.infrastructure.privilege.PrivilegeJpa;
 import com.mxerp.system.infrastructure.user.UserJpa;
 import com.mxerp.shared.infrastructure.security.user.LoginUser;
@@ -45,10 +45,10 @@ public class UserPermissionLoader {
   private static final String MASTER_ROLE = "Role";
 
   /** 权限主体：岗位 */
-  private static final String MASTER_POST = "Post";
+  private static final String MASTER_POSITION = "Position";
 
   /** 岗位 JPA */
-  private final PostJpa postJpa;
+  private final PositionJpa positionJpa;
 
   /** 部门 JPA */
   private final DepartmentJpa departmentJpa;
@@ -60,28 +60,28 @@ public class UserPermissionLoader {
   private final PrivilegeJpa privilegeJpa;
 
   /** 应用 JPA */
-  private final AppJpa appJpa;
+  private final MenuJpa menuJpa;
 
   /**
    * 构造器注入
    *
-   * @param postJpa 岗位 JPA
+   * @param positionJpa 岗位 JPA
    * @param departmentJpa 部门 JPA
    * @param employeeJpa 员工 JPA
    * @param privilegeJpa 权限 JPA
-   * @param appJpa 应用 JPA
+   * @param menuJpa 应用 JPA
    */
   public UserPermissionLoader(
-      PostJpa postJpa,
+      PositionJpa positionJpa,
       DepartmentJpa departmentJpa,
       EmployeeJpa employeeJpa,
       PrivilegeJpa privilegeJpa,
-      AppJpa appJpa) {
-    this.postJpa = postJpa;
+      MenuJpa menuJpa) {
+    this.positionJpa = positionJpa;
     this.departmentJpa = departmentJpa;
     this.employeeJpa = employeeJpa;
     this.privilegeJpa = privilegeJpa;
-    this.appJpa = appJpa;
+    this.menuJpa = menuJpa;
   }
 
   /**
@@ -100,16 +100,16 @@ public class UserPermissionLoader {
 
     // 2. 用户 → 员工 → 岗位（岗位是员工上的一列，可为空）
     List<Employee> employees = employeeJpa.findByUserId(model.getId());
-    Set<Long> userPostIds =
+    Set<Long> userPositionIds =
         employees.stream()
-            .map(Employee::getPostId)
+            .map(Employee::getPositionId)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
-    List<Post> userPosts = userPostIds.isEmpty() ? List.of() : postJpa.findAllById(userPostIds);
+    List<Position> userPositions = userPositionIds.isEmpty() ? List.of() : positionJpa.findAllById(userPositionIds);
 
     // 3. 岗位 → 部门（聚合内是 Id，需查实体）
-    Set<Long> userDepartmentIds = collectIds(userPosts, Post::getDepartmentId);
+    Set<Long> userDepartmentIds = collectIds(userPositions, Position::getDepartmentId);
 
     // 4. 部门 → 公司（组织的顶层链路终点）
     List<Department> userDepartments =
@@ -124,42 +124,42 @@ public class UserPermissionLoader {
                 departmentJpa.findByIdsOrDescendants(userDepartmentIds), Department::getId);
 
     // 6. 部门子树内的岗位，才是用户实际可见的岗位
-    Set<Long> allPostIds =
+    Set<Long> allPositionIds =
         allDepartmentIds.isEmpty()
             ? Set.of()
-            : collectIds(postJpa.findByDepartmentIdIn(allDepartmentIds), Post::getId);
+            : collectIds(positionJpa.findByDepartmentIdIn(allDepartmentIds), Position::getId);
     data.departmentIds = allDepartmentIds;
-    data.postIds = allPostIds;
+    data.positionIds = allPositionIds;
 
     // 7. 超级管理员走独立分支：直接放开全部应用，不再查权限表
     if (userRoleIds.contains(ADMIN_ROLE_ID)) {
       data.superAdmin = true;
-      Set<App> apps = new HashSet<>(appJpa.findAll());
-      fillApps(data, apps);
+      Set<Menu> menus = new HashSet<>(menuJpa.findAll());
+      fillMenus(data, menus);
       return data;
     }
 
     data.superAdmin = false;
 
-    // 8. 权限来源三条：用户直接、用户角色、本人岗位（岗位授权走 Privilege 的 Post 主体）
-    Set<Long> appIds = new HashSet<>();
+    // 8. 权限来源三条：用户直接、用户角色、本人岗位（岗位授权走 Privilege 的 Position 主体）
+    Set<Long> menuIds = new HashSet<>();
     addAccessValues(
-        appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_USER, Set.of(model.getId())));
+        menuIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_USER, Set.of(model.getId())));
     if (!userRoleIds.isEmpty()) {
       addAccessValues(
-          appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_ROLE, userRoleIds));
+          menuIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_ROLE, userRoleIds));
     }
-    if (!userPostIds.isEmpty()) {
+    if (!userPositionIds.isEmpty()) {
       addAccessValues(
-          appIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_POST, userPostIds));
+          menuIds, privilegeJpa.findByMasterAndMasterValueIn(MASTER_POSITION, userPositionIds));
     }
 
-    if (appIds.isEmpty()) {
+    if (menuIds.isEmpty()) {
       return data;
     }
 
     // 9. 按权限指向的应用反查许可
-    fillApps(data, new HashSet<>(appJpa.findByIdIn(appIds)));
+    fillMenus(data, new HashSet<>(menuJpa.findByIdIn(menuIds)));
     return data;
   }
 
@@ -181,12 +181,12 @@ public class UserPermissionLoader {
   /**
    * 累计权限记录指向的应用Id
    *
-   * @param appIds 累计目标集合
+   * @param menuIds 累计目标集合
    * @param privileges 权限记录集合
    */
-  private void addAccessValues(Set<Long> appIds, Set<Privilege> privileges) {
+  private void addAccessValues(Set<Long> menuIds, Set<Privilege> privileges) {
     for (Privilege item : privileges) {
-      appIds.add(item.getAccessValue());
+      menuIds.add(item.getAccessValue());
     }
   }
 
@@ -194,17 +194,17 @@ public class UserPermissionLoader {
    * 填充应用Id与许可证（过滤掉 RESOURCE 类型的资源节点，它不参与许可）
    *
    * @param data 权限数据
-   * @param apps 应用集合
+   * @param menus 应用集合
    */
-  private void fillApps(UserPermissionData data, Set<App> apps) {
-    data.appIds =
-        apps.stream()
-            .filter(x -> !AppTypeEnum.RESOURCE.getCode().equals(x.getType()))
-            .map(App::getId)
+  private void fillMenus(UserPermissionData data, Set<Menu> menus) {
+    data.menuIds =
+        menus.stream()
+            .filter(x -> !MenuTypeEnum.RESOURCE.getCode().equals(x.getType()))
+            .map(Menu::getId)
             .collect(Collectors.toSet());
     data.licenses =
-        apps.stream()
-            .map(App::getLicense)
+        menus.stream()
+            .map(Menu::getLicense)
             .filter(StringUtils::isNotBlank)
             .collect(Collectors.toSet());
   }
@@ -221,10 +221,10 @@ public class UserPermissionLoader {
     public Set<Long> departmentIds = Set.of();
 
     /** 岗位Id集合 */
-    public Set<Long> postIds = Set.of();
+    public Set<Long> positionIds = Set.of();
 
     /** 应用Id集合 */
-    public Set<Long> appIds = Set.of();
+    public Set<Long> menuIds = Set.of();
 
     /** 许可证集合 */
     public Set<String> licenses = Set.of();

@@ -167,9 +167,7 @@ public class BankAccount extends UpdateAggregateRoot {
       boolean disabled) {
     String trimmedAccountName = StringUtils.trimToNull(accountName);
     String trimmedAccountNumber = StringUtils.trimToNull(accountNumber);
-    if (EnumUtils.fromCode(BankAccountPartyTypeEnum.class, partyType) == null) {
-      throw new DomainException("银行账户的归属类型" + partyType + "有误!");
-    }
+    this.partyType = EnumUtils.getCode(BankAccountPartyTypeEnum.class, partyType, "银行账户的归属类型");
     if (partyId <= 0) {
       throw new DomainException("银行账户必须指定归属对象");
     }
@@ -186,7 +184,6 @@ public class BankAccount extends UpdateAggregateRoot {
       throw new DomainException("银行账户的币种不能为空");
     }
 
-    this.partyType = partyType;
     this.partyId = partyId;
     this.bankId = bankId;
     this.bankBranch = StringUtils.trimToNull(bankBranch);

@@ -75,7 +75,7 @@ public class Employee extends UpdateAggregateRoot {
   /** 岗位Id（可空，先入职后定岗） */
   @Column(name = "PostId")
   @Nullable
-  private Long postId;
+  private Long positionId;
 
   /** 关联账号Id（可空，没有系统账号的人也可是员工） */
   @Column(name = "UserId")
@@ -212,7 +212,7 @@ public class Employee extends UpdateAggregateRoot {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -241,7 +241,7 @@ public class Employee extends UpdateAggregateRoot {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -269,7 +269,7 @@ public class Employee extends UpdateAggregateRoot {
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,
@@ -301,7 +301,7 @@ public class Employee extends UpdateAggregateRoot {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -330,7 +330,7 @@ public class Employee extends UpdateAggregateRoot {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -358,7 +358,7 @@ public class Employee extends UpdateAggregateRoot {
         type,
         companyId,
         departmentId,
-        postId,
+        positionId,
         userId,
         number,
         name,
@@ -392,7 +392,7 @@ public class Employee extends UpdateAggregateRoot {
    * @param type 用工类型编码
    * @param companyId 公司Id
    * @param departmentId 部门Id
-   * @param postId 岗位Id（可空，空表示未定岗）
+   * @param positionId 岗位Id（可空，空表示未定岗）
    * @param userId 关联账号Id（可空）
    * @param number 员工编号
    * @param name 姓名
@@ -422,7 +422,7 @@ public class Employee extends UpdateAggregateRoot {
       String type,
       long companyId,
       long departmentId,
-      @Nullable Long postId,
+      @Nullable Long positionId,
       @Nullable Long userId,
       String number,
       String name,
@@ -463,21 +463,19 @@ public class Employee extends UpdateAggregateRoot {
     if (joinDate == null) {
       throw new DomainException("员工入职日期不能为空");
     }
-    if (EnumUtils.fromCode(EmployeeTypeEnum.class, type) == null) {
-      throw new DomainException("员工" + trimmedNumber + "的用工类型" + type + "有误!");
+    this.type = EnumUtils.getCode(EmployeeTypeEnum.class, type, "员工" + trimmedNumber + "的用工类型");
+    if (gender != null) {
+      this.gender = EnumUtils.getCode(GenderEnum.class, gender, "员工" + trimmedNumber + "的性别");
     }
-    if (gender != null && EnumUtils.fromCode(GenderEnum.class, gender) == null) {
-      throw new DomainException("员工" + trimmedNumber + "的性别" + gender + "有误!");
+    if (maritalStatus != null) {
+      this.maritalStatus =
+          EnumUtils.getCode(MaritalStatusEnum.class, maritalStatus, "员工" + trimmedNumber + "的婚姻状况");
     }
-    if (maritalStatus != null
-        && EnumUtils.fromCode(MaritalStatusEnum.class, maritalStatus) == null) {
-      throw new DomainException("员工" + trimmedNumber + "的婚姻状况" + maritalStatus + "有误!");
+    if (educationLevel != null) {
+      this.educationLevel =
+          EnumUtils.getCode(EducationLevelEnum.class, educationLevel, "员工" + trimmedNumber + "的学历");
     }
-    if (educationLevel != null
-        && EnumUtils.fromCode(EducationLevelEnum.class, educationLevel) == null) {
-      throw new DomainException("员工" + trimmedNumber + "的学历" + educationLevel + "有误!");
-    }
-    if (postId != null && postId <= 0) {
+    if (positionId != null && positionId <= 0) {
       throw new DomainException("员工岗位不能为空");
     }
     if (userId != null && userId <= 0) {
@@ -486,19 +484,16 @@ public class Employee extends UpdateAggregateRoot {
     if (bankAccountId != null && bankAccountId <= 0) {
       throw new DomainException("员工银行账户不能为空");
     }
-    EmployeeStatusEnum statusEnum = EnumUtils.fromCode(EmployeeStatusEnum.class, status);
-    if (statusEnum == null) {
-      throw new DomainException("员工" + trimmedNumber + "的状态" + status + "有误!");
-    }
+    this.status = EnumUtils.getCode(EmployeeStatusEnum.class, status, "员工" + trimmedNumber + "的状态");
+    EmployeeStatusEnum statusEnum = EnumUtils.fromCode(EmployeeStatusEnum.class, this.status);
     boolean left = statusEnum == EmployeeStatusEnum.LEFT;
     if (left && departureDate == null) {
       throw new DomainException("员工" + trimmedNumber + "离职时必须填离职日期");
     }
 
-    this.type = type;
     this.companyId = companyId;
     this.departmentId = departmentId;
-    this.postId = postId;
+    this.positionId = positionId;
     this.userId = userId;
     this.number = trimmedNumber;
     this.name = trimmedName;
@@ -506,22 +501,18 @@ public class Employee extends UpdateAggregateRoot {
     this.identificationNumber = StringUtils.trimToNull(identificationNumber);
     this.joinDate = joinDate;
     this.birthDate = birthDate;
-    this.maritalStatus = maritalStatus;
     this.bankAccountId = bankAccountId;
     this.mobile = StringUtils.trimToNull(mobile);
     this.email = StringUtils.trimToNull(email);
-    this.gender = gender;
     this.address = StringUtils.trimToNull(address);
     this.emergencyContactName = StringUtils.trimToNull(emergencyContactName);
     this.emergencyContactPhone = StringUtils.trimToNull(emergencyContactPhone);
     this.emergencyContactRelation = StringUtils.trimToNull(emergencyContactRelation);
-    this.educationLevel = educationLevel;
     this.studyField = StringUtils.trimToNull(studyField);
     this.studySchool = StringUtils.trimToNull(studySchool);
     // 不是离职就清掉离职日期与原因，避免「在职却挂着离职日期」
     this.departureDate = left ? departureDate : null;
     this.departureReason = left ? StringUtils.trimToNull(departureReason) : null;
-    this.status = status;
     this.remark = remark;
   }
 }
