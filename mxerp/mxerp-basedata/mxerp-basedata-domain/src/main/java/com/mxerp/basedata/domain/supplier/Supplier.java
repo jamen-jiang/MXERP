@@ -4,11 +4,11 @@ import com.mxerp.shared.domain.aggregate.UpdateAggregateRoot;
 import com.mxerp.shared.domain.exception.DomainException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,16 +45,11 @@ import org.jspecify.annotations.Nullable;
 @Table(
     name = "Supplier",
     indexes = {
-      @Index(name = "IX_Supplier_GroupId", columnList = "GroupId"),
       @Index(name = "IX_Supplier_Code", columnList = "Code"),
       @Index(name = "IX_Supplier_Name", columnList = "Name")
       // 注意：Code 的过滤唯一索引带 WHERE IsDeleted=0，JPA 不支持，用 Flyway 创建
     })
 public class Supplier extends UpdateAggregateRoot {
-
-  /** 供应商分类Id */
-  @Column(name = "GroupId", nullable = false)
-  private Long groupId;
 
   /** 供应商代码 */
   @Nationalized
@@ -89,15 +84,9 @@ public class Supplier extends UpdateAggregateRoot {
 
   /** 电话号码（可空） */
   @Nationalized
-  @Column(name = "Telephone", length = 50)
+  @Column(name = "Phone", length = 50)
   @Nullable
-  private String telephone;
-
-  /** 传真（可空） */
-  @Nationalized
-  @Column(name = "Fax", length = 20)
-  @Nullable
-  private String fax;
+  private String phone;
 
   /** 邮箱（可空） */
   @Nationalized
@@ -173,21 +162,18 @@ public class Supplier extends UpdateAggregateRoot {
    * 新增联系人
    *
    * @param name 姓名
-   * @param telephone 固定电话（可空）
-   * @param mobile 移动电话（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话（可空）
+   * @param mobile 手机（可空）
    * @param email 邮箱（可空）
-   * @param sequence 排序（可空）
+   * @param remark 备注（可空）
    */
   public void addContact(
       String name,
-      @Nullable String telephone,
+      @Nullable String phone,
       @Nullable String mobile,
-      @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sequence) {
-    supplierContacts.add(
-        new SupplierContact(name, telephone, mobile, fax, email, sequence));
+      @Nullable String remark) {
+    supplierContacts.add(new SupplierContact(name, phone, mobile, email, remark));
   }
 
   /**
@@ -195,26 +181,24 @@ public class Supplier extends UpdateAggregateRoot {
    *
    * @param contactId 联系人Id
    * @param name 姓名
-   * @param telephone 固定电话（可空）
-   * @param mobile 移动电话（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话（可空）
+   * @param mobile 手机（可空）
    * @param email 邮箱（可空）
-   * @param sequence 排序（可空）
+   * @param remark 备注（可空）
    * @throws DomainException 联系人不存在时抛出
    */
   public void modifyContact(
       long contactId,
       String name,
-      @Nullable String telephone,
+      @Nullable String phone,
       @Nullable String mobile,
-      @Nullable String fax,
       @Nullable String email,
-      @Nullable Integer sequence) {
+      @Nullable String remark) {
     SupplierContact contact = findContact(contactId);
     if (contact == null) {
       throw new DomainException("供应商联系人不存在!");
     }
-    contact.modify(name, telephone, mobile, fax, email, sequence);
+    contact.modify(name, phone, mobile, email, remark);
   }
 
   /**
@@ -248,15 +232,13 @@ public class Supplier extends UpdateAggregateRoot {
   /**
    * 构造器
    *
-   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
    * @param taxRegisterCode 税务登记号（可空）
    * @param currencyId 结算币别Id
    * @param taxRateId 税率Id（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话号码（可空）
    * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
@@ -268,15 +250,13 @@ public class Supplier extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   Supplier(
-      long groupId,
       String code,
       String name,
       @Nullable String shortName,
       @Nullable String taxRegisterCode,
       long currencyId,
       @Nullable Long taxRateId,
-      @Nullable String telephone,
-      @Nullable String fax,
+      @Nullable String phone,
       @Nullable String email,
       @Nullable String country,
       @Nullable String province,
@@ -287,15 +267,13 @@ public class Supplier extends UpdateAggregateRoot {
       boolean disabled,
       @Nullable String remark) {
     apply(
-        groupId,
         code,
         name,
         shortName,
         taxRegisterCode,
         currencyId,
         taxRateId,
-        telephone,
-        fax,
+        phone,
         email,
         country,
         province,
@@ -310,15 +288,13 @@ public class Supplier extends UpdateAggregateRoot {
   /**
    * 修改供应商
    *
-   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
    * @param taxRegisterCode 税务登记号（可空）
    * @param currencyId 结算币别Id
    * @param taxRateId 税率Id（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话号码（可空）
    * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
@@ -330,15 +306,13 @@ public class Supplier extends UpdateAggregateRoot {
    * @param remark 备注（可空）
    */
   void modify(
-      long groupId,
       String code,
       String name,
       @Nullable String shortName,
       @Nullable String taxRegisterCode,
       long currencyId,
       @Nullable Long taxRateId,
-      @Nullable String telephone,
-      @Nullable String fax,
+      @Nullable String phone,
       @Nullable String email,
       @Nullable String country,
       @Nullable String province,
@@ -349,15 +323,13 @@ public class Supplier extends UpdateAggregateRoot {
       boolean disabled,
       @Nullable String remark) {
     apply(
-        groupId,
         code,
         name,
         shortName,
         taxRegisterCode,
         currencyId,
         taxRateId,
-        telephone,
-        fax,
+        phone,
         email,
         country,
         province,
@@ -377,15 +349,13 @@ public class Supplier extends UpdateAggregateRoot {
    * <p>供应商字段多，构造器与 {@link #modify} 若各写一遍极易漏改。这里把「去空格 → 非空校验 →
    * 赋值」收敛到一处，后续新增字段只需改这一个方法。
    *
-   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
    * @param taxRegisterCode 税务登记号（可空）
    * @param currencyId 结算币别Id
    * @param taxRateId 税率Id（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话号码（可空）
    * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
@@ -398,15 +368,13 @@ public class Supplier extends UpdateAggregateRoot {
    * @throws DomainException 代码或名称为空、结算币别为空时抛出
    */
   private void apply(
-      long groupId,
       String code,
       String name,
       @Nullable String shortName,
       @Nullable String taxRegisterCode,
       long currencyId,
       @Nullable Long taxRateId,
-      @Nullable String telephone,
-      @Nullable String fax,
+      @Nullable String phone,
       @Nullable String email,
       @Nullable String country,
       @Nullable String province,
@@ -427,19 +395,14 @@ public class Supplier extends UpdateAggregateRoot {
     if (currencyId <= 0) {
       throw new DomainException("结算币别不能为空");
     }
-    if (groupId <= 0) {
-      throw new DomainException("供应商分类不能为空");
-    }
 
-    this.groupId = groupId;
     this.code = trimmedCode;
     this.name = trimmedName;
     this.shortName = shortName;
     this.taxRegisterCode = StringUtils.trimToNull(taxRegisterCode);
     this.currencyId = currencyId;
     this.taxRateId = taxRateId;
-    this.telephone = telephone;
-    this.fax = fax;
+    this.phone = phone;
     this.email = email;
     this.country = country;
     this.province = province;

@@ -88,23 +88,6 @@ public class Variant extends UpdateAggregateRoot {
   @SQLRestriction("IsDeleted = 0")
   private List<VariantSpecAttributeValue> specAttributes = new ArrayList<>();
 
-  // 属性值挂载先停用：属性那套（Attribute / AttributeAssignment）已挪到平台层
-  // com.mxerp.system.domain.attribute，basedata-domain 不依赖 system-domain，所以这里整段注释保留；
-  // 要接回来时先定下「谁来写这张赋值表」，再恢复本段与 VariantDomainService 里的 resolveAttributes。
-  // /**
-  //  * 属性值（一行一个值，不参与唯一性判断，只读）
-  //  *
-  //  * <p>与物料的属性值共用一张通用表 {@code AttributeAssignment}，靠 {@code EntityType = 'Variant'} +
-  //  * {@code EntityId} 认归属；这一条规格由哪组值构成是 {@code specAttributes} 的事，这里只是补充描述。
-  //  */
-  // @OneToMany(
-  //     fetch = FetchType.EAGER,
-  //     cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-  //     orphanRemoval = true)
-  // @JoinColumn(name = "EntityId")
-  // @SQLRestriction("IsDeleted = 0 AND EntityType = 'Variant'")
-  // private List<AttributeAssignment> attributes = new ArrayList<>();
-
   /**
    * 获取规格属性值行（只读）
    *
@@ -129,57 +112,6 @@ public class Variant extends UpdateAggregateRoot {
     }
     return result;
   }
-
-  // /**
-  //  * 获取属性值行（只读）
-  //  *
-  //  * @return 不可变列表
-  //  */
-  // public List<AttributeAssignment> getAttributes() {
-  //   return Collections.unmodifiableList(attributes);
-  // }
-
-  // /**
-  //  * 同步属性值（按「代码 + 值」匹配：删除不在输入中的、添加新的，已存在的行不动）
-  //  *
-  //  * <p>规格属性值不参与同步——它们构成这一行的身份，改一组值等于换一条规格，只能走删除 + 重新生成。
-  //  *
-  //  * @param attributes 目标属性值行数据（可空，为 null 表示这一笔不改动属性值）
-  //  */
-  // public void syncAttributes(@Nullable List<AssignedAttributeData> attributes) {
-  //   if (attributes == null) {
-  //     return;
-  //   }
-  //   List<AssignedAttributeData> target = attributes;
-
-  //   // 1. 删除输入里没有的行
-  //   for (AttributeAssignment attribute : this.attributes) {
-  //     boolean keep =
-  //         target.stream()
-  //             .anyMatch(
-  //                 d ->
-  //                     d.code().equals(attribute.getCode())
-  //                         && d.value().equals(attribute.getValue()));
-  //     if (!keep) {
-  //       attribute.delete();
-  //     }
-  //   }
-
-  //   // 2. 添加输入里有、当前没有的行
-  //   for (AssignedAttributeData data : target) {
-  //     boolean exists =
-  //         this.attributes.stream()
-  //             .anyMatch(i -> !i.getIsDeleted() && i.isSame(data.code(), data.value()));
-  //     if (!exists) {
-  //       this.attributes.add(
-  //           new AttributeAssignment(
-  //               "Variant",
-  //               data.attributeId(),
-  //               data.code(),
-  //               data.value()));
-  //     }
-  //   }
-  // }
 
   /**
    * 构造器

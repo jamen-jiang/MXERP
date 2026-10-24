@@ -23,15 +23,13 @@ public class SupplierFactory {
   /**
    * 创建供应商
    *
-   * @param groupId 供应商分类Id
    * @param code 供应商代码
    * @param name 供应商名称
    * @param shortName 供应商简称（可空）
    * @param taxRegisterCode 税务登记号（可空）
    * @param currencyId 结算币别Id
    * @param taxRateId 税率Id（可空）
-   * @param telephone 电话号码（可空）
-   * @param fax 传真（可空）
+   * @param phone 电话号码（可空）
    * @param email 邮箱（可空）
    * @param country 国家（可空）
    * @param province 省份（可空）
@@ -45,15 +43,13 @@ public class SupplierFactory {
    * @throws DomainException 供应商代码已存在时抛出
    */
   public Supplier create(
-      long groupId,
       String code,
       String name,
       @Nullable String shortName,
       @Nullable String taxRegisterCode,
       long currencyId,
       @Nullable Long taxRateId,
-      @Nullable String telephone,
-      @Nullable String fax,
+      @Nullable String phone,
       @Nullable String email,
       @Nullable String country,
       @Nullable String province,
@@ -68,15 +64,13 @@ public class SupplierFactory {
       throw new DomainException("供应商代码" + code + "已存在!");
     }
     return new Supplier(
-        groupId,
         code,
         name,
         shortName,
         taxRegisterCode,
         currencyId,
         taxRateId,
-        telephone,
-        fax,
+        phone,
         email,
         country,
         province,
