@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
  * Variant（一条规格型号，业务口中就是 SKU）
  *
  * <p>这里只放「这个规格是什么」：条码、规格属性值。采购价、币种、起订量不在这里，见 {@code
- * com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}——同一个规格可以被多个供应商报价， 钉在规格上只能留下最新一个值。
+ * com.mxerp.basedata.domain.suppliermaterial.SupplierMaterial}——同一个规格可以被多个供应商报价， 钉在规格上只能留下最新一个值。
  *
  * <p>值分两处存，是因为它们的作用根本不同：{@link VariantSpecAttributeValue} 是这一行的身份 （哪一组值构成一个规格），一行一个取值，改它就等于换一条规格，所以
  * {@code modify} 不碰它， 唯一性由这些行拼成 {@code Code}（物料代码 + 属性组合）来保证；描述性取值另存通用赋值表 {@code

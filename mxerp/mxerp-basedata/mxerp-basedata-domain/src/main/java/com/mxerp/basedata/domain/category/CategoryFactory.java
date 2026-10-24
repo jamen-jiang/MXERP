@@ -58,13 +58,13 @@ public class CategoryFactory {
       throw new DomainException("末级分类" + parent.getName() + "下面不能建子分类!");
     }
     return new Category(
-        HierarchyUtils.resolveParentPath(parentId, parent, "父分类"),
         parentId,
+        HierarchyUtils.resolveParentPath(parentId, parent, "父分类"),
         code,
         name,
         isLeaf,
-        disabled,
         sequence,
+        disabled,
         remark);
   }
 

@@ -103,13 +103,13 @@ public class CategoryDomainService {
       throw new DomainException("分类" + model.getName() + "下面还有子分类，不能改成末级!");
     }
     model.modify(
-        HierarchyUtils.resolveParentPath(parentId, parent, "父分类"),
         parentId,
+        HierarchyUtils.resolveParentPath(parentId, parent, "父分类"),
         code,
         name,
         isLeaf,
-        disabled,
         sequence,
+        disabled,
         remark);
     List<Category> list = new ArrayList<>();
     setChildrenParentPath(model, list);

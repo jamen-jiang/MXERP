@@ -29,7 +29,7 @@ public class SpecAttributeFactory {
    * @param label 规格属性标签
    * @param inputType 输入类型
    * @param dataType 数据类型
-   * @param isFilter 是否用于筛选
+   * @param variantCreateMode 变体生成方式编码
    * @param sequence 排序（可空）
    * @param remark 备注（可空）
    * @return 规格属性聚合
@@ -41,7 +41,7 @@ public class SpecAttributeFactory {
       String label,
       String inputType,
       String dataType,
-      boolean isFilter,
+      String variantCreateMode,
       @Nullable Integer sequence,
       @Nullable String remark) {
     // 校验同一分类下规格属性代码唯一
@@ -49,6 +49,6 @@ public class SpecAttributeFactory {
       throw new DomainException("分类" + categoryId + "下规格属性代码" + code + "已存在!");
     }
     return new SpecAttribute(
-        categoryId, code, label, inputType, dataType, isFilter, sequence, remark);
+        categoryId, code, label, inputType, dataType, variantCreateMode, sequence, remark);
   }
 }

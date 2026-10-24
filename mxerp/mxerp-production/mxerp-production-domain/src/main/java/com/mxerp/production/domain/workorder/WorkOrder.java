@@ -785,8 +785,6 @@ public class WorkOrder extends OrderAggregateRoot {
   /**
    * 统一的校验与赋值入口（构造器与修改共用）
    *
-   * @param materialId 产出SKU的SPU
-   * @param variantId 产出SKU
    * @param sourceType 来源类型编码
    * @param sourceId 来源单据Id（可空）
    * @param sourceNumber 来源单号（可空）

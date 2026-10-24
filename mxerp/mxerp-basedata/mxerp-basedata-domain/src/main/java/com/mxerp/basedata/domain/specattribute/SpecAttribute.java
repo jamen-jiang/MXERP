@@ -80,9 +80,10 @@ public class SpecAttribute extends UpdateAggregateRoot {
   @Column(name = "DataType", nullable = false, length = 50)
   private String dataType;
 
-  /** 是否用于筛选 */
-  @Column(name = "IsFilter", nullable = false)
-  private Boolean isFilter;
+  /** 变体生成方式编码，取值见 { VariantCreateModeEnum} */
+  @Nationalized
+  @Column(name = "VariantCreateMode", nullable = false, length = 50)
+  private String variantCreateMode;
 
 /** 排序（可空） */
   @Column(name = "Sequence")
@@ -104,16 +105,6 @@ public class SpecAttribute extends UpdateAggregateRoot {
   @SQLRestriction("IsDeleted = 0")
   private List<SpecAttributeValue> specAttributeValues = new ArrayList<>();
 
-  /** 校验规则列表（只读） */
-  @OneToMany(
-      fetch = FetchType.EAGER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-      orphanRemoval = true)
-  @JoinColumn(name = "SpecAttributeId")
-  @SQLRestriction("IsDeleted = 0")
-  private List<SpecAttributeValidateRule> specAttributeValidateRules =
-      new ArrayList<>();
-
   /**
    * 获取规格属性值列表（只读）
    *
@@ -124,15 +115,6 @@ public class SpecAttribute extends UpdateAggregateRoot {
   }
 
   /**
-   * 获取校验规则列表（只读）
-   *
-   * @return 不可变列表
-   */
-  public List<SpecAttributeValidateRule> getSpecAttributeValidateRules() {
-    return Collections.unmodifiableList(specAttributeValidateRules);
-  }
-
-  /**
    * 构造器
    *
    * @param categoryId 所属分类Id
@@ -140,7 +122,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
    * @param label 规格属性标签
    * @param inputType 输入类型
    * @param dataType 数据类型
-   * @param isFilter 是否用于筛选
+   * @param variantCreateMode 变体生成方式编码
    * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
@@ -150,7 +132,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
       String label,
       String inputType,
       String dataType,
-      boolean isFilter,
+      String variantCreateMode,
       @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
@@ -164,7 +146,7 @@ public class SpecAttribute extends UpdateAggregateRoot {
     this.code = trimmedCode;
 
     // 可变字段交给 apply 统一处理
-    apply(label, inputType, isFilter, sequence, remark);
+    apply(label, inputType, variantCreateMode, sequence, remark);
   }
 
   /**
@@ -174,17 +156,17 @@ public class SpecAttribute extends UpdateAggregateRoot {
    *
    * @param label 规格属性标签
    * @param inputType 输入类型
-   * @param isFilter 是否用于筛选
+   * @param variantCreateMode 变体生成方式编码
    * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   public void modify(
       String label,
       String inputType,
-      boolean isFilter,
+      String variantCreateMode,
       @Nullable Integer sequence,
       @Nullable String remark) {
-    apply(label, inputType, isFilter, sequence, remark);
+    apply(label, inputType, variantCreateMode, sequence, remark);
   }
 
   /**
@@ -239,55 +221,6 @@ public class SpecAttribute extends UpdateAggregateRoot {
     specAttributeValue.delete();
   }
 
-  /**
-   * 新增校验规则
-   *
-   * @param expression 校验表达式
-   * @param errorMessage 校验失败提示
-   * @param sequence 排序（可空）
-   * @throws DomainException 相同表达式已存在时抛出
-   */
-  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sequence) {
-    if (isExistValidateRule(expression)) {
-      throw new DomainException("规格属性" + this.label + ":校验规则已存在!");
-    }
-    specAttributeValidateRules.add(
-        new SpecAttributeValidateRule(expression, errorMessage, sequence));
-  }
-
-  /**
-   * 修改校验规则
-   *
-   * @param validateRuleId 校验规则Id
-   * @param expression 校验表达式
-   * @param errorMessage 校验失败提示
-   * @param sequence 排序（可空）
-   * @throws DomainException 校验规则不存在时抛出
-   */
-  public void modifyValidateRule(
-      long validateRuleId, String expression, String errorMessage, @Nullable Integer sequence) {
-    SpecAttributeValidateRule validateRule = findValidateRule(validateRuleId);
-    if (validateRule == null) {
-      throw new DomainException("规格属性" + this.label + ":校验规则不存在!");
-    }
-    validateRule.modify(expression, errorMessage, sequence);
-  }
-
-  /**
-   * 删除校验规则（逻辑删除）
-   *
-   * <p>找不到对应规则时静默返回，保证删除操作幂等。
-   *
-   * @param validateRuleId 校验规则Id
-   */
-  public void deleteValidateRule(long validateRuleId) {
-    SpecAttributeValidateRule validateRule = findValidateRule(validateRuleId);
-    if (validateRule == null) {
-      return;
-    }
-    validateRule.delete();
-  }
-
   // ==================== 私有：校验与赋值 ====================
 
   /**
@@ -297,14 +230,13 @@ public class SpecAttribute extends UpdateAggregateRoot {
    *
    * @param label 规格属性标签
    * @param inputType 输入类型
-   * @param isFilter 是否用于筛选
    * @param sequence 排序（可空）
    * @param remark 备注（可空）
    */
   private void apply(
       String label,
       String inputType,
-      boolean isFilter,
+      String variantCreateMode,
       @Nullable Integer sequence,
       @Nullable String remark) {
     String trimmedLabel = StringUtils.trimToNull(label);
@@ -312,9 +244,10 @@ public class SpecAttribute extends UpdateAggregateRoot {
       throw new DomainException("规格属性标签不能为空");
     }
     this.inputType = EnumUtils.getCode(InputTypeEnum.class, inputType, "输入类型");
+    this.variantCreateMode =
+        EnumUtils.getCode(VariantCreateModeEnum.class, variantCreateMode, "变体生成方式");
 
     this.label = trimmedLabel;
-    this.isFilter = isFilter;
     this.sequence = sequence;
     this.remark = remark;
   }
@@ -336,20 +269,6 @@ public class SpecAttribute extends UpdateAggregateRoot {
   }
 
   /**
-   * 按Id查找校验规则
-   *
-   * @param validateRuleId 校验规则Id
-   * @return 校验规则（可空），找不到返回 null
-   */
-  @Nullable
-  private SpecAttributeValidateRule findValidateRule(long validateRuleId) {
-    return specAttributeValidateRules.stream()
-        .filter(r -> Objects.equals(r.getId(), validateRuleId))
-        .findFirst()
-        .orElse(null);
-  }
-
-  /**
    * 判断规格属性值是否已存在于当前规格属性的规格属性值列表中
    *
    * <p>已逻辑删除的规格属性值不参与判断，这样删除后可以重新添加相同规格属性值。
@@ -360,18 +279,5 @@ public class SpecAttribute extends UpdateAggregateRoot {
   private boolean isExistValue(String value) {
     return specAttributeValues.stream()
         .anyMatch(i -> i.getValue().equals(value) && !i.getIsDeleted());
-  }
-
-  /**
-   * 判断校验规则表达式是否已存在于当前规格属性的规则列表中
-   *
-   * <p>已逻辑删除的规则不参与判断，这样删除后可以重新添加相同表达式。
-   *
-   * @param expression 校验表达式
-   * @return true：已存在
-   */
-  private boolean isExistValidateRule(String expression) {
-    return specAttributeValidateRules.stream()
-        .anyMatch(r -> r.getExpression().equals(expression) && !r.getIsDeleted());
   }
 }

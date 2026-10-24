@@ -1,4 +1,4 @@
-package com.mxerp.basedata.domain.materialsupplier;
+package com.mxerp.basedata.domain.suppliermaterial;
 
 import com.mxerp.shared.domain.repository.Repository;
 import java.time.LocalDateTime;
@@ -6,9 +6,9 @@ import java.util.List;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** 物料供应商仓储接口 */
+/** 供应商物料仓储接口 */
 @NullMarked
-public interface MaterialSupplierRepository extends Repository<MaterialSupplier> {
+public interface SupplierMaterialRepository extends Repository<SupplierMaterial> {
 
   /**
    * 按供应商 + 物料系列 + SKU 查询全部供应商卡
@@ -18,7 +18,7 @@ public interface MaterialSupplierRepository extends Repository<MaterialSupplier>
    * @param variantId SKU Id（可空，空表示查系列级价格）
    * @return 供应商卡列表
    */
-  List<MaterialSupplier> getListBySupplierIdAndMaterialIdAndVariantId(
+  List<SupplierMaterial> getListBySupplierIdAndMaterialIdAndVariantId(
       long supplierId, long materialId, @Nullable Long variantId);
 
   /**

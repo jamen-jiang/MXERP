@@ -94,49 +94,49 @@ public class Category extends UpdateAggregateRoot implements Parent {
   /**
    * 构造器
    *
-   * @param parentPath 层级路径（可空）
    * @param parentId 父分类Id（可空）
+   * @param parentPath 层级路径（可空）
    * @param code 分类代码
    * @param name 分类名称
    * @param isLeaf 是否末级
-   * @param disabled 是否禁用
    * @param sequence 排序（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
   Category(
-      @Nullable String parentPath,
       @Nullable Long parentId,
+      @Nullable String parentPath,
       String code,
       String name,
       boolean isLeaf,
-      boolean disabled,
       @Nullable Integer sequence,
+      boolean disabled,
       @Nullable String remark) {
-    apply(parentPath, parentId, code, name, isLeaf, disabled, sequence, remark);
+    apply(parentId, parentPath, code, name, isLeaf, sequence, disabled, remark);
   }
 
   /**
    * 修改分类
    *
-   * @param parentPath 层级路径（可空）
    * @param parentId 父分类Id（可空）
+   * @param parentPath 层级路径（可空）
    * @param code 分类代码
    * @param name 分类名称
    * @param isLeaf 是否末级
-   * @param disabled 是否禁用
    * @param sequence 排序（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
   void modify(
-      @Nullable String parentPath,
       @Nullable Long parentId,
+      @Nullable String parentPath,
       String code,
       String name,
       boolean isLeaf,
-      boolean disabled,
       @Nullable Integer sequence,
+      boolean disabled,
       @Nullable String remark) {
-    apply(parentPath, parentId, code, name, isLeaf, disabled, sequence, remark);
+    apply(parentId, parentPath, code, name, isLeaf, sequence, disabled, remark);
   }
 
   /**
@@ -156,23 +156,23 @@ public class Category extends UpdateAggregateRoot implements Parent {
    *
    * <p>把「去空格 → 非空校验 → 赋值」收敛到一处，避免构造器和 {@link #modify} 各写一遍导致规则漂移。
    *
-   * @param parentPath 层级路径（可空）
    * @param parentId 父分类Id（可空）
+   * @param parentPath 层级路径（可空）
    * @param code 分类代码
    * @param name 分类名称
    * @param isLeaf 是否末级
-   * @param disabled 是否禁用
    * @param sequence 排序（可空）
+   * @param disabled 是否禁用
    * @param remark 备注（可空）
    */
   private void apply(
-      @Nullable String parentPath,
       @Nullable Long parentId,
+      @Nullable String parentPath,
       String code,
       String name,
       boolean isLeaf,
-      boolean disabled,
       @Nullable Integer sequence,
+      boolean disabled,
       @Nullable String remark) {
     String trimmedCode = StringUtils.trimToNull(code);
     String trimmedName = StringUtils.trimToNull(name);

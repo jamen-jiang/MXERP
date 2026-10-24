@@ -5,6 +5,7 @@ import com.mxerp.basedata.domain.material.MaterialRepository;
 import com.mxerp.basedata.domain.specattribute.AssignedSpecAttributeData;
 import com.mxerp.basedata.domain.specattribute.SpecAttribute;
 import com.mxerp.basedata.domain.specattribute.SpecAttributeRepository;
+import com.mxerp.basedata.domain.specattribute.VariantCreateModeEnum;
 import com.mxerp.shared.domain.exception.DomainException;
 import com.mxerp.shared.domain.util.ValueTextUtils;
 import java.util.ArrayList;
@@ -153,6 +154,9 @@ public class VariantDomainService {
    *
    * <p>规格属性值增删后重新生成，落在候选值之外的旧 SKU 标记删除，保证 SKU 集合始终等于当前配置的展开。
    *
+   * <p>只要分类下有一条规格属性是「按需生成」，整张物料就不预建——返回空列表，改由
+   * {@link #getOrCreate} 在单据选到具体组合时补建。
+   *
    * @param materialId MaterialId
    * @return 需要持久化的聚合列表（含新增 + 已标记删除的）
    * @throws DomainException 物料不存在 / 规格属性没有维护规格属性值 / 组合数超上限时抛出
@@ -163,15 +167,20 @@ public class VariantDomainService {
     List<SpecAttribute> specAttributes =
         specAttributeRepository.getListByCategoryId(material.getCategoryId());
 
-    // 2. 查已有 SKU
+    // 2. 按需生成模式：不预建 SKU，等单据选到具体组合时再建
+    if (hasDynamicMode(specAttributes)) {
+      return List.of();
+    }
+
+    // 3. 查已有 SKU
     List<Variant> existing = variantRepository.getListByMaterialId(material.getId());
 
-    // 3. 没有规格属性：只保证有一条没有规格属性值的 SKU
+    // 4. 没有规格属性：只保证有一条没有规格属性值的 SKU
     if (specAttributes.isEmpty()) {
       return generateEmptyVariant(material, existing);
     }
 
-    // 4. 逐个规格属性取候选值行，再做笛卡尔积
+    // 5. 逐个规格属性取候选值行，再做笛卡尔积
     Map<String, List<AssignedSpecAttributeData>> candidates = new LinkedHashMap<>();
     for (SpecAttribute specAttribute : specAttributes) {
       candidates.put(specAttribute.getCode(), candidateRows(specAttribute));
@@ -182,7 +191,7 @@ public class VariantDomainService {
           "规格属性组合共" + combinations.size() + "种，超过单次生成上限" + MAX_GENERATE_COUNT + "，请缩减规格属性取值!");
     }
 
-    // 5. 生成候选值内的 SKU
+    // 6. 生成候选值内的 SKU
     List<Variant> toSave = new ArrayList<>();
     for (List<AssignedSpecAttributeData> combination : combinations) {
       String code = Variant.buildCode(material.getCode(), combination);
@@ -192,7 +201,7 @@ public class VariantDomainService {
       }
     }
 
-    // 6. 已有 SKU 的取值若不在候选集合内，标记删除
+    // 7. 已有 SKU 的取值若不在候选集合内，标记删除
     for (Variant variant : existing) {
       if (isOutOfRange(variant, candidates)) {
         variant.delete();
@@ -200,6 +209,45 @@ public class VariantDomainService {
       }
     }
     return toSave;
+  }
+
+  /**
+   * 按一组规格取值取 SKU：有就返回，没有就建一条（按需生成模式用）
+   *
+   * <p>与 { #createFromMaterial} 的分工：那个按「规格属性上的候选值」批量预建（立即生成模式），
+   * 这个只在单据选到具体组合时补建一条，没选过的组合永远不占 SKU 行。
+   *
+   * @param materialId MaterialId
+   * @param specAttributes 规格属性值（可空，可空表示没有规格维度的物料）
+   * @return 需要持久化的聚合：已存在时原样返回，不存在时返回新建的那条
+   * @throws DomainException 物料不存在、或规格属性不存在时抛出
+   */
+  public Variant getOrCreate(
+      long materialId, @Nullable Map<String, Object> specAttributes) {
+    Material material = getExistMaterial(materialId);
+    List<AssignedSpecAttributeData> rows =
+        resolveSpecAttributes(material.getCategoryId(), specAttributes);
+    String code = Variant.buildCode(material.getCode(), rows);
+    Variant existing = variantRepository.getByCode(code);
+    if (existing != null) {
+      return existing;
+    }
+    return buildVariant(material.getId(), material.getCode(), null, rows);
+  }
+
+  /**
+   * 分类下的规格属性里是否有「按需生成」的
+   *
+   * <p>跟 Odoo 一致：只要有一条按需生成，整个物料的 SKU 都不预建——预建一部分反而会出现
+   * 「一半组合有 SKU、一半没有」的两套规则。
+   *
+   * @param specAttributes 分类下的规格属性
+   * @return true 表示按需生成
+   */
+  private boolean hasDynamicMode(List<SpecAttribute> specAttributes) {
+    return specAttributes.stream()
+        .anyMatch(
+            x -> VariantCreateModeEnum.DYNAMIC.getCode().equals(x.getVariantCreateMode()));
   }
 
   // ==================== 私有：创建 / 修改 ====================

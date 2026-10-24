@@ -382,8 +382,8 @@ public class MaterialDomainService {
   /**
    * 校验基本单位存在
    *
-   * <p>采购单位不在物料上校验了：按什么单位进货随供应商变，那一列挪到了物料供应商卡，见
-   * {@code com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}。
+   * <p>采购单位不在物料上校验了：按什么单位进货随供应商变，那一列挪到了供应商物料卡，见
+   * {@code com.mxerp.basedata.domain.suppliermaterial.SupplierMaterial}。
    *
    * @param unitId 基本单位Id
    * @throws DomainException 单位不存在时抛出

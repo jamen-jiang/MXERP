@@ -121,15 +121,6 @@ public class Attribute extends UpdateAggregateRoot {
   @SQLRestriction("IsDeleted = 0")
   private List<AttributeValue> attributeValues = new ArrayList<>();
 
-  /** 校验规则列表（只读） */
-  @OneToMany(
-      fetch = FetchType.EAGER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-      orphanRemoval = true)
-  @JoinColumn(name = "AttributeId")
-  @SQLRestriction("IsDeleted = 0")
-  private List<AttributeValidateRule> attributeValidateRules = new ArrayList<>();
-
   /**
    * 获取属性值列表（只读）
    *
@@ -137,15 +128,6 @@ public class Attribute extends UpdateAggregateRoot {
    */
   public List<AttributeValue> getAttributeValues() {
     return Collections.unmodifiableList(attributeValues);
-  }
-
-  /**
-   * 获取校验规则列表（只读）
-   *
-   * @return 不可变列表
-   */
-  public List<AttributeValidateRule> getAttributeValidateRules() {
-    return Collections.unmodifiableList(attributeValidateRules);
   }
 
   /**
@@ -260,54 +242,6 @@ public class Attribute extends UpdateAggregateRoot {
       return;
     }
     attributeValue.delete();
-  }
-
-  /**
-   * 新增校验规则
-   *
-   * @param expression 校验表达式
-   * @param errorMessage 校验失败提示
-   * @param sequence 排序（可空）
-   * @throws DomainException 相同表达式已存在时抛出
-   */
-  public void addValidateRule(String expression, String errorMessage, @Nullable Integer sequence) {
-    if (isExistValidateRule(expression)) {
-      throw new DomainException("属性" + this.label + ":校验规则已存在!");
-    }
-    attributeValidateRules.add(new AttributeValidateRule(expression, errorMessage, sequence));
-  }
-
-  /**
-   * 修改校验规则
-   *
-   * @param validateRuleId 校验规则Id
-   * @param expression 校验表达式
-   * @param errorMessage 校验失败提示
-   * @param sequence 排序（可空）
-   * @throws DomainException 校验规则不存在时抛出
-   */
-  public void modifyValidateRule(
-      long validateRuleId, String expression, String errorMessage, @Nullable Integer sequence) {
-    AttributeValidateRule validateRule = findValidateRule(validateRuleId);
-    if (validateRule == null) {
-      throw new DomainException("属性" + this.label + ":校验规则不存在!");
-    }
-    validateRule.modify(expression, errorMessage, sequence);
-  }
-
-  /**
-   * 删除校验规则（逻辑删除）
-   *
-   * <p>找不到对应规则时静默返回，保证删除操作幂等。
-   *
-   * @param validateRuleId 校验规则Id
-   */
-  public void deleteValidateRule(long validateRuleId) {
-    AttributeValidateRule validateRule = findValidateRule(validateRuleId);
-    if (validateRule == null) {
-      return;
-    }
-    validateRule.delete();
   }
 
   /**
@@ -469,20 +403,6 @@ public class Attribute extends UpdateAggregateRoot {
   }
 
   /**
-   * 按Id查找校验规则
-   *
-   * @param validateRuleId 校验规则Id
-   * @return 校验规则（可空），找不到返回 null
-   */
-  @Nullable
-  private AttributeValidateRule findValidateRule(long validateRuleId) {
-    return attributeValidateRules.stream()
-        .filter(r -> Objects.equals(r.getId(), validateRuleId))
-        .findFirst()
-        .orElse(null);
-  }
-
-  /**
    * 判断属性值是否已存在于当前属性的属性值列表中
    *
    * <p>已逻辑删除的属性值不参与判断，这样删除后可以重新添加相同属性值。
@@ -492,18 +412,5 @@ public class Attribute extends UpdateAggregateRoot {
    */
   private boolean isExistValue(String value) {
     return attributeValues.stream().anyMatch(i -> i.getValue().equals(value) && !i.getIsDeleted());
-  }
-
-  /**
-   * 判断校验规则表达式是否已存在于当前属性的规则列表中
-   *
-   * <p>已逻辑删除的规则不参与判断，这样删除后可以重新添加相同表达式。
-   *
-   * @param expression 校验表达式
-   * @return true：已存在
-   */
-  private boolean isExistValidateRule(String expression) {
-    return attributeValidateRules.stream()
-        .anyMatch(r -> r.getExpression().equals(expression) && !r.getIsDeleted());
   }
 }

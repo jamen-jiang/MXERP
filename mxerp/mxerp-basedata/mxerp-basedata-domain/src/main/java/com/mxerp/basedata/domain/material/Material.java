@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>这里只放「物料是什么」：分类、代码、名称、基本单位。采购价、采购单位、币种、起订量不在这里——那是 「供应商 ×
  * 物料」这一层的事，一个物料可以有多个供应商和多个报价，钉在物料上只能留下最新一个值，历史价当场丢失。见 {@code
- * com.mxerp.basedata.domain.materialsupplier.MaterialSupplier}。按什么单位进货本来就随供应商变 （这家按卷、那家按米），Odoo 19
+ * com.mxerp.basedata.domain.suppliermaterial.SupplierMaterial}。按什么单位进货本来就随供应商变 （这家按卷、那家按米），Odoo 19
  * 也把采购单位从产品表挪到了供应商价格表。
  *
  * <p>{@code categoryId} 说「归哪一类、挂哪组规格属性」，跟「这张料怎么来、要不要管库存」是两回事，不能并成一个枚举—— 同一分类下的东西完全可以既自制又外购。
