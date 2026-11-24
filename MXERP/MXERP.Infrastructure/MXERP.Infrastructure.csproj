@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Snow.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MXERP.Common\MXERP.Common.csproj" />
     <ProjectReference Include="..\MXERP.Domain\MXERP.Domain.csproj" />
     <ProjectReference Include="..\MXERP.Application\MXERP.Application.csproj" />

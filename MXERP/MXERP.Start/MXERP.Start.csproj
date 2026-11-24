@@ -1,15 +1,55 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MXERP.Start</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Snow 框架全能力模块(版本由 Directory.Packages.props 集中管理, 这里一律不写 Version) -->
+  <ItemGroup>
+    <PackageReference Include="Snow.Aop.Castle" />
+    <PackageReference Include="Snow.AspNetCore" />
+    <PackageReference Include="Snow.AspNetCore.Mvc" />
+    <PackageReference Include="Snow.AspNetCore.RateLimiting" />
+    <PackageReference Include="Snow.AspNetCore.Serilog" />
+    <PackageReference Include="Snow.AspNetCore.SignalR" />
+    <PackageReference Include="Snow.Authentication" />
+    <PackageReference Include="Snow.Authorization" />
+    <PackageReference Include="Snow.BackgroundJobs" />
+    <PackageReference Include="Snow.BackgroundJobs.Hangfire" />
+    <PackageReference Include="Snow.Caching.StackExchangeRedis" />
+    <PackageReference Include="Snow.Data" />
+    <PackageReference Include="Snow.DistributedLocking.Redis" />
+    <PackageReference Include="Snow.Emailing.MailKit" />
+    <PackageReference Include="Snow.EntityFrameworkCore" />
+    <PackageReference Include="Snow.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Snow.EventBus" />
+    <PackageReference Include="Snow.Ftping.FluentFTP" />
+    <PackageReference Include="Snow.Http.Client" />
+    <PackageReference Include="Snow.Json" />
+    <PackageReference Include="Snow.Localization" />
+    <PackageReference Include="Snow.Messaging" />
+    <PackageReference Include="Snow.ObjectMapping.Mapster" />
+    <PackageReference Include="Snow.OpenApi" />
+    <PackageReference Include="Snow.Security" />
+    <PackageReference Include="Snow.Timing" />
+    <PackageReference Include="Snow.Tracing" />
+    <PackageReference Include="Snow.Uow" />
+    <PackageReference Include="Snow.Validation.FluentValidation" />
+    <PackageReference Include="Snow.Workflows.Elsa" />
+  </ItemGroup>
+
+  <!-- Hangfire 持久化存储: 只宿主需要, 框架包本身不引 -->
+  <ItemGroup>
+    <PackageReference Include="Hangfire.Storage.SQLite" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MXERP.Application\MXERP.Application.csproj" />
     <ProjectReference Include="..\MXERP.Infrastructure\MXERP.Infrastructure.csproj" />
     <ProjectReference Include="..\MXERP.Adapter\MXERP.Adapter.csproj" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
 
 </Project>

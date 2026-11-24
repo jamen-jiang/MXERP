@@ -5,8 +5,54 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- 在此集中声明 <PackageVersion Include="..." Version="..." /> -->
+  <ItemGroup Label="Snow 框架">
+    <!-- 版本与 D:\Project\Snow\.nuget-packages 里的本地包一致。
+         Snow 重新打包后版本号不变，消费方需先清全局包缓存（dotnet nuget locals global-packages 加 clear 参数），否则会一直用旧 dll。 -->
+    <PackageVersion Include="Snow.Core" Version="1.0.0" />
+    <PackageVersion Include="Snow.Aop.Castle" Version="1.0.0" />
+    <PackageVersion Include="Snow.AspNetCore" Version="1.0.0" />
+    <PackageVersion Include="Snow.AspNetCore.Mvc" Version="1.0.0" />
+    <PackageVersion Include="Snow.AspNetCore.RateLimiting" Version="1.0.0" />
+    <PackageVersion Include="Snow.AspNetCore.Serilog" Version="1.0.0" />
+    <PackageVersion Include="Snow.AspNetCore.SignalR" Version="1.0.0" />
+    <PackageVersion Include="Snow.Authentication" Version="1.0.0" />
+    <PackageVersion Include="Snow.Authorization" Version="1.0.0" />
+    <PackageVersion Include="Snow.BackgroundJobs" Version="1.0.0" />
+    <PackageVersion Include="Snow.BackgroundJobs.Hangfire" Version="1.0.0" />
+    <PackageVersion Include="Snow.Caching" Version="1.0.0" />
+    <PackageVersion Include="Snow.Caching.StackExchangeRedis" Version="1.0.0" />
+    <PackageVersion Include="Snow.Data" Version="1.0.0" />
+    <PackageVersion Include="Snow.DistributedLocking" Version="1.0.0" />
+    <PackageVersion Include="Snow.DistributedLocking.Redis" Version="1.0.0" />
+    <PackageVersion Include="Snow.Domain" Version="1.0.0" />
+    <PackageVersion Include="Snow.Emailing" Version="1.0.0" />
+    <PackageVersion Include="Snow.Emailing.MailKit" Version="1.0.0" />
+    <PackageVersion Include="Snow.EntityFrameworkCore" Version="1.0.0" />
+    <PackageVersion Include="Snow.EntityFrameworkCore.SqlServer" Version="1.0.0" />
+    <PackageVersion Include="Snow.EventBus" Version="1.0.0" />
+    <PackageVersion Include="Snow.Ftping" Version="1.0.0" />
+    <PackageVersion Include="Snow.Ftping.FluentFTP" Version="1.0.0" />
+    <PackageVersion Include="Snow.Http.Client" Version="1.0.0" />
+    <PackageVersion Include="Snow.Json" Version="1.0.0" />
+    <PackageVersion Include="Snow.Localization" Version="1.0.0" />
+    <PackageVersion Include="Snow.Messaging" Version="1.0.0" />
+    <PackageVersion Include="Snow.MultiTenancy" Version="1.0.0" />
+    <PackageVersion Include="Snow.ObjectMapping" Version="1.0.0" />
+    <PackageVersion Include="Snow.ObjectMapping.Mapster" Version="1.0.0" />
+    <PackageVersion Include="Snow.OpenApi" Version="1.0.0" />
+    <PackageVersion Include="Snow.Security" Version="1.0.0" />
+    <PackageVersion Include="Snow.Timing" Version="1.0.0" />
+    <PackageVersion Include="Snow.Tracing" Version="1.0.0" />
+    <PackageVersion Include="Snow.Uow" Version="1.0.0" />
+    <PackageVersion Include="Snow.Validation" Version="1.0.0" />
+    <PackageVersion Include="Snow.Validation.FluentValidation" Version="1.0.0" />
+    <PackageVersion Include="Snow.Workflows" Version="1.0.0" />
+    <PackageVersion Include="Snow.Workflows.Elsa" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="第三方依赖">
+    <!-- Hangfire 持久化存储：示例用 SQLite 文件库，换库改成 Hangfire.SqlServer / Hangfire.PostgreSql / Hangfire.MySql -->
+    <PackageVersion Include="Hangfire.Storage.SQLite" Version="0.4.3" />
   </ItemGroup>
 
 </Project>

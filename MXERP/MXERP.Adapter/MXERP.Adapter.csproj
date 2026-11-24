@@ -5,6 +5,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Snow.AspNetCore" />
+    <PackageReference Include="Snow.AspNetCore.Mvc" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MXERP.Infrastructure\MXERP.Infrastructure.csproj" />
   </ItemGroup>
 
