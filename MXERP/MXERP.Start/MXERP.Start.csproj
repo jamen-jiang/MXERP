@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MXERP.Application\MXERP.Application.csproj" />
+    <ProjectReference Include="..\MXERP.Infrastructure\MXERP.Infrastructure.csproj" />
+    <ProjectReference Include="..\MXERP.Adapter\MXERP.Adapter.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

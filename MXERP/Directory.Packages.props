@@ -1,0 +1,12 @@
+<Project>
+
+  <!-- 对应 Java 父 pom 的 dependencyManagement：集中管理 NuGet 版本 -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 在此集中声明 <PackageVersion Include="..." Version="..." /> -->
+  </ItemGroup>
+
+</Project>

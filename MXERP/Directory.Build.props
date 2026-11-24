@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- 对应 Java 项目父 pom.xml 的公共配置：统一目标框架与编译选项 -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+</Project>
