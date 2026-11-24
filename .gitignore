@@ -384,3 +384,11 @@ dist-ssr
 
 # DSH agent worktrees / caches
 .agents/
+
+# 运行时数据库文件(Hangfire SQLite: 库 + 预写日志 + 共享内存)
+*.db
+*.db-shm
+*.db-wal
+
+# Elsa 运行时目录(默认的文件锁根目录, 启动时自动重建, 不入库)
+App_Data/

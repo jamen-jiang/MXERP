@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MXERP.Adapter.Controllers;
+namespace MXERP.Web.Controllers;
 
-/// <summary>Adapter 层示例接口，用于验证 Web 管线连通。</summary>
+/// <summary>Web 层示例接口，用于验证管线连通。</summary>
 [ApiController]
 [Route("api/[controller]")]
 [AllowAnonymous]
@@ -13,7 +13,7 @@ public sealed class PingController : ControllerBase
     public IActionResult Get() => Ok(new
     {
         status = "ok",
-        layer = "adapter",
+        layer = "web",
         timestamp = DateTimeOffset.UtcNow
     });
 }

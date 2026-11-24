@@ -1,4 +1,5 @@
-using MXERP.Adapter;
+using MXERP.Infrastructure;
+using MXERP.Web;
 using Snow.Aop.Castle;
 using Snow.AspNetCore;
 using Snow.AspNetCore.Mvc;
@@ -30,14 +31,15 @@ using Snow.Uow;
 using Snow.Validation.FluentValidation;
 using Snow.Workflows.Elsa;
 
-namespace MXERP.Start;
+namespace MXERP;
 
 /// <summary>
-/// MXERP 启动模块: 一次性 <c>DependsOn</c> 框架全部能力模块与各实现提供者(与 Snow.Sample.Web 的 SampleModule 同形)。
-/// <para>按 Snow 约定, 管道由启动模块在 <see cref="OnApplicationInitialization"/> 里手写。</para>
+/// MXERP 宿主模块: 一次性 <c>DependsOn</c> 框架全部能力模块与各实现提供者(与 Snow.Sample.Web 的 SampleModule 同形)。
+/// <para>按 Snow 约定, 管道由宿主模块在 <see cref="OnApplicationInitialization"/> 里手写。</para>
 /// </summary>
 [DependsOn(
-    typeof(AdapterModule),
+    typeof(WebModule),
+    typeof(InfrastructureModule),
     typeof(SnowAopModule),
     typeof(SnowAspNetCoreModule),
     typeof(SnowMvcModule),
@@ -69,14 +71,14 @@ namespace MXERP.Start;
     typeof(SnowValidationFluentValidationModule),
     typeof(SnowElsaModule)
 )]
-public sealed class StartModule : SnowModule
+public sealed class MXERPModule : SnowModule
 {
     /// <inheritdoc />
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        // Snow 约定: 模块不铺管道, 整条管道由启动模块在这里按行序手写(对齐 ABP 模板)。
+        // Snow 约定: 模块不铺管道, 整条管道由宿主模块在这里按行序手写(对齐 ABP 模板)。
         // 下面把框架各能力包提供的 UseSnowXxx 逐一接上, 书写顺序即中间件的嵌套顺序(先挂的在最外层)。
         IApplicationBuilder app = context.GetApplicationBuilder();
 

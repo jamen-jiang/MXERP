@@ -4,7 +4,7 @@
     <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>MXERP.Start</RootNamespace>
+    <RootNamespace>MXERP</RootNamespace>
   </PropertyGroup>
 
   <!-- Snow 框架全能力模块(版本由 Directory.Packages.props 集中管理, 这里一律不写 Version) -->
@@ -46,10 +46,17 @@
     <PackageReference Include="Hangfire.Storage.SQLite" />
   </ItemGroup>
 
+  <!-- Elsa 持久化: 用 Dapper 而不是 EF Core —— Elsa 3.10.2 的 EF 存储调用 EF10 的 API, 与基座的 EF11 不兼容 -->
+  <ItemGroup>
+    <PackageReference Include="Elsa.Persistence.Dapper" />
+    <PackageReference Include="Elsa.Persistence.Dapper.Migrations" />
+    <PackageReference Include="FluentMigrator.Runner.SQLite" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MXERP.Application\MXERP.Application.csproj" />
     <ProjectReference Include="..\MXERP.Infrastructure\MXERP.Infrastructure.csproj" />
-    <ProjectReference Include="..\MXERP.Adapter\MXERP.Adapter.csproj" />
+    <ProjectReference Include="..\MXERP.Web\MXERP.Web.csproj" />
   </ItemGroup>
 
 </Project>

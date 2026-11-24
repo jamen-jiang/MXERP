@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <PackageReference Include="Snow.EntityFrameworkCore" />
+    <PackageReference Include="Snow.EntityFrameworkCore.SqlServer" />
   </ItemGroup>
 
   <ItemGroup>

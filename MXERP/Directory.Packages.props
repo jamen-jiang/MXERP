@@ -53,6 +53,13 @@
   <ItemGroup Label="第三方依赖">
     <!-- Hangfire 持久化存储：示例用 SQLite 文件库，换库改成 Hangfire.SqlServer / Hangfire.PostgreSql / Hangfire.MySql -->
     <PackageVersion Include="Hangfire.Storage.SQLite" Version="0.4.3" />
+
+    <!-- Elsa 的 Dapper 持久化: 绕开 EF Core(Snow 基座是 EF11, Elsa 3.10.2 的 EF 存储只认 EF10)。
+         Dapper 版直接用 Microsoft.Data.Sqlite.Core 10.0.9, 与 Hangfire 的 SQLitePCLRaw 2.1.11 同版, 不冲突。
+         Migrations 走 FluentMigrator 7.2.0(与 Elsa 声明一致), 建表由它负责。 -->
+    <PackageVersion Include="Elsa.Persistence.Dapper" Version="3.10.2" />
+    <PackageVersion Include="Elsa.Persistence.Dapper.Migrations" Version="3.10.2" />
+    <PackageVersion Include="FluentMigrator.Runner.SQLite" Version="7.2.0" />
   </ItemGroup>
 
 </Project>

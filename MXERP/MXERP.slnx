@@ -1,8 +1,8 @@
 <Solution>
-  <Project Path="MXERP.Adapter/MXERP.Adapter.csproj" />
   <Project Path="MXERP.Application/MXERP.Application.csproj" />
   <Project Path="MXERP.Common/MXERP.Common.csproj" />
   <Project Path="MXERP.Domain/MXERP.Domain.csproj" />
   <Project Path="MXERP.Infrastructure/MXERP.Infrastructure.csproj" />
-  <Project Path="MXERP.Start/MXERP.Start.csproj" />
+  <Project Path="MXERP.Web/MXERP.Web.csproj" />
+  <Project Path="MXERP/MXERP.csproj" />
 </Solution>
