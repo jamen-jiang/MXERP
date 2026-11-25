@@ -6,11 +6,15 @@ using Snow.EntityFrameworkCore;
 
 namespace MXERP.Infrastructure.EFCore.Repositories;
 
-/// <summary>品牌仓储实现: 复用框架的 EfCoreRepository, 只补按代码查询</summary>
+/// <summary>
+/// 品牌仓储实现: 复用框架的 EfCoreRepository, 只补按代码查询
+/// </summary>
 [ScopedService]
 public class BrandRepository : EfCoreRepository<MXERPDbContext, Brand>, IBrandRepository
 {
-    /// <summary>构造器</summary>
+    /// <summary>
+    /// 构造器
+    /// </summary>
     /// <param name="dbContextProvider">上下文提供器</param>
     public BrandRepository(IDbContextProvider<MXERPDbContext> dbContextProvider)
         : base(dbContextProvider)
@@ -24,8 +28,8 @@ public class BrandRepository : EfCoreRepository<MXERPDbContext, Brand>, IBrandRe
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByCodeAsync(string code, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByCodeExcludeIdAsync(string code, long? id = null, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.Code == code, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.Code == code && x.Id != id, cancellationToken);
     }
 }

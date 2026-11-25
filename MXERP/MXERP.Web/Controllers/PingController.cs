@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MXERP.Web.Controllers;
 
-/// <summary>Web 层示例接口，用于验证管线连通。</summary>
+/// <summary>
+/// Web 层示例接口，用于验证管线连通。
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [AllowAnonymous]

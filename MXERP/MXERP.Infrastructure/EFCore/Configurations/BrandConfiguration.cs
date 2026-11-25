@@ -4,7 +4,9 @@ using MXERP.Domain.Brands;
 
 namespace MXERP.Infrastructure.EFCore.Configurations;
 
-/// <summary>品牌表映射(对应 Java 的 @Table/@Column/@Index)</summary>
+/// <summary>
+/// 品牌表映射(对应 Java 的 @Table/@Column/@Index)
+/// </summary>
 public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
 {
     /// <inheritdoc />
@@ -22,7 +24,7 @@ public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
         // Java 侧因 JPA 不支持过滤索引而改用 Flyway 建; EF 的 Fluent 直接能表达, 不必额外脚本。
         builder.HasIndex(x => x.Code)
             .IsUnique()
-            .HasDatabaseName("IX_Brand_Code")
+            .HasDatabaseName("UX_Brand_Code")
             .HasFilter("[IsDeleted] = 0");
     }
 }

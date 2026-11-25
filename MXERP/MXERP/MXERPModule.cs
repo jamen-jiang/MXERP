@@ -29,7 +29,12 @@ using Snow.Timing;
 using Snow.Tracing;
 using Snow.Uow;
 using Snow.Validation.FluentValidation;
+using Elsa.Extensions;
 using Snow.Workflows.Elsa;
+using Hangfire;
+using Hangfire.Storage.SQLite;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MXERP;
 
@@ -42,7 +47,7 @@ namespace MXERP;
     typeof(InfrastructureModule),
     typeof(SnowAopModule),
     typeof(SnowAspNetCoreModule),
-    typeof(SnowMvcModule),
+    typeof(SnowAspNetCoreMvcModule),
     typeof(SnowRateLimitingModule),
     typeof(SnowAspNetCoreSerilogModule),
     typeof(SnowSignalRModule),
@@ -73,6 +78,113 @@ namespace MXERP;
 )]
 public sealed class MXERPModule : SnowModule
 {
+    /// <inheritdoc />
+    public override void PreConfigureServices(ServiceConfigurationContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        // Elsa 选项不读配置节(与 ABP 一致): 选项全由宿主用代码给, 照 Snow.Sample.Web/SampleModule 的写法。
+        string contentRootPath = context.Services.GetHostingEnvironment().ContentRootPath;
+        string sqliteConnectionString = context.Configuration.GetConnectionString("Sqlite")
+            ?? throw new InvalidOperationException("缺少配置 ConnectionStrings:Sqlite: Elsa 需要持久化存储的位置(文件路径)。");
+
+        Configure<SnowElsaOptions>(options =>
+        {
+            // ① 持久化: 非空即落库(SQLite 文件), 留空则纯内存、重启即丢。相对路径按内容根展开。
+            options.ConnectionString = ResolveSqlitePath($"Data Source={sqliteConnectionString}", contentRootPath);
+
+            // ② 工作流 HTTP 端点: 关掉时管理 API 仍在。
+            options.EnableHttp = true;
+            options.HttpBasePath = "/workflows";
+
+            // ③ 管理 API(/elsa/api): 工作流定义的增删改查与手动触发。
+            options.EnableApi = true;
+
+            // ④ 代码方式定义的工作流: 有工作流类时逐个 options.WorkflowTypes.Add(typeof(XxxWorkflow));
+            //    MXERP 目前还没有工作流定义, 留空。
+
+            // ⑤ 直接拿 Elsa 的 IModule 追加特性(内置之后补一刀)。
+            options.ConfigureElsa = elsa =>
+            {
+                // 身份(Identity): 一样是代码写法。
+                elsa.UseIdentity(identity =>
+                {
+                    // 管理员账号: 用户名/密码/角色都在这儿写。
+                    identity.UseAdminUserProvider(admin =>
+                    {
+                        admin.UserId = "admin";
+                        admin.UserName = "admin";
+                        admin.Password = "Admin@123456";
+                        admin.Roles = ["admin"];
+                    });
+
+                    // 令牌: 签名密钥不配就用 Elsa 的默认值, 这里用代码改有效期。
+                    identity.TokenOptions = token =>
+                    {
+                        token.AccessTokenLifetime = TimeSpan.FromHours(8);
+                        token.RefreshTokenLifetime = TimeSpan.FromDays(7);
+                    };
+                });
+            };
+        });
+    }
+
+    /// <inheritdoc />
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        // Hangfire 的存储由宿主选: 框架不绑定任何存储库(与 ABP 一样), 用 Hangfire 自己的 AddHangfire 追加。
+        // 模块已经给过兼容级别与序列化器这些设置, 这里后加的存储排在后面, 持久化存储就盖掉默认值。
+        // 换库换包与 UseXxxStorage 即可: Hangfire.SqlServer / Hangfire.PostgreSql / Hangfire.MySql。
+        // 注意: SQLite 提供程序把这个参数当"数据库文件名"; 换成关系库时填真实连接串。
+        // 路径相对宿主的内容根, 配成 DataBase/xxx.db 就落在本项目目录下的 DataBase/ 里。
+        string hangfireConnectionString = context.Configuration.GetConnectionString("Sqlite")
+            ?? throw new InvalidOperationException("缺少配置 ConnectionStrings:Sqlite: Hangfire 需要持久化存储的位置(文件路径或连接串)。");
+        string contentRootPath = context.Services.GetHostingEnvironment().ContentRootPath;
+        context.Services.AddHangfire(configuration =>
+            configuration.UseSQLiteStorage(ResolveSqlitePath(hangfireConnectionString, contentRootPath)));
+    }
+
+    // SQLite 存储把参数当文件名, 而 "Data Source=" 形态是给关系库用的: 两种都认, 相对路径按内容根展开,
+    // 并把目录建出来 —— 否则 SQLite 只在进程工作目录下找文件, 换个启动方式就换了一个库。
+    private static string ResolveSqlitePath(string connectionString, string contentRootPath)
+    {
+        foreach (string key in new[] { "Data Source", "Filename" })
+        {
+            string prefix = key + "=";
+            int index = connectionString.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+            {
+                continue;
+            }
+
+            int start = index + prefix.Length;
+            int end = connectionString.IndexOf(';', start);
+            string value = (end < 0 ? connectionString[start..] : connectionString[start..end]).Trim();
+            return connectionString[..start] + ExpandPath(value, contentRootPath) + (end < 0 ? string.Empty : connectionString[end..]);
+        }
+
+        return ExpandPath(connectionString.Trim(), contentRootPath);
+    }
+
+    private static string ExpandPath(string path, string contentRootPath)
+    {
+        if (path.Length == 0 || path == ":memory:" || Path.IsPathRooted(path))
+        {
+            return path;
+        }
+
+        string fullPath = Path.GetFullPath(Path.Combine(contentRootPath, path));
+        string? directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        return fullPath;
+    }
+
     /// <inheritdoc />
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
