@@ -15,10 +15,8 @@ public class Work : AuditedAggregateRoot
     {
         WorkflowId = string.Empty;
         Name = string.Empty;
-        BusinessType = string.Empty;
         BusinessNumber = string.Empty;
-        Status = string.Empty;
-        WorkLogs = new List<WorkLog>();
+        _workLogs = new List<WorkLog>();
     }
 
     /// <summary>
@@ -29,16 +27,15 @@ public class Work : AuditedAggregateRoot
     /// <param name="businessType">业务类型</param>
     /// <param name="businessId">业务Id</param>
     /// <param name="businessNumber">业务编号</param>
-    public Work(string workflowId, string name, string businessType, long businessId, string businessNumber)
+    public Work(string workflowId, string name, WorkBusinessTypeEnum businessType, long businessId, string businessNumber)
+        : this()
     {
-        ValidateBusinessType(businessType);
         WorkflowId = workflowId;
         Name = name;
         BusinessType = businessType;
         BusinessId = businessId;
         BusinessNumber = businessNumber;
         Status = WorkStatusEnum.Running;
-        WorkLogs = new List<WorkLog>();
     }
 
     /// <summary>
@@ -54,7 +51,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 业务类型
     /// </summary>
-    public string BusinessType { get; private set; }
+    public WorkBusinessTypeEnum BusinessType { get; private set; }
 
     /// <summary>
     /// 业务Id
@@ -69,7 +66,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 当前任务(可空)
     /// </summary>
-    public string? CurrentTask { get; private set; }
+    public TaskEnum? CurrentTask { get; private set; }
 
     /// <summary>
     /// 当前任务分配人(可空)
@@ -79,7 +76,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; }
+    public WorkStatusEnum Status { get; private set; }
 
     /// <summary>
     /// 完成时间(可空)
@@ -89,15 +86,14 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 工作日志
     /// </summary>
-    public virtual ICollection<WorkLog> WorkLogs { get; private set; }
+    private readonly List<WorkLog> _workLogs;
 
     /// <summary>
-    /// 获取工作日志列表(只读)
+    /// 工作日志
     /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<WorkLog> GetWorkLogs()
+    public IReadOnlyCollection<WorkLog> WorkLogs
     {
-        return WorkLogs.ToList().AsReadOnly();
+        get { return _workLogs.AsReadOnly(); }
     }
 
     /// <summary>
@@ -105,9 +101,8 @@ public class Work : AuditedAggregateRoot
     /// </summary>
     /// <param name="currentTask">当前任务</param>
     /// <param name="currentTaskAssigner">当前任务分配人</param>
-    public void Modify(string currentTask, string currentTaskAssigner)
+    public void Modify(TaskEnum currentTask, string currentTaskAssigner)
     {
-        ValidateCurrentTask(currentTask);
         CurrentTask = currentTask;
         CurrentTaskAssigner = currentTaskAssigner;
     }
@@ -131,13 +126,12 @@ public class Work : AuditedAggregateRoot
     /// <param name="assigneeName">处理人名称</param>
     /// <param name="status">审批状态</param>
     /// <param name="remark">备注(可空)</param>
-    public void AddLog(string taskName, long assigneeId, string assigneeName, string status, string? remark)
+    public void AddLog(string taskName, long assigneeId, string assigneeName, UserTaskStatusEnum status, string? remark)
     {
-        ValidateCurrentTask(status);
         CurrentTask = null;
         CurrentTaskAssigner = null;
         WorkLog workLog = new WorkLog(taskName, assigneeId, assigneeName, status, remark);
-        WorkLogs.Add(workLog);
+        _workLogs.Add(workLog);
         AddDomainEvent(new WorkLogAddedEvent(this, taskName, status));
     }
 
@@ -150,42 +144,4 @@ public class Work : AuditedAggregateRoot
         AddDomainEvent(new WorkDeletedEvent(this));
     }
 
-    /// <summary>
-    /// 校验业务类型
-    /// </summary>
-    /// <param name="businessType">业务类型</param>
-    private static void ValidateBusinessType(string businessType)
-    {
-        if (string.IsNullOrWhiteSpace(businessType))
-        {
-            throw new UserFriendlyException("业务类型不能为空");
-        }
-
-        if (!WorkBusinessTypeEnum.IsValid(businessType))
-        {
-            throw new UserFriendlyException("业务类型" + businessType + "有误!");
-        }
-    }
-
-    /// <summary>
-    /// 校验当前任务
-    /// </summary>
-    /// <param name="currentTask">当前任务(可空)</param>
-    private static void ValidateCurrentTask(string? currentTask)
-    {
-        if (currentTask is null)
-        {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(currentTask))
-        {
-            return;
-        }
-
-        if (!TaskEnum.IsValid(currentTask))
-        {
-            throw new UserFriendlyException("当前任务" + currentTask + "有误!");
-        }
-    }
 }

@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Events;
 
 namespace MXERP.Domain.PurchasePlans;
@@ -18,7 +19,7 @@ public class PurchasePlanItemAddedEvent : DomainEvent
     /// <param name="skuId">产品SkuId</param>
     /// <param name="warehouseId">仓库Id</param>
     /// <param name="qty">数量</param>
-    public PurchasePlanItemAddedEvent(PurchasePlan purchasePlan, string relationType, long relationId, long? relationItemId, long itemRelationItemId, long skuId, long warehouseId, double qty)
+    public PurchasePlanItemAddedEvent(PurchasePlan purchasePlan, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, long itemRelationItemId, long skuId, long warehouseId, double qty)
         : base(purchasePlan)
     {
         RelationType = relationType;
@@ -33,7 +34,7 @@ public class PurchasePlanItemAddedEvent : DomainEvent
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; }
+    public BusinessOrderTypeEnum RelationType { get; }
 
     /// <summary>
     /// 关联Id

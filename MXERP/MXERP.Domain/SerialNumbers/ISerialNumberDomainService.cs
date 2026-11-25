@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.SerialNumbers;
 
 /// <summary>
@@ -19,7 +21,7 @@ public interface ISerialNumberDomainService
     /// <param name="rule">规则(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>流水号聚合</returns>
-    Task<SerialNumber> ModifyAsync(long id, string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule, CancellationToken cancellationToken = default);
+    Task<SerialNumber> ModifyAsync(long id, SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改流水号(使用已有聚合, 避免重复查询)
@@ -34,5 +36,5 @@ public interface ISerialNumberDomainService
     /// <param name="splitSymbol">分割符号</param>
     /// <param name="rule">规则(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task ModifyAsync(SerialNumber serialNumber, string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule, CancellationToken cancellationToken = default);
+    Task ModifyAsync(SerialNumber serialNumber, SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule, CancellationToken cancellationToken = default);
 }

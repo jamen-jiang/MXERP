@@ -19,13 +19,22 @@ public class ExpressOrder : AuditedAggregateRoot
     /// <summary>
     /// 快递单项
     /// </summary>
-    public virtual ICollection<ExpressOrderItem> ExpressOrderItems { get; private set; } = new List<ExpressOrderItem>();
+    private readonly List<ExpressOrderItem> _expressOrderItems;
+
+    /// <summary>
+    /// 快递单项
+    /// </summary>
+    public IReadOnlyCollection<ExpressOrderItem> ExpressOrderItems
+    {
+        get { return _expressOrderItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected ExpressOrder()
     {
+        _expressOrderItems = new List<ExpressOrderItem>();
     }
 
     /// <summary>
@@ -34,18 +43,10 @@ public class ExpressOrder : AuditedAggregateRoot
     /// <param name="number">快递单号</param>
     /// <param name="customerCode">客户代码</param>
     public ExpressOrder(string number, string customerCode)
+        : this()
     {
         Number = number;
         CustomerCode = customerCode;
-    }
-
-    /// <summary>
-    /// 获取快递单项列表（只读）
-    /// </summary>
-    /// <returns>只读视图</returns>
-    public IReadOnlyList<ExpressOrderItem> GetExpressOrderItems()
-    {
-        return ExpressOrderItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -67,10 +68,10 @@ public class ExpressOrder : AuditedAggregateRoot
     /// <param name="qty">数量</param>
     public void AddOrModifyItem(string grid, string orderNumber, string customerPONumber, string lensName, int qty)
     {
-        ExpressOrderItem? item = ExpressOrderItems.FirstOrDefault(x => x.Grid == grid && x.OrderNumber == orderNumber && x.CustomerPONumber == customerPONumber && x.LensName == lensName);
+        ExpressOrderItem? item = _expressOrderItems.FirstOrDefault(x => x.Grid == grid && x.OrderNumber == orderNumber && x.CustomerPONumber == customerPONumber && x.LensName == lensName);
         if (item is null)
         {
-            ExpressOrderItems.Add(new ExpressOrderItem(grid, orderNumber, customerPONumber, lensName, qty));
+            _expressOrderItems.Add(new ExpressOrderItem(grid, orderNumber, customerPONumber, lensName, qty));
             return;
         }
 

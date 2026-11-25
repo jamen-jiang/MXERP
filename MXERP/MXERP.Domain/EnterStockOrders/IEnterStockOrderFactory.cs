@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.EnterStockOrders;
 
 /// <summary>
@@ -14,7 +16,7 @@ public interface IEnterStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>入库单聚合</returns>
-    Task<EnterStockOrder> CreateAsync(string productType, long? originalId, string businessType, string? remark, CancellationToken cancellationToken = default);
+    Task<EnterStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, EnterStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 创建入库单（带关联类型）
@@ -26,5 +28,5 @@ public interface IEnterStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>入库单聚合</returns>
-    Task<EnterStockOrder> CreateAsync(string productType, long? originalId, string businessOrderType, string businessType, string? remark, CancellationToken cancellationToken = default);
+    Task<EnterStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum businessOrderType, EnterStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default);
 }

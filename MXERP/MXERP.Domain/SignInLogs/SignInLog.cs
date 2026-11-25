@@ -11,7 +11,7 @@ public class SignInLog : LogAggregateRoot
     /// <summary>
     /// 登录类型
     /// </summary>
-    public string Type { get; private set; } = string.Empty;
+    public SignEntryTypeEnum Type { get; private set; }
 
     /// <summary>
     /// 登录账号(可空)
@@ -86,10 +86,10 @@ public class SignInLog : LogAggregateRoot
     /// <param name="isSuccess">是否成功</param>
     /// <param name="errorMessage">错误信息(可空)</param>
     /// <param name="exception">异常信息(可空)</param>
-    public SignInLog(string type, long? userId, string? userCode, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? token, string? refreshToken, string? oldRefreshToken, string? ip, string? city, string? userAgent, string? browser, string? os, bool isSuccess, string? errorMessage, string? exception)
+    public SignInLog(SignEntryTypeEnum type, long? userId, string? userCode, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? token, string? refreshToken, string? oldRefreshToken, string? ip, string? city, string? userAgent, string? browser, string? os, bool isSuccess, string? errorMessage, string? exception)
         : base(userId, userName, startedOn, endedOn, elapsedMilliseconds, null, null, isSuccess, errorMessage, exception)
     {
-        Type = ValidateType(type);
+        Type = type;
         UserCode = userCode;
         Token = token;
         RefreshToken = refreshToken;
@@ -101,19 +101,5 @@ public class SignInLog : LogAggregateRoot
         Os = os;
     }
 
-    /// <summary>
-    /// 校验登录类型
-    /// </summary>
-    /// <param name="type">登录类型</param>
-    /// <returns>校验并 trim 后的类型</returns>
-    private static string ValidateType(string type)
-    {
-        string? trimmed = type?.Trim();
-        if (trimmed is null || trimmed.Length == 0 || !SignEntryTypeEnum.IsValid(trimmed))
-        {
-            throw new UserFriendlyException($"登录类型{type}有误!");
-        }
 
-        return trimmed;
-    }
 }

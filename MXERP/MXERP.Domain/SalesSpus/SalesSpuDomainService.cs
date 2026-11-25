@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Exceptions;
 using MXERP.Domain.Attachments;
@@ -29,7 +30,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<SalesSpu> CreateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default)
+    public async Task<SalesSpu> CreateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default)
     {
         if (await _salesSpuRepository.IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(productType, companyId, code, null, cancellationToken))
         {
@@ -41,7 +42,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<SalesSpu> ImportGenerateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default)
+    public async Task<SalesSpu> ImportGenerateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default)
     {
         List<long> finalWorkStepIds = workStepIds == null ? new List<long>() : workStepIds.ToList();
         List<SalesSpuAssignItemData> finalAssignItems = salesSpuAssignItems == null ? new List<SalesSpuAssignItemData>() : salesSpuAssignItems.ToList();
@@ -94,7 +95,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     {
         List<SalesSpuAssignItemData> inputs = salesSpuAssignItems == null ? new List<SalesSpuAssignItemData>() : salesSpuAssignItems.ToList();
 
-        List<SalesSpuAssignItem> toRemoves = salesSpu.GetSalesSpuAssignItems()
+        List<SalesSpuAssignItem> toRemoves = salesSpu.SalesSpuAssignItems
             .Where(a => !inputs.Any(i => i.SpuId == a.SpuId && i.WarehouseId == a.WarehouseId))
             .ToList();
         foreach (SalesSpuAssignItem item in toRemoves)
@@ -103,7 +104,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
         }
 
         Dictionary<(long?, long?), long> existingDict = new Dictionary<(long?, long?), long>();
-        foreach (SalesSpuAssignItem item in salesSpu.GetSalesSpuAssignItems())
+        foreach (SalesSpuAssignItem item in salesSpu.SalesSpuAssignItems)
         {
             existingDict.TryAdd((item.SpuId, item.WarehouseId), item.Id);
         }
@@ -128,7 +129,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     {
         List<long> inputs = workStepIds == null ? new List<long>() : workStepIds.ToList();
 
-        List<SalesSpuWorkStep> toRemoves = salesSpu.GetSalesSpuWorkSteps()
+        List<SalesSpuWorkStep> toRemoves = salesSpu.SalesSpuWorkSteps
             .Where(a => !inputs.Contains(a.WorkStepId))
             .ToList();
         foreach (SalesSpuWorkStep item in toRemoves)
@@ -136,7 +137,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
             salesSpu.DeleteWorkStep(item.Id);
         }
 
-        HashSet<long> existingWorkStepIds = salesSpu.GetSalesSpuWorkSteps().Select(x => x.WorkStepId).ToHashSet();
+        HashSet<long> existingWorkStepIds = salesSpu.SalesSpuWorkSteps.Select(x => x.WorkStepId).ToHashSet();
         foreach (long workStepId in inputs)
         {
             if (!existingWorkStepIds.Contains(workStepId))
@@ -153,7 +154,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     {
         List<SalesSpuRoutingData> inputs = salesSpuRoutings == null ? new List<SalesSpuRoutingData>() : salesSpuRoutings.ToList();
 
-        List<SalesSpuRouting> toRemoves = salesSpu.GetSalesSpuRoutings()
+        List<SalesSpuRouting> toRemoves = salesSpu.SalesSpuRoutings
             .Where(a => !inputs.Any(i => i.SpuId == a.SpuId))
             .ToList();
         foreach (SalesSpuRouting item in toRemoves)
@@ -162,7 +163,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
         }
 
         Dictionary<long, long> existingDict = new Dictionary<long, long>();
-        foreach (SalesSpuRouting item in salesSpu.GetSalesSpuRoutings())
+        foreach (SalesSpuRouting item in salesSpu.SalesSpuRoutings)
         {
             if (!item.IsDeleted)
             {
@@ -196,7 +197,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     /// <param name="productType">产品类型</param>
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
-    private async Task ValidateAttributesAsync(string productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
+    private async Task ValidateAttributesAsync(ProductTypeEnum productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
     {
         if (attributes == null)
         {

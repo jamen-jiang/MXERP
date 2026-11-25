@@ -45,18 +45,36 @@ public class OrderEvent : AuditedAggregateRoot
     /// <summary>
     /// 订单事件部门列表
     /// </summary>
-    public virtual ICollection<OrderEventDepartment> OrderEventDepartments { get; private set; } = new List<OrderEventDepartment>();
+    private readonly List<OrderEventDepartment> _orderEventDepartments;
+
+    /// <summary>
+    /// 订单事件部门列表
+    /// </summary>
+    public IReadOnlyCollection<OrderEventDepartment> OrderEventDepartments
+    {
+        get { return _orderEventDepartments.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 订单事件项列表
     /// </summary>
-    public virtual ICollection<OrderEventItem> OrderEventItems { get; private set; } = new List<OrderEventItem>();
+    private readonly List<OrderEventItem> _orderEventItems;
+
+    /// <summary>
+    /// 订单事件项列表
+    /// </summary>
+    public IReadOnlyCollection<OrderEventItem> OrderEventItems
+    {
+        get { return _orderEventItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器
     /// </summary>
     protected OrderEvent()
     {
+        _orderEventDepartments = new List<OrderEventDepartment>();
+        _orderEventItems = new List<OrderEventItem>();
     }
 
     /// <summary>
@@ -79,6 +97,7 @@ public class OrderEvent : AuditedAggregateRoot
         string template,
         string? remark,
         IReadOnlyCollection<long>? departmentIds)
+        : this()
     {
         OrderType = orderType.Trim();
         OrderStatus = orderStatus.Trim();
@@ -88,24 +107,6 @@ public class OrderEvent : AuditedAggregateRoot
         Template = template;
         Remark = remark;
         SyncDepartments(departmentIds);
-    }
-
-    /// <summary>
-    /// 获取订单事件部门列表（只读）
-    /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<OrderEventDepartment> GetOrderEventDepartments()
-    {
-        return OrderEventDepartments.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取订单事件项列表（只读）
-    /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<OrderEventItem> GetOrderEventItems()
-    {
-        return OrderEventItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -148,7 +149,7 @@ public class OrderEvent : AuditedAggregateRoot
     /// <param name="companyIds">公司Id列表</param>
     internal void AddItem(string? to, string? cc, string? remark, IReadOnlyCollection<long>? companyIds)
     {
-        OrderEventItems.Add(new OrderEventItem(to, cc, remark, companyIds));
+        _orderEventItems.Add(new OrderEventItem(to, cc, remark, companyIds));
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ public class OrderEvent : AuditedAggregateRoot
     /// <param name="companyIds">公司Id列表</param>
     internal void ModifyItem(long itemId, string? to, string? cc, string? remark, IReadOnlyCollection<long>? companyIds)
     {
-        OrderEventItem? item = OrderEventItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
+        OrderEventItem? item = _orderEventItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
         if (item != null)
         {
             item.Modify(to, cc, remark, companyIds);
@@ -174,7 +175,7 @@ public class OrderEvent : AuditedAggregateRoot
     /// <param name="orderEventItemId">订单事件项Id</param>
     internal void DeleteItem(long orderEventItemId)
     {
-        OrderEventItem? item = OrderEventItems.FirstOrDefault(x => x.Id == orderEventItemId && !x.IsDeleted);
+        OrderEventItem? item = _orderEventItems.FirstOrDefault(x => x.Id == orderEventItemId && !x.IsDeleted);
         if (item != null)
         {
             item.Delete();
@@ -187,7 +188,7 @@ public class OrderEvent : AuditedAggregateRoot
     /// <param name="orderEventDepartmentId">订单事件部门Id</param>
     internal void DeleteDepartment(long orderEventDepartmentId)
     {
-        OrderEventDepartment? department = OrderEventDepartments.FirstOrDefault(x => x.Id == orderEventDepartmentId && !x.IsDeleted);
+        OrderEventDepartment? department = _orderEventDepartments.FirstOrDefault(x => x.Id == orderEventDepartmentId && !x.IsDeleted);
         if (department != null)
         {
             department.Delete();
@@ -202,7 +203,7 @@ public class OrderEvent : AuditedAggregateRoot
     {
         IReadOnlyCollection<long> target = departmentIds ?? Array.Empty<long>();
 
-        List<OrderEventDepartment> toRemoves = OrderEventDepartments
+        List<OrderEventDepartment> toRemoves = _orderEventDepartments
             .Where(a => !target.Contains(a.DepartmentId))
             .ToList();
         foreach (OrderEventDepartment item in toRemoves)
@@ -212,9 +213,9 @@ public class OrderEvent : AuditedAggregateRoot
 
         foreach (long departmentId in target)
         {
-            if (!OrderEventDepartments.Any(x => x.DepartmentId == departmentId))
+            if (!_orderEventDepartments.Any(x => x.DepartmentId == departmentId))
             {
-                OrderEventDepartments.Add(new OrderEventDepartment(departmentId));
+                _orderEventDepartments.Add(new OrderEventDepartment(departmentId));
             }
         }
     }

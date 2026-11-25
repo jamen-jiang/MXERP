@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Exceptions;
 
@@ -18,7 +19,7 @@ public class EndProductCodeConfigFactory : IEndProductCodeConfigFactory
     }
 
     /// <inheritdoc />
-    public async Task<EndProductCodeConfig> CreateAsync(string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default)
+    public async Task<EndProductCodeConfig> CreateAsync(EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistBySpuIdAndDegreesTypeExcludeIdAsync(spuId, degreesType, null, cancellationToken))
         {

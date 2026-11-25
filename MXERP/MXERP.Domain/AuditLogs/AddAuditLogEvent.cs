@@ -11,7 +11,7 @@ public class AddAuditLogEvent : DomainEvent
     /// <summary>
     /// 动作
     /// </summary>
-    public string Action { get; }
+    public AuditActionEnum Action { get; }
 
     /// <summary>
     /// 备注(可空)
@@ -24,7 +24,7 @@ public class AddAuditLogEvent : DomainEvent
     /// <param name="aggregateRoot">聚合根</param>
     /// <param name="action">动作</param>
     /// <param name="remark">备注(可空)</param>
-    public AddAuditLogEvent(IAggregateRoot aggregateRoot, string action, string? remark)
+    public AddAuditLogEvent(IAggregateRoot aggregateRoot, AuditActionEnum action, string? remark)
         : base(aggregateRoot)
     {
         Action = action;
@@ -36,7 +36,7 @@ public class AddAuditLogEvent : DomainEvent
     /// </summary>
     /// <param name="aggregateRoot">聚合根</param>
     /// <param name="action">动作</param>
-    public AddAuditLogEvent(IAggregateRoot aggregateRoot, string action)
+    public AddAuditLogEvent(IAggregateRoot aggregateRoot, AuditActionEnum action)
         : this(aggregateRoot, action, null)
     {
     }

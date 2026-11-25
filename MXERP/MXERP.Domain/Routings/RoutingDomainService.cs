@@ -47,7 +47,7 @@ public class RoutingDomainService : IRoutingDomainService
     {
         List<RoutingStepData> inputs = steps ?? new List<RoutingStepData>();
 
-        List<RoutingStep> toRemoves = routing.GetRoutingSteps()
+        List<RoutingStep> toRemoves = routing.RoutingSteps
             .Where(s => inputs.All(d => d.WorkStepId != s.WorkStepId))
             .ToList();
         foreach (RoutingStep step in toRemoves)
@@ -56,7 +56,7 @@ public class RoutingDomainService : IRoutingDomainService
         }
 
         Dictionary<long, long> existingDict = new Dictionary<long, long>();
-        foreach (RoutingStep step in routing.GetRoutingSteps())
+        foreach (RoutingStep step in routing.RoutingSteps)
         {
             if (!step.IsDeleted && !existingDict.ContainsKey(step.WorkStepId))
             {

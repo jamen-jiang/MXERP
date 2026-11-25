@@ -21,7 +21,7 @@ public class ProcessDomainService : IProcessDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Process> ModifyAsync(long id, string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Process> ModifyAsync(long id, ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
     {
         Process? model = await _repository.FindAsync(id, true, cancellationToken);
         if (model is null)
@@ -34,7 +34,7 @@ public class ProcessDomainService : IProcessDomainService
     }
 
     /// <inheritdoc />
-    public async Task ModifyAsync(Process process, string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
+    public async Task ModifyAsync(Process process, ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistByTypeAndCodeExcludeIdAsync(type, code, process.Id, cancellationToken))
         {
@@ -45,7 +45,7 @@ public class ProcessDomainService : IProcessDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Process> ImportGenerateAsync(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Process> ImportGenerateAsync(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
     {
         Process? model = await _repository.GetByTypeAndCodeAsync(type, code, cancellationToken);
         if (model is null)

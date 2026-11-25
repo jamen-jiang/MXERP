@@ -26,5 +26,5 @@ public interface ICompanyFactory
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>返回公司</returns>
-    Task<Company> CreateAsync(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
+    Task<Company> CreateAsync(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
 }

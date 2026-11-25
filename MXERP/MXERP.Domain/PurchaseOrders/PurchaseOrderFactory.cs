@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,8 +26,8 @@ public class PurchaseOrderFactory : IPurchaseOrderFactory
 
     /// <inheritdoc />
     public async Task<PurchaseOrder> CreateAsync(
-        string productType,
-        string relationType,
+        ProductTypeEnum productType,
+        BusinessOrderTypeEnum relationType,
         long companyId,
         long? positionId,
         long supplierId,

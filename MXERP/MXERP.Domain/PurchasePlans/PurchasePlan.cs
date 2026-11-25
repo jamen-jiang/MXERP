@@ -12,11 +12,11 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; } = string.Empty;
+    public BusinessOrderTypeEnum RelationType { get; private set; }
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -65,14 +65,22 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <summary>
     /// 采购计划项列表
     /// </summary>
-    public virtual ICollection<PurchasePlanItem> PurchasePlanItems { get; private set; }
-        = new List<PurchasePlanItem>();
+    private readonly List<PurchasePlanItem> _purchasePlanItems;
+
+    /// <summary>
+    /// 采购计划项列表
+    /// </summary>
+    public IReadOnlyCollection<PurchasePlanItem> PurchasePlanItems
+    {
+        get { return _purchasePlanItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected PurchasePlan()
     {
+        _purchasePlanItems = new List<PurchasePlanItem>();
     }
 
     /// <summary>
@@ -89,7 +97,8 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchasePlan(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal PurchasePlan(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+        : this()
     {
         ProductType = productType;
         StoreId = storeId;
@@ -114,7 +123,8 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchasePlan(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
+    internal PurchasePlan(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+        : this()
     {
         ProductType = productType;
         DepartmentId = departmentId;
@@ -123,15 +133,6 @@ public class PurchasePlan : AuditedAggregateRoot
         RelationId = relationId;
         RelationNumber = relationNumber;
         Remark = remark;
-    }
-
-    /// <summary>
-    /// 获取采购计划项列表（只读）
-    /// </summary>
-    /// <returns>采购计划项列表</returns>
-    public IReadOnlyList<PurchasePlanItem> GetPurchasePlanItems()
-    {
-        return PurchasePlanItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -157,7 +158,7 @@ public class PurchasePlan : AuditedAggregateRoot
         }
 
         PurchasePlanItem item = new PurchasePlanItem(relationItemId, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-        PurchasePlanItems.Add(item);
+        _purchasePlanItems.Add(item);
         UpdateQty();
         AddDomainEvent(new PurchasePlanItemAddedEvent(this, RelationType, RelationId, RelationItemId, item.RelationItemId, skuId, warehouseId, qty));
     }
@@ -189,11 +190,11 @@ public class PurchasePlan : AuditedAggregateRoot
         }
 
         PurchasePlanItem item = new PurchasePlanItem(relationItemId, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-        PurchasePlanItems.Add(item);
+        _purchasePlanItems.Add(item);
         UpdateQty();
         if (RelationType == BusinessOrderTypeEnum.BulkOrder)
         {
-            long distinctSalesSpuCount = PurchasePlanItems.Select(x => x.SalesSpuId).Distinct().LongCount();
+            long distinctSalesSpuCount = _purchasePlanItems.Select(x => x.SalesSpuId).Distinct().LongCount();
             if (distinctSalesSpuCount > 1)
             {
                 throw new UserFriendlyException("关联类型为批量订单的采购计划不允许添加多个销售产品!");
@@ -209,7 +210,7 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <param name="itemId">采购计划项Id</param>
     public void DeleteItem(long itemId)
     {
-        PurchasePlanItem? item = PurchasePlanItems.FirstOrDefault(x => x.Id == itemId);
+        PurchasePlanItem? item = _purchasePlanItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -228,7 +229,7 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return PurchasePlanItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _purchasePlanItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -236,6 +237,6 @@ public class PurchasePlan : AuditedAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = PurchasePlanItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _purchasePlanItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 }

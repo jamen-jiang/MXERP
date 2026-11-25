@@ -4,6 +4,7 @@ using System.Linq;
 using MXERP.Domain.AuditLogs;
 using MXERP.Domain.Common.Aggregates;
 using MXERP.Domain.SerialNumbers;
+using MXERP.Domain.Works;
 using Snow.Exceptions;
 
 namespace MXERP.Domain.PurchaseRequisitionOrders;
@@ -40,7 +41,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public PurchaseRequisitionOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 备注（可空）
     /// </summary>
@@ -96,13 +97,22 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <summary>
     /// 申购单项列表
     /// </summary>
-    public virtual ICollection<PurchaseRequisitionOrderItem> PurchaseRequisitionOrderItems { get; private set; } = new List<PurchaseRequisitionOrderItem>();
+    private readonly List<PurchaseRequisitionOrderItem> _purchaseRequisitionOrderItems;
+
+    /// <summary>
+    /// 申购单项列表
+    /// </summary>
+    public IReadOnlyCollection<PurchaseRequisitionOrderItem> PurchaseRequisitionOrderItems
+    {
+        get { return _purchaseRequisitionOrderItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected PurchaseRequisitionOrder()
     {
+        _purchaseRequisitionOrderItems = new List<PurchaseRequisitionOrderItem>();
     }
 
     /// <summary>
@@ -112,20 +122,12 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="companyId">公司Id</param>
     /// <param name="remark">备注（可空）</param>
     internal PurchaseRequisitionOrder(long departmentId, long companyId, string? remark)
+        : this()
     {
         DepartmentId = departmentId;
         CompanyId = companyId;
         Remark = remark;
         Status = PurchaseRequisitionOrderStatusEnum.Pending;
-    }
-
-    /// <summary>
-    /// 获取申购单项列表（只读）
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<PurchaseRequisitionOrderItem> GetPurchaseRequisitionOrderItems()
-    {
-        return PurchaseRequisitionOrderItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -180,7 +182,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
             throw new UserFriendlyException("产品Sku " + skuId + "已存在!");
         }
 
-        PurchaseRequisitionOrderItems.Add(new PurchaseRequisitionOrderItem(spuId, skuId, isFirst, qty, weeklyUsage, currentQty, purpose, mustDeliveryOn, deliveryAddress, deliveryOn, remark));
+        _purchaseRequisitionOrderItems.Add(new PurchaseRequisitionOrderItem(spuId, skuId, isFirst, qty, weeklyUsage, currentQty, purpose, mustDeliveryOn, deliveryAddress, deliveryOn, remark));
         UpdateQty();
     }
 
@@ -209,7 +211,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         DateTime? deliveryOn,
         string? remark)
     {
-        PurchaseRequisitionOrderItem? item = PurchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
+        PurchaseRequisitionOrderItem? item = _purchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             throw new UserFriendlyException("申购单项不存在!");
@@ -225,7 +227,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="itemId">申购单项Id</param>
     internal void DeleteItem(long itemId)
     {
-        PurchaseRequisitionOrderItem? item = PurchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
+        PurchaseRequisitionOrderItem? item = _purchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -299,7 +301,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
             throw new UserFriendlyException("申购单" + Number + "当前状态不允许采购审核!");
         }
 
-        bool hasUnassigned = PurchaseRequisitionOrderItems.Any(x => !x.GetIsAssign() && !x.IsDeleted);
+        bool hasUnassigned = _purchaseRequisitionOrderItems.Any(x => !x.GetIsAssign() && !x.IsDeleted);
         if (hasUnassigned)
         {
             throw new UserFriendlyException("申购单" + Number + "必须所有产品已分配!");
@@ -412,7 +414,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         return SerialNumberTypeEnum.PurchaseRequisitionOrder;
     }
@@ -422,7 +424,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     /// <param name="task">任务类型</param>
     /// <param name="taskStatus">任务状态</param>
-    public void ChangeStatus(string task, string taskStatus)
+    public void ChangeStatus(TaskEnum task, UserTaskStatusEnum taskStatus)
     {
         if (task == TaskEnum.Check)
         {
@@ -454,7 +456,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <returns>申购单项（可空）</returns>
     private PurchaseRequisitionOrderItem? FindItem(long itemId)
     {
-        return PurchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
+        return _purchaseRequisitionOrderItems.FirstOrDefault(x => x.Id == itemId);
     }
 
     /// <summary>
@@ -464,7 +466,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <returns>true 表示存在</returns>
     private bool IsExistItem(long skuId)
     {
-        return PurchaseRequisitionOrderItems.Any(x => x.SkuId == skuId && !x.IsDeleted);
+        return _purchaseRequisitionOrderItems.Any(x => x.SkuId == skuId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -472,7 +474,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = PurchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _purchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -480,7 +482,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateDeductQty()
     {
-        DeductQty = PurchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.DeductQty);
+        DeductQty = _purchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.DeductQty);
     }
 
     /// <summary>
@@ -488,7 +490,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateCustomizedQty()
     {
-        CustomizedQty = PurchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.CustomizedQty);
+        CustomizedQty = _purchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.CustomizedQty);
     }
 
     /// <summary>
@@ -496,7 +498,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateLeaveStockQty()
     {
-        LeaveStockQty = PurchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
+        LeaveStockQty = _purchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
         if (LeaveStockQty == 0)
         {
             Status = PurchaseRequisitionOrderStatusEnum.Delivery;

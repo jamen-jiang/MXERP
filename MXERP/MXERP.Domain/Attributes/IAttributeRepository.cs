@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Repositories;
 
 namespace MXERP.Domain.Attributes;
@@ -15,7 +16,7 @@ public interface IAttributeRepository : IRepository<Attribute>
     /// <param name="code">属性代码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>属性, 不存在返回 null</returns>
-    Task<Attribute?> GetByProductTypeAndScopeAndCodeAsync(string productType, string scope, string code, CancellationToken cancellationToken = default);
+    Task<Attribute?> GetByProductTypeAndScopeAndCodeAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 按产品类型 + 范围查询列表
@@ -24,7 +25,7 @@ public interface IAttributeRepository : IRepository<Attribute>
     /// <param name="scope">范围</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>属性列表</returns>
-    Task<List<Attribute>> GetListByProductTypeAndScopeAsync(string productType, string scope, CancellationToken cancellationToken = default);
+    Task<List<Attribute>> GetListByProductTypeAndScopeAsync(ProductTypeEnum productType, AttributeScopeEnum scope, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断属性代码是否存在(排除指定主键)
@@ -35,5 +36,5 @@ public interface IAttributeRepository : IRepository<Attribute>
     /// <param name="id">排除的主键Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(string productType, string scope, string code, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, long? id = null, CancellationToken cancellationToken = default);
 }

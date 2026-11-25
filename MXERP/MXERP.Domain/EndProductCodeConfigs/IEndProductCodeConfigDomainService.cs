@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.EndProductCodeConfigs;
 
 /// <summary>
@@ -15,7 +17,7 @@ public interface IEndProductCodeConfigDomainService
     /// <param name="sort">排序(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>配置聚合</returns>
-    Task<EndProductCodeConfig> ModifyAsync(long id, string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default);
+    Task<EndProductCodeConfig> ModifyAsync(long id, EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改成品代码配置(使用已有聚合)
@@ -26,7 +28,7 @@ public interface IEndProductCodeConfigDomainService
     /// <param name="degreesType">度数类型</param>
     /// <param name="sort">排序(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task ModifyAsync(EndProductCodeConfig model, string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default);
+    Task ModifyAsync(EndProductCodeConfig model, EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成: 配置存在则修改, 不存在则创建
@@ -37,5 +39,5 @@ public interface IEndProductCodeConfigDomainService
     /// <param name="sort">排序(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>配置聚合</returns>
-    Task<EndProductCodeConfig> ImportGenerateAsync(string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default);
+    Task<EndProductCodeConfig> ImportGenerateAsync(EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default);
 }

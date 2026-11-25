@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 using MXERP.Domain.Common.Aggregates;
 using MXERP.Domain.SerialNumbers;
 using Snow.Domain.Entities.Auditing;
@@ -14,11 +16,9 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// </summary>
     protected LeaveWarehouseOrder()
     {
-        ProductType = string.Empty;
-        Type = string.Empty;
         Sender = string.Empty;
         Deliveryer = string.Empty;
-        LeaveWarehouseOrderItems = new List<LeaveWarehouseOrderItem>();
+        _leaveWarehouseOrderItems = new List<LeaveWarehouseOrderItem>();
     }
 
     /// <summary>
@@ -37,7 +37,8 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <param name="deliveryerTelephone">收货人电话(可空)</param>
     /// <param name="deliveryArea">收货地区(可空)</param>
     /// <param name="deliveryAddress">收货地址(可空)</param>
-    internal LeaveWarehouseOrder(string productType, string type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress)
+    internal LeaveWarehouseOrder(ProductTypeEnum productType, LeaveWarehouseOrderTypeEnum type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress)
+        : this()
     {
         ProductType = productType;
         Type = type;
@@ -52,18 +53,17 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
         DeliveryerTelephone = deliveryerTelephone;
         DeliveryArea = deliveryArea;
         DeliveryAddress = deliveryAddress;
-        LeaveWarehouseOrderItems = new List<LeaveWarehouseOrderItem>();
     }
 
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; }
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// 类型
     /// </summary>
-    public string Type { get; private set; }
+    public LeaveWarehouseOrderTypeEnum Type { get; private set; }
 
     /// <summary>
     /// 公司Id
@@ -153,15 +153,14 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <summary>
     /// 出仓单详情列表
     /// </summary>
-    public virtual ICollection<LeaveWarehouseOrderItem> LeaveWarehouseOrderItems { get; private set; }
+    private readonly List<LeaveWarehouseOrderItem> _leaveWarehouseOrderItems;
 
     /// <summary>
-    /// 获取出仓单详情列表(只读)
+    /// 出仓单详情列表
     /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<LeaveWarehouseOrderItem> GetLeaveWarehouseOrderItems()
+    public IReadOnlyCollection<LeaveWarehouseOrderItem> LeaveWarehouseOrderItems
     {
-        return LeaveWarehouseOrderItems.ToList().AsReadOnly();
+        get { return _leaveWarehouseOrderItems.AsReadOnly(); }
     }
 
     /// <summary>
@@ -204,7 +203,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void AddItem(long leaveStockBatchId, string leaveStockBatchNumber, long? salesSpuId, string? salesSpuCode, long spuId, double qty, decimal price, string? remark)
     {
-        LeaveWarehouseOrderItem? item = LeaveWarehouseOrderItems
+        LeaveWarehouseOrderItem? item = _leaveWarehouseOrderItems
             .FirstOrDefault(x => x.LeaveStockBatchId == leaveStockBatchId && x.SalesSpuId == salesSpuId && x.SpuId == spuId && !x.IsDeleted);
 
         if (item is not null)
@@ -219,7 +218,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
         }
 
         item = new LeaveWarehouseOrderItem(leaveStockBatchId, leaveStockBatchNumber, salesSpuId, salesSpuCode, spuId, qty, price, remark);
-        LeaveWarehouseOrderItems.Add(item);
+        _leaveWarehouseOrderItems.Add(item);
         AddDomainEvent(new LeaveWarehouseOrderItemAddedEvent(this, item.LeaveStockBatchId, item.SalesSpuId, item.SpuId, item.Qty));
         UpdateQty();
         UpdateMoney();
@@ -231,7 +230,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <param name="itemId">出仓单项Id</param>
     public void DeleteItem(long itemId)
     {
-        LeaveWarehouseOrderItem? item = LeaveWarehouseOrderItems.FirstOrDefault(x => x.Id == itemId);
+        LeaveWarehouseOrderItem? item = _leaveWarehouseOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -262,7 +261,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     public override void Delete()
     {
         base.Delete();
-        foreach (LeaveWarehouseOrderItem item in LeaveWarehouseOrderItems)
+        foreach (LeaveWarehouseOrderItem item in _leaveWarehouseOrderItems)
         {
             AddDomainEvent(new LeaveWarehouseOrderItemDeletedEvent(this, item.LeaveStockBatchId, item.SalesSpuId, item.SpuId, item.Qty));
         }
@@ -284,7 +283,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (Type == LeaveWarehouseOrderTypeEnum.Second)
         {
@@ -299,7 +298,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = LeaveWarehouseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _leaveWarehouseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -308,7 +307,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     private void UpdateMoney()
     {
         decimal total = 0;
-        foreach (LeaveWarehouseOrderItem item in LeaveWarehouseOrderItems)
+        foreach (LeaveWarehouseOrderItem item in _leaveWarehouseOrderItems)
         {
             if (!item.IsDeleted)
             {

@@ -41,7 +41,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
             throw new UserFriendlyException("出库批次" + number + "不存在!");
         }
 
-        if (leaveStockBatch.GetLeaveStockBatchWorkSteps().Count == 0)
+        if (leaveStockBatch.LeaveStockBatchWorkSteps.Count == 0)
         {
             throw new UserFriendlyException("出库批次" + number + "还未配置工序列表!");
         }
@@ -54,7 +54,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
 
         if (workStepId is not null && string.IsNullOrWhiteSpace(reason))
         {
-            List<long> workStepIds = leaveStockBatch.GetLeaveStockBatchWorkSteps().Select(x => x.WorkStepId).ToList();
+            List<long> workStepIds = leaveStockBatch.LeaveStockBatchWorkSteps.Select(x => x.WorkStepId).ToList();
             List<WorkStep> workSteps = await _workStepRepository.GetListByIdsAsync(workStepIds, cancellationToken);
             WorkStep? workStep = workSteps.FirstOrDefault(x => x.Id == workStepId.Value);
             if (workStep is null)
@@ -62,7 +62,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
                 throw new UserFriendlyException("出库批次" + number + "工序不存在!");
             }
 
-            LeaveStockBatchTracking? leaveStockBatchTracking = leaveStockBatch.GetLeaveStockBatchTrackings().FirstOrDefault(x => x.WorkStepId == workStepId.Value);
+            LeaveStockBatchTracking? leaveStockBatchTracking = leaveStockBatch.LeaveStockBatchTrackings.FirstOrDefault(x => x.WorkStepId == workStepId.Value);
             if (leaveStockBatchTracking is not null)
             {
                 throw new UserFriendlyException("出库批次" + number + "工序 " + workStep.Name + " 重复录入!");
@@ -76,7 +76,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
             List<WorkStep> aboveWorkSteps = workSteps.Where(x => x.Sequence < workStep.Sequence).OrderBy(x => x.Sequence).ToList();
             foreach (WorkStep aboveWorkStep in aboveWorkSteps)
             {
-                LeaveStockBatchTracking? aboveOrderTracking = leaveStockBatch.GetLeaveStockBatchTrackings().FirstOrDefault(x => x.WorkStepId == aboveWorkStep.Id);
+                LeaveStockBatchTracking? aboveOrderTracking = leaveStockBatch.LeaveStockBatchTrackings.FirstOrDefault(x => x.WorkStepId == aboveWorkStep.Id);
                 if (aboveOrderTracking is null)
                 {
                     throw new UserFriendlyException("出库批次" + number + "不允许跳过工序 " + aboveWorkStep.Name + " 录入!");
@@ -102,7 +102,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
             throw new UserFriendlyException("出库批次" + id + "不存在!");
         }
 
-        LeaveStockBatchItem? first = model.GetLeaveStockBatchItems().FirstOrDefault();
+        LeaveStockBatchItem? first = model.LeaveStockBatchItems.FirstOrDefault();
         if (first is null)
         {
             return model;
@@ -117,7 +117,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
                 throw new UserFriendlyException("出库批次" + model.Number + "销售产品" + salesSpuId + "不存在!");
             }
 
-            await SyncLeaveStockBatchWorkStepsAsync(model, salesSpu.GetSalesSpuWorkSteps().Select(x => x.WorkStepId), cancellationToken);
+            await SyncLeaveStockBatchWorkStepsAsync(model, salesSpu.SalesSpuWorkSteps.Select(x => x.WorkStepId), cancellationToken);
         }
 
         return model;
@@ -128,7 +128,7 @@ public class LeaveStockBatchDomainService : ILeaveStockBatchDomainService
     {
         List<long> finalWorkStepIds = workStepIds is null ? [] : workStepIds.ToList();
 
-        List<LeaveStockBatchWorkStep> toRemoves = leaveStockBatch.GetLeaveStockBatchWorkSteps().Where(a => !finalWorkStepIds.Contains(a.WorkStepId)).ToList();
+        List<LeaveStockBatchWorkStep> toRemoves = leaveStockBatch.LeaveStockBatchWorkSteps.Where(a => !finalWorkStepIds.Contains(a.WorkStepId)).ToList();
         foreach (LeaveStockBatchWorkStep item in toRemoves)
         {
             leaveStockBatch.DeleteWorkStep(item.Id);

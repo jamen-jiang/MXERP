@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using Snow.Domain.Entities;
@@ -62,13 +63,22 @@ public class PurchaseOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 采购单项关联列表
     /// </summary>
-    public virtual ICollection<PurchaseOrderRelation> PurchaseOrderRelations { get; private set; } = new List<PurchaseOrderRelation>();
+    private readonly List<PurchaseOrderRelation> _purchaseOrderRelations;
+
+    /// <summary>
+    /// 采购单项关联列表
+    /// </summary>
+    public IReadOnlyCollection<PurchaseOrderRelation> PurchaseOrderRelations
+    {
+        get { return _purchaseOrderRelations.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器
     /// </summary>
     protected PurchaseOrderItem()
     {
+        _purchaseOrderRelations = new List<PurchaseOrderRelation>();
     }
 
     /// <summary>
@@ -93,6 +103,7 @@ public class PurchaseOrderItem : DeletionAuditedEntity
         double? discount,
         SortedDictionary<string, object?>? skuAttributes,
         SortedDictionary<string, object?>? otherAttributes)
+        : this()
     {
         SpuId = spuId;
         SkuId = skuId;
@@ -104,15 +115,6 @@ public class PurchaseOrderItem : DeletionAuditedEntity
         SkuAttributes = skuAttributes;
         OtherAttributes = otherAttributes;
         UpdateMoney();
-    }
-
-    /// <summary>
-    /// 获取采购单项关联列表(只读)
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<PurchaseOrderRelation> GetPurchaseOrderRelations()
-    {
-        return PurchaseOrderRelations.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -159,9 +161,9 @@ public class PurchaseOrderItem : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal void AddPurchaseOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal void AddPurchaseOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
-        PurchaseOrderRelations.Add(new PurchaseOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
+        _purchaseOrderRelations.Add(new PurchaseOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
     }
 
     /// <summary>

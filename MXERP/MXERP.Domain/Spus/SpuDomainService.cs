@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Exceptions;
 using MXERP.Domain.Attachments;
@@ -29,7 +30,7 @@ public class SpuDomainService : ISpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Spu> CreateAsync(string productType, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
+    public async Task<Spu> CreateAsync(ProductTypeEnum productType, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
     {
         if (await _spuRepository.IsExistByCodeExcludeIdAsync(code, null, cancellationToken))
         {
@@ -41,7 +42,7 @@ public class SpuDomainService : ISpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Spu> ImportCreateAsync(string productType, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, CancellationToken cancellationToken = default)
+    public async Task<Spu> ImportCreateAsync(ProductTypeEnum productType, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, CancellationToken cancellationToken = default)
     {
         Spu? model = await _spuRepository.GetByProductTypeAndCodeAsync(productType, code, cancellationToken);
         if (model == null)
@@ -58,7 +59,7 @@ public class SpuDomainService : ISpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Spu> ModifyAsync(long id, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
+    public async Task<Spu> ModifyAsync(long id, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
     {
         Spu? model = await _spuRepository.FindAsync(id, true, cancellationToken);
         if (model == null)
@@ -71,7 +72,7 @@ public class SpuDomainService : ISpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task ModifyAsync(Spu spu, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
+    public async Task ModifyAsync(Spu spu, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
     {
         if (await _spuRepository.IsExistByCodeExcludeIdAsync(code, spu.Id, cancellationToken))
         {
@@ -88,7 +89,7 @@ public class SpuDomainService : ISpuDomainService
     /// <param name="productType">产品类型</param>
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
-    private async Task ValidateAttributesAsync(string productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
+    private async Task ValidateAttributesAsync(ProductTypeEnum productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
     {
         if (attributes == null)
         {

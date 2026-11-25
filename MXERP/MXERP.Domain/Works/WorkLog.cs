@@ -15,7 +15,6 @@ public class WorkLog : DeletionAuditedEntity
     {
         TaskName = string.Empty;
         HandlerName = string.Empty;
-        Status = string.Empty;
     }
 
     /// <summary>
@@ -26,7 +25,7 @@ public class WorkLog : DeletionAuditedEntity
     /// <param name="handlerName">处理人名称</param>
     /// <param name="status">审批状态</param>
     /// <param name="remark">备注(可空)</param>
-    internal WorkLog(string taskName, long handlerId, string handlerName, string status, string? remark)
+    internal WorkLog(string taskName, long handlerId, string handlerName, UserTaskStatusEnum status, string? remark)
     {
         TaskName = taskName;
         HandlerId = handlerId;
@@ -59,7 +58,7 @@ public class WorkLog : DeletionAuditedEntity
     /// <summary>
     /// 审批状态
     /// </summary>
-    public string Status { get; private set; }
+    public UserTaskStatusEnum Status { get; private set; }
 
     /// <summary>
     /// 备注(可空)

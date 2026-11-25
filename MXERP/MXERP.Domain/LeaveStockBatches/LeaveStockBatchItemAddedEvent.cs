@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Events;
 
 namespace MXERP.Domain.LeaveStockBatches;
@@ -15,7 +16,7 @@ public class LeaveStockBatchItemAddedEvent : DomainEvent
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; }
+    public BusinessOrderTypeEnum RelationType { get; }
 
     /// <summary>
     /// 关联Id
@@ -59,7 +60,7 @@ public class LeaveStockBatchItemAddedEvent : DomainEvent
     /// <param name="itemRelationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    public LeaveStockBatchItemAddedEvent(LeaveStockBatch leaveStockBatch, long? leaveStockPlanId, string relationType, long relationId, long? relationItemId, long? purchaseBatchItemId, long itemRelationItemId, string relationNumber, double qty)
+    public LeaveStockBatchItemAddedEvent(LeaveStockBatch leaveStockBatch, long? leaveStockPlanId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, long? purchaseBatchItemId, long itemRelationItemId, string relationNumber, double qty)
         : base(leaveStockBatch)
     {
         LeaveStockPlanId = leaveStockPlanId;

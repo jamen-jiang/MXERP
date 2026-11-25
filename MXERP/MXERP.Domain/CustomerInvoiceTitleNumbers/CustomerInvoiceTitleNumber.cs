@@ -41,7 +41,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
     /// <summary>
     /// 规则(可空)
     /// </summary>
-    public string? Rule { get; private set; }
+    public DateTypeEnum? Rule { get; private set; }
 
     /// <summary>
     /// 构造器(供 EF 使用)
@@ -74,10 +74,10 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
     /// </summary>
     /// <param name="padNumber">补充数字</param>
     /// <param name="rule">规则(可空)</param>
-    public void Modify(int padNumber, string? rule)
+    public void Modify(int padNumber, DateTypeEnum? rule)
     {
         PadNumber = padNumber;
-        if (!string.IsNullOrWhiteSpace(rule))
+        if (rule is not null)
         {
             Rule = rule;
         }

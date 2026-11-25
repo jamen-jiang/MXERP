@@ -35,7 +35,7 @@ public abstract class OrderAggregateRoot : AuditedAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public abstract string GetSerialNumberType();
+    public abstract SerialNumberTypeEnum GetSerialNumberType();
 
     /// <summary>
     /// 分配单号, 只能分配一次
@@ -56,7 +56,7 @@ public abstract class OrderAggregateRoot : AuditedAggregateRoot
     /// 记录审计日志
     /// </summary>
     /// <param name="action">动作</param>
-    public void Audit(string action)
+    public void Audit(AuditActionEnum action)
     {
         Audit(action, null);
     }
@@ -66,7 +66,7 @@ public abstract class OrderAggregateRoot : AuditedAggregateRoot
     /// </summary>
     /// <param name="action">动作</param>
     /// <param name="remark">备注(可空)</param>
-    public void Audit(string action, string? remark)
+    public void Audit(AuditActionEnum action, string? remark)
     {
         AddDomainEvent(new AddAuditLogEvent(this, action, remark));
     }

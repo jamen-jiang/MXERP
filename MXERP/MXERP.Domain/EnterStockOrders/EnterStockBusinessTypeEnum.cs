@@ -1,54 +1,39 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.EnterStockOrders;
 
 /// <summary>
 /// 入库业务类型
 /// </summary>
-public static class EnterStockBusinessTypeEnum
+public enum EnterStockBusinessTypeEnum
 {
     /// <summary>
     /// 采购入库
     /// </summary>
-    public const string PurchaseEnterStock = "PurchaseEnterStock";
+    [Description("采购入库")]
+    PurchaseEnterStock,
 
     /// <summary>
     /// 订单入库
     /// </summary>
-    public const string OrderEnterStock = "OrderEnterStock";
+    [Description("订单入库")]
+    OrderEnterStock,
 
     /// <summary>
     /// 盘点入库
     /// </summary>
-    public const string InventoryEnterStock = "InventoryEnterStock";
+    [Description("盘点入库")]
+    InventoryEnterStock,
 
     /// <summary>
     /// 转仓入库
     /// </summary>
-    public const string TransferEnterStock = "TransferEnterStock";
+    [Description("转仓入库")]
+    TransferEnterStock,
 
     /// <summary>
     /// 冲销出库
     /// </summary>
-    public const string ReversalEnterStock = "ReversalEnterStock";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>
-    {
-        PurchaseEnterStock,
-        OrderEnterStock,
-        InventoryEnterStock,
-        TransferEnterStock,
-        ReversalEnterStock
-    };
-
-    /// <summary>
-    /// 判断编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>是否有效</returns>
-    public static bool IsValid(string? code)
-    {
-        return !string.IsNullOrWhiteSpace(code) && All.Contains(code);
-    }
+    [Description("冲销出库")]
+    ReversalEnterStock
 }

@@ -1,87 +1,99 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.AuditLogs;
 
 /// <summary>
 /// 审核动作(对应 Java 的 AuditActionEnum, 以编码字符串存储)
 /// </summary>
-public static class AuditActionEnum
+public enum AuditActionEnum
 {
     /// <summary>
     /// 修改
     /// </summary>
-    public const string Modify = "Modify";
+    [Description("修改")]
+    Modify,
+
     /// <summary>
     /// 打印
     /// </summary>
-    public const string Print = "Print";
+    [Description("打印")]
+    Print,
+
     /// <summary>
     /// 提交
     /// </summary>
-    public const string Commit = "Commit";
+    [Description("提交")]
+    Commit,
+
     /// <summary>
     /// 弃提
     /// </summary>
-    public const string UnCommit = "UnCommit";
+    [Description("弃提")]
+    UnCommit,
+
     /// <summary>
     /// 拒审
     /// </summary>
-    public const string RejectCheck = "RejectCheck";
+    [Description("拒审")]
+    RejectCheck,
+
     /// <summary>
     /// 审核
     /// </summary>
-    public const string Check = "Check";
+    [Description("审核")]
+    Check,
+
     /// <summary>
     /// 弃审
     /// </summary>
-    public const string UnCheck = "UnCheck";
+    [Description("弃审")]
+    UnCheck,
+
     /// <summary>
     /// 拒通
     /// </summary>
-    public const string RejectPass = "RejectPass";
+    [Description("拒通")]
+    RejectPass,
+
     /// <summary>
     /// 通过
     /// </summary>
-    public const string Pass = "Pass";
+    [Description("通过")]
+    Pass,
+
     /// <summary>
     /// 弃通
     /// </summary>
-    public const string UnPass = "UnPass";
+    [Description("弃通")]
+    UnPass,
+
     /// <summary>
     /// 拒完
     /// </summary>
-    public const string RejectFinish = "RejectFinish";
+    [Description("拒完")]
+    RejectFinish,
+
     /// <summary>
     /// 完成
     /// </summary>
-    public const string Finish = "Finish";
+    [Description("完成")]
+    Finish,
+
     /// <summary>
     /// 弃完
     /// </summary>
-    public const string UnFinish = "UnFinish";
+    [Description("弃完")]
+    UnFinish,
+
     /// <summary>
     /// 取消
     /// </summary>
-    public const string Cancel = "Cancel";
+    [Description("取消")]
+    Cancel,
+
     /// <summary>
     /// 删除
     /// </summary>
-    public const string Delete = "Delete";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
-    {
-        Modify, Print, Commit, UnCommit, RejectCheck, Check, UnCheck, RejectPass, Pass, UnPass,
-        RejectFinish, Finish, UnFinish, Cancel, Delete
-    };
-
-    /// <summary>
-    /// 编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>有效返回 true</returns>
-    public static bool IsValid(string? code)
-    {
-        return code is not null && All.Contains(code);
-    }
+    [Description("删除")]
+    Delete
 }

@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using MXERP.Domain.SerialNumbers;
 using Snow.DependencyInjection;
 
@@ -21,7 +22,7 @@ public class LeaveStockOrderFactory : ILeaveStockOrderFactory
     }
 
     /// <inheritdoc />
-    public async Task<LeaveStockOrder> CreateAsync(string productType, long? originalId, string businessType, string? remark, CancellationToken cancellationToken = default)
+    public async Task<LeaveStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, LeaveStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default)
     {
         LeaveStockOrder model = new LeaveStockOrder(productType, originalId, businessType, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);
@@ -30,7 +31,7 @@ public class LeaveStockOrderFactory : ILeaveStockOrderFactory
     }
 
     /// <inheritdoc />
-    public async Task<LeaveStockOrder> CreateAsync(string productType, long? originalId, string businessOrderType, string businessType, string? remark, CancellationToken cancellationToken = default)
+    public async Task<LeaveStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum businessOrderType, LeaveStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default)
     {
         LeaveStockOrder model = new LeaveStockOrder(productType, originalId, businessOrderType, businessType, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);

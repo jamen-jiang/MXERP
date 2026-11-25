@@ -83,7 +83,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
     {
         IReadOnlyCollection<PurchaseRequisitionOrderItemData> finalItems = purchaseRequisitionOrderItems ?? new List<PurchaseRequisitionOrderItemData>();
 
-        List<PurchaseRequisitionOrderItem> toRemoves = purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems()
+        List<PurchaseRequisitionOrderItem> toRemoves = purchaseRequisitionOrder.PurchaseRequisitionOrderItems
             .Where(a => !finalItems.Any(i => i.SkuId == a.SkuId))
             .ToList();
         foreach (PurchaseRequisitionOrderItem item in toRemoves)
@@ -92,7 +92,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
         }
 
         Dictionary<long, long> existingDict = new Dictionary<long, long>();
-        foreach (PurchaseRequisitionOrderItem a in purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems())
+        foreach (PurchaseRequisitionOrderItem a in purchaseRequisitionOrder.PurchaseRequisitionOrderItems)
         {
             existingDict[a.SkuId] = a.Id;
         }
@@ -176,7 +176,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
 
         List<LeaveStockPlanItemData> leaveStockPlanItems = new List<LeaveStockPlanItemData>();
         List<PurchasePlanItemData> purchasePlanItems = new List<PurchasePlanItemData>();
-        foreach (PurchaseRequisitionOrderItem item in purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems())
+        foreach (PurchaseRequisitionOrderItem item in purchaseRequisitionOrder.PurchaseRequisitionOrderItems)
         {
             Sku? sku = await _skuRepository.FindAsync(item.SkuId, true, cancellationToken);
             if (sku is null)
@@ -231,7 +231,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
         PurchasePlan purchasePlan = await GetOrCreatePurchasePlanAsync(purchaseRequisitionOrder, cancellationToken);
 
         List<PurchasePlanItemData> purchasePlanItems = new List<PurchasePlanItemData>();
-        foreach (PurchaseRequisitionOrderItem item in purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems())
+        foreach (PurchaseRequisitionOrderItem item in purchaseRequisitionOrder.PurchaseRequisitionOrderItems)
         {
             Sku? sku = await _skuRepository.FindAsync(item.SkuId, true, cancellationToken);
             if (sku is null)
@@ -290,7 +290,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
                     throw new UserFriendlyException("产品" + sku.SpuId + "不存在!");
                 }
 
-                PurchaseRequisitionOrderItem? purchaseRequisitionOrderItem = purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems()
+                PurchaseRequisitionOrderItem? purchaseRequisitionOrderItem = purchaseRequisitionOrder.PurchaseRequisitionOrderItems
                     .FirstOrDefault(x => x.SkuId == item.SkuId);
                 if (purchaseRequisitionOrderItem is null)
                 {
@@ -328,7 +328,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
                     throw new UserFriendlyException("产品" + sku.SpuId + "不存在!");
                 }
 
-                PurchaseRequisitionOrderItem? purchaseRequisitionOrderItem = purchaseRequisitionOrder.GetPurchaseRequisitionOrderItems()
+                PurchaseRequisitionOrderItem? purchaseRequisitionOrderItem = purchaseRequisitionOrder.PurchaseRequisitionOrderItems
                     .FirstOrDefault(x => x.SkuId == item.SkuId);
                 if (purchaseRequisitionOrderItem is null)
                 {

@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using MXERP.Domain.AuditLogs;
 using MXERP.Domain.Common.Aggregates;
 using MXERP.Domain.SerialNumbers;
@@ -65,7 +66,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public RetailOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 发票打印时间(可空)
     /// </summary>
@@ -138,17 +139,36 @@ public class RetailOrder : OrderAggregateRoot
     /// <summary>
     /// 散镜订单项
     /// </summary>
-    public virtual ICollection<RetailOrderItem> RetailOrderItems { get; private set; } = new List<RetailOrderItem>();
+    private readonly List<RetailOrderItem> _retailOrderItems;
+
+    /// <summary>
+    /// 散镜订单项
+    /// </summary>
+    public IReadOnlyCollection<RetailOrderItem> RetailOrderItems
+    {
+        get { return _retailOrderItems.AsReadOnly(); }
+    }
+
     /// <summary>
     /// 散镜订单跟踪记录
     /// </summary>
-    public virtual ICollection<RetailOrderTracking> RetailOrderTrackings { get; private set; } = new List<RetailOrderTracking>();
+    private readonly List<RetailOrderTracking> _retailOrderTrackings;
+
+    /// <summary>
+    /// 散镜订单跟踪记录
+    /// </summary>
+    public IReadOnlyCollection<RetailOrderTracking> RetailOrderTrackings
+    {
+        get { return _retailOrderTrackings.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected RetailOrder()
     {
+        _retailOrderItems = new List<RetailOrderItem>();
+        _retailOrderTrackings = new List<RetailOrderTracking>();
     }
 
     /// <summary>
@@ -182,6 +202,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="frame">镜架(可空)</param>
     /// <param name="remark">备注(可空)</param>
     internal RetailOrder(long storeId, long companyId, string? outArea, string? sequenceNumber, string? hkNumber, string customerOrderNumber, string? customerPONumber, string? documentaryBarCode, int outGood, string? outGoodTime, string? material, string? coating, string? tintingColor, string? mirror, string? tintingCode, string? tintingName, bool? uv, bool? hard, bool? polish, string? auro, string? edge, string? superHole, string? special, string? specialCode, string? zuanKong, string? frame, string? remark)
+        : this()
     {
         StoreId = storeId;
         CompanyId = companyId;
@@ -337,7 +358,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <summary>
     /// 添加或修改项
     /// </summary>
-    public void AddOrModifyItem(string eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
+    public void AddOrModifyItem(EyeTypeEnum eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
     {
         RetailOrderItem? retailOrderItem = GetItem(eyeType);
         if (retailOrderItem is not null)
@@ -347,7 +368,7 @@ public class RetailOrder : OrderAggregateRoot
         else
         {
             retailOrderItem = new RetailOrderItem(eyeType, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, warehouseId, sph, cyl, add, diameter, axis, pd, ph, baseCurve, centerThickness, knifeSide, decenter, prism, qty);
-            RetailOrderItems.Add(retailOrderItem);
+            _retailOrderItems.Add(retailOrderItem);
         }
 
         UpdateQty();
@@ -378,7 +399,7 @@ public class RetailOrder : OrderAggregateRoot
             throw new UserFriendlyException("散镜订单" + Number + "已取消,不允许录入!");
         }
 
-        RetailOrderTrackings.Add(new RetailOrderTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
+        _retailOrderTrackings.Add(new RetailOrderTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -386,7 +407,7 @@ public class RetailOrder : OrderAggregateRoot
     /// </summary>
     internal void AddTracking(string? reason, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        RetailOrderTrackings.Add(new RetailOrderTracking(reason, employeeId, outDepartmentId, inDepartmentId));
+        _retailOrderTrackings.Add(new RetailOrderTracking(reason, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -403,7 +424,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="retailOrderTrackingId">散镜订单跟踪Id</param>
     public void SyncHkoTracking(long retailOrderTrackingId)
     {
-        RetailOrderTracking? retailOrderTracking = RetailOrderTrackings.FirstOrDefault(x => x.Id == retailOrderTrackingId);
+        RetailOrderTracking? retailOrderTracking = _retailOrderTrackings.FirstOrDefault(x => x.Id == retailOrderTrackingId);
         if (retailOrderTracking is not null)
         {
             retailOrderTracking.SyncHkoTracking();
@@ -414,47 +435,29 @@ public class RetailOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         return SerialNumberTypeEnum.RetailOrder;
     }
 
-    /// <summary>
-    /// 获取散镜订单项(只读)
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<RetailOrderItem> GetRetailOrderItems()
+    private RetailOrderItem? GetItem(EyeTypeEnum eyeType)
     {
-        return RetailOrderItems.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取散镜订单跟踪记录(只读)
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<RetailOrderTracking> GetRetailOrderTrackings()
-    {
-        return RetailOrderTrackings.ToList().AsReadOnly();
-    }
-
-    private RetailOrderItem? GetItem(string eyeType)
-    {
-        return RetailOrderItems.FirstOrDefault(x => x.EyeType == eyeType);
+        return _retailOrderItems.FirstOrDefault(x => x.EyeType == eyeType);
     }
 
     private RetailOrderItem? GetItem(long retailOrderItemId)
     {
-        return RetailOrderItems.FirstOrDefault(x => x.Id == retailOrderItemId);
+        return _retailOrderItems.FirstOrDefault(x => x.Id == retailOrderItemId);
     }
 
     private void UpdateQty()
     {
-        Qty = RetailOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _retailOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     private void UpdateLeaveStockQty()
     {
-        LeaveStockQty = RetailOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
+        LeaveStockQty = _retailOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
         if (Qty - LeaveStockQty > 0)
         {
             Status = RetailOrderStatusEnum.Delivery;

@@ -30,14 +30,14 @@ public class LeaveStockPlanDomainService : ILeaveStockPlanDomainService
     {
         List<LeaveStockPlanItemData> target = skuInfos is null ? [] : skuInfos.ToList();
 
-        List<LeaveStockPlanItem> toRemoves = leaveStockPlan.GetLeaveStockPlanItems().Where(a => !target.Any(i => i.SalesSpuId == a.SalesSpuId && i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId)).ToList();
+        List<LeaveStockPlanItem> toRemoves = leaveStockPlan.LeaveStockPlanItems.Where(a => !target.Any(i => i.SalesSpuId == a.SalesSpuId && i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId)).ToList();
         foreach (LeaveStockPlanItem item in toRemoves)
         {
             leaveStockPlan.DeleteItem(item.Id);
         }
 
         Dictionary<ItemKey, long> existingDict = new Dictionary<ItemKey, long>();
-        foreach (LeaveStockPlanItem item in leaveStockPlan.GetLeaveStockPlanItems())
+        foreach (LeaveStockPlanItem item in leaveStockPlan.LeaveStockPlanItems)
         {
             existingDict.TryAdd(new ItemKey(item.SalesSpuId, item.SkuId, item.WarehouseId), item.Id);
         }

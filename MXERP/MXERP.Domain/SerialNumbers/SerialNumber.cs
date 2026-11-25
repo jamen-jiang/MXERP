@@ -12,7 +12,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <summary>
     /// 类型
     /// </summary>
-    public string Type { get; private set; } = string.Empty;
+    public SerialNumberTypeEnum Type { get; private set; }
 
     /// <summary>
     /// 号码
@@ -67,7 +67,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <summary>
     /// 规则(可空)
     /// </summary>
-    public string? Rule { get; private set; }
+    public DateTypeEnum? Rule { get; private set; }
 
     /// <summary>
     /// 构造器(供 EF 使用)
@@ -87,18 +87,9 @@ public class SerialNumber : AuditedAggregateRoot
     /// <param name="isSplit">是否分割</param>
     /// <param name="splitSymbol">分割符号</param>
     /// <param name="rule">规则(可空)</param>
-    internal SerialNumber(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule)
+    internal SerialNumber(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule)
     {
-        if (type.IsNullOrWhiteSpace())
-        {
-            throw new UserFriendlyException("类型不能为空");
-        }
-
-        string trimmedType = type.Trim();
-        string? trimmedRule = rule?.Trim();
-        ValidateTypeAndRule(trimmedType, trimmedRule);
-
-        Type = trimmedType;
+        Type = type;
         Number = 1;
         Prefix = prefix;
 
@@ -112,7 +103,7 @@ public class SerialNumber : AuditedAggregateRoot
         PadSymbol = padSymbol;
         IsSplit = isSplit;
         SplitSymbol = splitSymbol;
-        Rule = trimmedRule;
+        Rule = rule;
     }
 
     /// <summary>
@@ -126,25 +117,16 @@ public class SerialNumber : AuditedAggregateRoot
     /// <param name="isSplit">是否分割</param>
     /// <param name="splitSymbol">分割符号</param>
     /// <param name="rule">规则(可空)</param>
-    public void Modify(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule)
+    public void Modify(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule)
     {
-        if (type.IsNullOrWhiteSpace())
-        {
-            throw new UserFriendlyException("类型不能为空");
-        }
-
-        string trimmedType = type.Trim();
-        string? trimmedRule = rule?.Trim();
-        ValidateTypeAndRule(trimmedType, trimmedRule);
-
-        Type = trimmedType;
+        Type = type;
         Prefix = prefix;
         DateFormat = dateFormat;
         Pad = pad;
         PadSymbol = padSymbol;
         IsSplit = isSplit;
         SplitSymbol = splitSymbol;
-        Rule = trimmedRule;
+        Rule = rule;
     }
 
     /// <summary>
@@ -209,21 +191,4 @@ public class SerialNumber : AuditedAggregateRoot
         return Prefix + split + datePart + Number.ToString().PadLeft(Pad, padChar);
     }
 
-    /// <summary>
-    /// 校验类型和规则
-    /// </summary>
-    /// <param name="type">类型</param>
-    /// <param name="rule">规则(可空)</param>
-    private static void ValidateTypeAndRule(string type, string? rule)
-    {
-        if (!SerialNumberTypeEnum.IsValid(type))
-        {
-            throw new UserFriendlyException($"类型{type}有误!");
-        }
-
-        if (!string.IsNullOrWhiteSpace(rule) && !DateTypeEnum.IsValid(rule))
-        {
-            throw new UserFriendlyException($"规则{rule}有误!");
-        }
-    }
 }

@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Exceptions;
 
@@ -21,7 +22,7 @@ public class AttributeFactory : IAttributeFactory
     }
 
     /// <inheritdoc />
-    public async Task<Attribute> CreateAsync(string productType, string scope, string code, string name, bool isKey, string inputType, string dataType, bool isRequired, bool isFilter, int? sort, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Attribute> CreateAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, string name, bool isKey, InputTypeEnum inputType, DataTypeEnum dataType, bool isRequired, bool isFilter, int? sort, string? remark, CancellationToken cancellationToken = default)
     {
         if (await _attributeRepository.IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(productType, scope, code, null, cancellationToken))
         {

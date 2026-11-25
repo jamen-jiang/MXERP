@@ -14,7 +14,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 采购单号（可空）
     /// </summary>
@@ -26,7 +26,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 关联类型（可空）
     /// </summary>
-    public string? RelationType { get; private set; }
+    public BusinessOrderTypeEnum? RelationType { get; private set; }
     /// <summary>
     /// 关联Id（可空）
     /// </summary>
@@ -78,7 +78,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public PurchaseBatchStatusEnum Status { get; private set; }
     /// <summary>
     /// 备注（可空）
     /// </summary>
@@ -111,14 +111,22 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 采购批次项列表
     /// </summary>
-    public virtual ICollection<PurchaseBatchItem> PurchaseBatchItems { get; private set; }
-        = new List<PurchaseBatchItem>();
+    private readonly List<PurchaseBatchItem> _purchaseBatchItems;
+
+    /// <summary>
+    /// 采购批次项列表
+    /// </summary>
+    public IReadOnlyCollection<PurchaseBatchItem> PurchaseBatchItems
+    {
+        get { return _purchaseBatchItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected PurchaseBatch()
     {
+        _purchaseBatchItems = new List<PurchaseBatchItem>();
     }
 
     /// <summary>
@@ -136,7 +144,8 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(string productType, long? purchasePlanId, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal PurchaseBatch(ProductTypeEnum productType, long? purchasePlanId, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+        : this()
     {
         ProductType = productType;
         PurchasePlanId = purchasePlanId;
@@ -164,7 +173,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(string productType, long? purchasePlanId, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
+    internal PurchaseBatch(ProductTypeEnum productType, long? purchasePlanId, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
         : this(productType, departmentId, companyId, remark)
     {
         PurchasePlanId = purchasePlanId;
@@ -180,22 +189,14 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="departmentId">部门Id</param>
     /// <param name="companyId">公司Id</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(string productType, long departmentId, long companyId, string? remark)
+    internal PurchaseBatch(ProductTypeEnum productType, long departmentId, long companyId, string? remark)
+        : this()
     {
         ProductType = productType;
         DepartmentId = departmentId;
         CompanyId = companyId;
         Remark = remark;
         Status = PurchaseBatchStatusEnum.Pending;
-    }
-
-    /// <summary>
-    /// 获取采购批次项列表（只读）
-    /// </summary>
-    /// <returns>采购批次项列表</returns>
-    public IReadOnlyList<PurchaseBatchItem> GetPurchaseBatchItems()
-    {
-        return PurchaseBatchItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -278,7 +279,7 @@ public class PurchaseBatch : OrderAggregateRoot
         if (!IsExistItem(skuId, warehouseId))
         {
             PurchaseBatchItem item = new PurchaseBatchItem(relationItemId, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-            PurchaseBatchItems.Add(item);
+            _purchaseBatchItems.Add(item);
         }
 
         UpdateQty();
@@ -305,15 +306,15 @@ public class PurchaseBatch : OrderAggregateRoot
             return;
         }
 
-        if (PurchaseBatchItems.Count > 0 && RelationType == BusinessOrderTypeEnum.BulkOrder)
+        if (_purchaseBatchItems.Count > 0 && RelationType == BusinessOrderTypeEnum.BulkOrder)
         {
-            bool hasSameSalesSpu = PurchaseBatchItems.Any(x => x.SalesSpuId is not null && x.SalesSpuId == salesSpuId);
+            bool hasSameSalesSpu = _purchaseBatchItems.Any(x => x.SalesSpuId is not null && x.SalesSpuId == salesSpuId);
             if (!hasSameSalesSpu)
             {
                 throw new UserFriendlyException("关联类型为批量订单的采购批次不允许添加多个销售产品!");
             }
 
-            bool hasSameSpuAndWarehouse = PurchaseBatchItems.Any(x => x.SpuId == spuId && x.WarehouseId == warehouseId);
+            bool hasSameSpuAndWarehouse = _purchaseBatchItems.Any(x => x.SpuId == spuId && x.WarehouseId == warehouseId);
             if (!hasSameSpuAndWarehouse)
             {
                 throw new UserFriendlyException("关联类型为批量订单的采购批次不允许添加多个不同产品或不同仓库!");
@@ -323,7 +324,7 @@ public class PurchaseBatch : OrderAggregateRoot
         if (!IsExistItem(salesSpuId, skuId, warehouseId))
         {
             PurchaseBatchItem item = new PurchaseBatchItem(relationItemId, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-            PurchaseBatchItems.Add(item);
+            _purchaseBatchItems.Add(item);
             UpdateQty();
         }
     }
@@ -340,7 +341,7 @@ public class PurchaseBatch : OrderAggregateRoot
             return;
         }
 
-        PurchaseBatchItem? item = PurchaseBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
+        PurchaseBatchItem? item = _purchaseBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
         if (item is not null)
         {
             item.UpdatePurchaseQty(qty);
@@ -360,7 +361,7 @@ public class PurchaseBatch : OrderAggregateRoot
             return;
         }
 
-        PurchaseBatchItem? item = PurchaseBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
+        PurchaseBatchItem? item = _purchaseBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
         if (item is not null)
         {
             item.UpdateLeaveStockQty(qty);
@@ -381,7 +382,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductType == ProductTypeEnum.SemiProduct)
         {
@@ -404,7 +405,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return PurchaseBatchItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _purchaseBatchItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -416,7 +417,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistItem(long salesSpuId, long skuId, long warehouseId)
     {
-        return PurchaseBatchItems.Any(x => x.SalesSpuId is not null && x.SalesSpuId == salesSpuId && x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _purchaseBatchItems.Any(x => x.SalesSpuId is not null && x.SalesSpuId == salesSpuId && x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -424,7 +425,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = PurchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _purchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -432,7 +433,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// </summary>
     private void UpdatePurchaseQty()
     {
-        PurchaseQty = PurchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.PurchaseQty);
+        PurchaseQty = _purchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.PurchaseQty);
         if (PurchaseQty == 0)
         {
             Status = PurchaseBatchStatusEnum.Pending;
@@ -456,6 +457,6 @@ public class PurchaseBatch : OrderAggregateRoot
     /// </summary>
     private void UpdateLeaveStockQty()
     {
-        LeaveStockQty = PurchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
+        LeaveStockQty = _purchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
     }
 }

@@ -68,14 +68,22 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// <summary>
     /// 销售SKU行列表
     /// </summary>
-    public virtual ICollection<BulkOrderItemSalesSku> BulkOrderItemSalesSkus { get; private set; }
-        = new List<BulkOrderItemSalesSku>();
+    private readonly List<BulkOrderItemSalesSku> _bulkOrderItemSalesSkus;
+
+    /// <summary>
+    /// 销售SKU行列表
+    /// </summary>
+    public IReadOnlyCollection<BulkOrderItemSalesSku> BulkOrderItemSalesSkus
+    {
+        get { return _bulkOrderItemSalesSkus.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected BulkOrderItem()
     {
+        _bulkOrderItemSalesSkus = new List<BulkOrderItemSalesSku>();
     }
 
     /// <summary>
@@ -93,6 +101,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// <param name="attachmentIds">附件Id集合(可空)</param>
     /// <param name="attachments">附件集合(可空)</param>
     internal BulkOrderItem(long bulkOrderId, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, string? packetInfo, string? remark, IReadOnlyCollection<long>? attachmentIds, IReadOnlyDictionary<string, byte[]>? attachments)
+        : this()
     {
         BulkOrderId = bulkOrderId;
         SalesSpuId = salesSpuId;
@@ -271,7 +280,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
         }
 
         BulkOrderItemSalesSku salesSku = new BulkOrderItemSalesSku(SalesSpuId, salesSkuId, skuAttributes, otherAttributes, qty);
-        BulkOrderItemSalesSkus.Add(salesSku);
+        _bulkOrderItemSalesSkus.Add(salesSku);
         UpdateQtyTotal();
     }
 
@@ -318,20 +327,11 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取销售SKU行列表(只读)
-    /// </summary>
-    /// <returns>销售SKU行列表</returns>
-    public IReadOnlyList<BulkOrderItemSalesSku> GetBulkOrderItemSalesSkus()
-    {
-        return BulkOrderItemSalesSkus.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 汇总数量
     /// </summary>
     private void UpdateQtyTotal()
     {
-        Qty = BulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _bulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -339,7 +339,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// </summary>
     private void UpdateDeductQtyTotal()
     {
-        DeductQty = BulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.DeductQty);
+        DeductQty = _bulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.DeductQty);
     }
 
     /// <summary>
@@ -347,7 +347,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// </summary>
     private void UpdateCustomizedQtyTotal()
     {
-        CustomizedQty = BulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.CustomizedQty);
+        CustomizedQty = _bulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.CustomizedQty);
     }
 
     /// <summary>
@@ -355,7 +355,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// </summary>
     private void UpdateLeaveStockQtyTotal()
     {
-        LeaveStockQty = BulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
+        LeaveStockQty = _bulkOrderItemSalesSkus.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
     }
 
     /// <summary>
@@ -365,7 +365,7 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistSalesSku(long salesSkuId)
     {
-        return BulkOrderItemSalesSkus.Any(x => x.SalesSkuId == salesSkuId && !x.IsDeleted);
+        return _bulkOrderItemSalesSkus.Any(x => x.SalesSkuId == salesSkuId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -375,6 +375,6 @@ public class BulkOrderItem : DeletionAuditedAggregateRoot
     /// <returns>销售SKU行(可空), 不存在返回 null</returns>
     private BulkOrderItemSalesSku? FindBulkOrderItemSalesSku(long bulkOrderItemSalesSkuId)
     {
-        return BulkOrderItemSalesSkus.FirstOrDefault(x => x.Id == bulkOrderItemSalesSkuId);
+        return _bulkOrderItemSalesSkus.FirstOrDefault(x => x.Id == bulkOrderItemSalesSkuId);
     }
 }

@@ -27,7 +27,7 @@ public interface ICompanyDomainService
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>返回公司</returns>
-    Task<Company> ModifyAsync(long id, string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
+    Task<Company> ModifyAsync(long id, CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改公司(使用已有聚合)
@@ -50,7 +50,7 @@ public interface ICompanyDomainService
     /// <param name="sort">排序(可空)</param>
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task ModifyAsync(Company company, string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
+    Task ModifyAsync(Company company, CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成: 公司存在则修改, 不存在则创建
@@ -73,7 +73,7 @@ public interface ICompanyDomainService
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>返回公司</returns>
-    Task<Company> ImportGenerateAsync(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
+    Task<Company> ImportGenerateAsync(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 同步联系人列表(按姓名匹配)

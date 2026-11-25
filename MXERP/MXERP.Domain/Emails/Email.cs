@@ -61,13 +61,22 @@ public class Email : AuditedAggregateRoot
     /// <summary>
     /// 附件列表
     /// </summary>
-    public ICollection<EmailAttachment> EmailAttachments { get; private set; } = new List<EmailAttachment>();
+    private readonly List<EmailAttachment> _emailAttachments;
+
+    /// <summary>
+    /// 附件列表
+    /// </summary>
+    public IReadOnlyCollection<EmailAttachment> EmailAttachments
+    {
+        get { return _emailAttachments.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器
     /// </summary>
     protected Email()
     {
+        _emailAttachments = new List<EmailAttachment>();
     }
 
     /// <summary>
@@ -81,6 +90,7 @@ public class Email : AuditedAggregateRoot
     /// <param name="content">内容</param>
     /// <param name="exception">异常</param>
     public Email(string from, string name, string to, string? cc, string subject, string content, System.Exception? exception)
+        : this()
     {
         From = from;
         Name = name;
@@ -134,21 +144,21 @@ public class Email : AuditedAggregateRoot
     /// <param name="isDeleted">是否删除</param>
     public void AddOrModifyAttachment(long? id, string fileName, byte[]? data, bool isDeleted)
     {
-        EmailAttachment? attachment = EmailAttachments.FirstOrDefault(a => a.Id == id);
+        EmailAttachment? attachment = _emailAttachments.FirstOrDefault(a => a.Id == id);
         if (isDeleted)
         {
             attachment?.Delete();
             return;
         }
 
-        if (EmailAttachments.Any(a => a.FileName == fileName && a.Id != id))
+        if (_emailAttachments.Any(a => a.FileName == fileName && a.Id != id))
         {
             throw new UserFriendlyException($"邮件已存在对应附件{fileName}!");
         }
 
         if (attachment is null)
         {
-            EmailAttachments.Add(new EmailAttachment(fileName, data));
+            _emailAttachments.Add(new EmailAttachment(fileName, data));
         }
         else
         {
@@ -162,15 +172,7 @@ public class Email : AuditedAggregateRoot
     /// <returns>附件列表</returns>
     public IReadOnlyList<EmailAttachment> GetEmailAttachments()
     {
-        return EmailAttachments.Where(a => !a.IsDeleted).ToList();
+        return _emailAttachments.Where(a => !a.IsDeleted).ToList();
     }
 
-    /// <summary>
-    /// 获取全部附件列表(含已删除)
-    /// </summary>
-    /// <returns>附件列表</returns>
-    public IReadOnlyList<EmailAttachment> GetAllEmailAttachments()
-    {
-        return EmailAttachments.ToList().AsReadOnly();
-    }
 }

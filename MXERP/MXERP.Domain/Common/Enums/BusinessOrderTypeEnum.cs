@@ -1,96 +1,81 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.Common.Enums;
 
 /// <summary>
 /// 业务单类型枚举
 /// </summary>
-public static class BusinessOrderTypeEnum
+public enum BusinessOrderTypeEnum
 {
     /// <summary>
     /// 采购单
     /// </summary>
-    public const string PurchaseOrder = "PurchaseOrder";
+    [Description("采购单")]
+    PurchaseOrder,
 
     /// <summary>
     /// 调拨单
     /// </summary>
-    public const string TransferOrder = "TransferOrder";
+    [Description("调拨单")]
+    TransferOrder,
 
     /// <summary>
     /// 镜种转换单
     /// </summary>
-    public const string TransferLensOrder = "TransferLensOrder";
+    [Description("镜种转换单")]
+    TransferLensOrder,
 
     /// <summary>
     /// 盘点单
     /// </summary>
-    public const string InventoryOrder = "InventoryOrder";
+    [Description("盘点单")]
+    InventoryOrder,
 
     /// <summary>
     /// 散镜订单
     /// </summary>
-    public const string RetailOrder = "RetailOrder";
+    [Description("散镜订单")]
+    RetailOrder,
 
     /// <summary>
     /// 批量订单
     /// </summary>
-    public const string BulkOrder = "BulkOrder";
+    [Description("批量订单")]
+    BulkOrder,
 
     /// <summary>
     /// 外部出库单
     /// </summary>
-    public const string ExternalLeaveStockOrder = "ExternalLeaveStockOrder";
+    [Description("外部出库单")]
+    ExternalLeaveStockOrder,
 
     /// <summary>
     /// 出库单
     /// </summary>
-    public const string LeaveStockOrder = "LeaveStockOrder";
+    [Description("出库单")]
+    LeaveStockOrder,
 
     /// <summary>
     /// 入库单
     /// </summary>
-    public const string EnterStockOrder = "EnterStockOrder";
+    [Description("入库单")]
+    EnterStockOrder,
 
     /// <summary>
     /// 申购单
     /// </summary>
-    public const string PurchaseRequisitionOrder = "PurchaseRequisitionOrder";
+    [Description("申购单")]
+    PurchaseRequisitionOrder,
 
     /// <summary>
     /// 出库批次
     /// </summary>
-    public const string LeaveStockBatch = "LeaveStockBatch";
+    [Description("出库批次")]
+    LeaveStockBatch,
 
     /// <summary>
     /// 采购批次
     /// </summary>
-    public const string PurchaseBatch = "PurchaseBatch";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>
-    {
-        PurchaseOrder,
-        TransferOrder,
-        TransferLensOrder,
-        InventoryOrder,
-        RetailOrder,
-        BulkOrder,
-        ExternalLeaveStockOrder,
-        LeaveStockOrder,
-        EnterStockOrder,
-        PurchaseRequisitionOrder,
-        LeaveStockBatch,
-        PurchaseBatch
-    };
-
-    /// <summary>
-    /// 判断编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>是否有效</returns>
-    public static bool IsValid(string? code)
-    {
-        return !string.IsNullOrWhiteSpace(code) && All.Contains(code);
-    }
+    [Description("采购批次")]
+    PurchaseBatch
 }

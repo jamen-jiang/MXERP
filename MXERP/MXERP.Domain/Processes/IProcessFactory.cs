@@ -18,5 +18,5 @@ public interface IProcessFactory
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>工序聚合</returns>
-    Task<Process> CreateAsync(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
+    Task<Process> CreateAsync(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
 }

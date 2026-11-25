@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Repositories;
 
 namespace MXERP.Domain.Spus;
@@ -22,7 +23,7 @@ public interface ISpuRepository : IRepository<Spu>
     /// <param name="code">产品代码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>产品, 不存在返回 null</returns>
-    Task<Spu?> GetByProductTypeAndCodeAsync(string productType, string code, CancellationToken cancellationToken = default);
+    Task<Spu?> GetByProductTypeAndCodeAsync(ProductTypeEnum productType, string code, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断产品代码是否存在(排除指定主键)

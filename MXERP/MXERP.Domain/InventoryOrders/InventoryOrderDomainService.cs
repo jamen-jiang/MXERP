@@ -46,7 +46,7 @@ public class InventoryOrderDomainService : IInventoryOrderDomainService
     {
         IReadOnlyCollection<SkuInfoData> finalSkuInfos = skuInfos ?? new List<SkuInfoData>();
 
-        List<InventoryOrderItem> toRemoves = inventoryOrder.GetInventoryOrderItems()
+        List<InventoryOrderItem> toRemoves = inventoryOrder.InventoryOrderItems
             .Where(a => !finalSkuInfos.Any(i => i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId))
             .ToList();
         foreach (InventoryOrderItem item in toRemoves)
@@ -55,7 +55,7 @@ public class InventoryOrderDomainService : IInventoryOrderDomainService
         }
 
         Dictionary<SkuWarehouse, long> existingDict = new Dictionary<SkuWarehouse, long>();
-        foreach (InventoryOrderItem a in inventoryOrder.GetInventoryOrderItems())
+        foreach (InventoryOrderItem a in inventoryOrder.InventoryOrderItems)
         {
             existingDict[new SkuWarehouse(a.SkuId, a.WarehouseId)] = a.Id;
         }
@@ -96,7 +96,7 @@ public class InventoryOrderDomainService : IInventoryOrderDomainService
         }
 
         model.Check(userId, name);
-        foreach (InventoryOrderItem item in model.GetInventoryOrderItems())
+        foreach (InventoryOrderItem item in model.InventoryOrderItems)
         {
             Stock? stock = await _stockRepository.GetBySkuIdAndWarehouseIdAsync(item.SkuId, item.WarehouseId, cancellationToken);
             double stockQty = 0;

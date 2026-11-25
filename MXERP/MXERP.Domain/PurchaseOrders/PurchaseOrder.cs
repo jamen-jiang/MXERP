@@ -17,11 +17,11 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; } = string.Empty;
+    public BusinessOrderTypeEnum RelationType { get; private set; }
     /// <summary>
     /// 仓位Id(可空)
     /// </summary>
@@ -77,7 +77,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public PurchaseOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 用途(可空)
     /// </summary>
@@ -125,13 +125,22 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <summary>
     /// 采购单项列表
     /// </summary>
-    public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; private set; } = new List<PurchaseOrderItem>();
+    private readonly List<PurchaseOrderItem> _purchaseOrderItems;
+
+    /// <summary>
+    /// 采购单项列表
+    /// </summary>
+    public IReadOnlyCollection<PurchaseOrderItem> PurchaseOrderItems
+    {
+        get { return _purchaseOrderItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected PurchaseOrder()
     {
+        _purchaseOrderItems = new List<PurchaseOrderItem>();
     }
 
     /// <summary>
@@ -151,8 +160,8 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="deliveryAddress">收货地址</param>
     /// <param name="remark">备注(可空)</param>
     internal PurchaseOrder(
-        string productType,
-        string relationType,
+        ProductTypeEnum productType,
+        BusinessOrderTypeEnum relationType,
         long companyId,
         long? positionId,
         long supplierId,
@@ -164,6 +173,7 @@ public class PurchaseOrder : OrderAggregateRoot
         string deliveryArea,
         string deliveryAddress,
         string? remark)
+        : this()
     {
         ProductType = productType;
         RelationType = relationType;
@@ -180,15 +190,6 @@ public class PurchaseOrder : OrderAggregateRoot
         Remark = remark;
         Status = PurchaseOrderStatusEnum.Pending;
         AddDomainEvent(new PurchaseOrderAddedEvent(this));
-    }
-
-    /// <summary>
-    /// 获取采购单项列表(只读)
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<PurchaseOrderItem> GetPurchaseOrderItems()
-    {
-        return PurchaseOrderItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -248,7 +249,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="skuAttributes">Sku属性值(可空)</param>
     /// <param name="otherAttributes">非关键属性值(可空)</param>
     internal void AddItem(
-        string relationType,
+        BusinessOrderTypeEnum relationType,
         long relationId,
         long relationItemId,
         string relationNumber,
@@ -267,7 +268,7 @@ public class PurchaseOrder : OrderAggregateRoot
             return;
         }
 
-        PurchaseOrderItem? item = PurchaseOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        PurchaseOrderItem? item = _purchaseOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
         if (item != null)
         {
             item.AddQty(qty);
@@ -275,12 +276,12 @@ public class PurchaseOrder : OrderAggregateRoot
         else
         {
             item = new PurchaseOrderItem(spuId, skuId, warehouseId, qty, price, taxRate, discount, skuAttributes, otherAttributes);
-            PurchaseOrderItems.Add(item);
+            _purchaseOrderItems.Add(item);
         }
 
         if (ProductType == ProductTypeEnum.EndProduct || ProductType == ProductTypeEnum.SemiProduct)
         {
-            long distinctCount = PurchaseOrderItems.Select(x => x.SpuId + "_" + x.WarehouseId).Distinct().LongCount();
+            long distinctCount = _purchaseOrderItems.Select(x => x.SpuId + "_" + x.WarehouseId).Distinct().LongCount();
             if (distinctCount > 1)
             {
                 throw new UserFriendlyException("成品或半成品采购订单不允许添加多个不同产品或不同仓库!");
@@ -301,7 +302,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="discount">打折(可空)</param>
     public void ModifyItem(long itemId, decimal? price, decimal? taxRate, double? discount)
     {
-        PurchaseOrderItem? item = PurchaseOrderItems.FirstOrDefault(x => x.Id == itemId);
+        PurchaseOrderItem? item = _purchaseOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             throw new UserFriendlyException("采购单项不存在!");
@@ -323,7 +324,7 @@ public class PurchaseOrder : OrderAggregateRoot
             return;
         }
 
-        PurchaseOrderItem? item = PurchaseOrderItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
+        PurchaseOrderItem? item = _purchaseOrderItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
         if (item != null)
         {
             item.AddEnterStockQty(qty);
@@ -399,7 +400,7 @@ public class PurchaseOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductType == ProductTypeEnum.SemiProduct)
         {
@@ -419,7 +420,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = PurchaseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _purchaseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -428,7 +429,7 @@ public class PurchaseOrder : OrderAggregateRoot
     private void UpdateMoney()
     {
         decimal total = decimal.Zero;
-        foreach (PurchaseOrderItem item in PurchaseOrderItems)
+        foreach (PurchaseOrderItem item in _purchaseOrderItems)
         {
             if (!item.IsDeleted)
             {
@@ -444,7 +445,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateEnterStockQty()
     {
-        EnterStockQty = PurchaseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.EnterStockQty);
+        EnterStockQty = _purchaseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.EnterStockQty);
         if (EnterStockQty == 0)
         {
             Status = PurchaseOrderStatusEnum.EnterStock;

@@ -14,7 +14,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 出库计划Id（可空）
     /// </summary>
@@ -30,7 +30,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; } = string.Empty;
+    public BusinessOrderTypeEnum RelationType { get; private set; }
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -82,7 +82,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public LeaveStockBatchStatusEnum Status { get; private set; }
     /// <summary>
     /// 是否打印
     /// </summary>
@@ -135,21 +135,50 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 出库批次项列表
     /// </summary>
-    public virtual ICollection<LeaveStockBatchItem> LeaveStockBatchItems { get; private set; } = new List<LeaveStockBatchItem>();
+    private readonly List<LeaveStockBatchItem> _leaveStockBatchItems;
+
+    /// <summary>
+    /// 出库批次项列表
+    /// </summary>
+    public IReadOnlyCollection<LeaveStockBatchItem> LeaveStockBatchItems
+    {
+        get { return _leaveStockBatchItems.AsReadOnly(); }
+    }
+
     /// <summary>
     /// 出库批次工序列表
     /// </summary>
-    public virtual ICollection<LeaveStockBatchWorkStep> LeaveStockBatchWorkSteps { get; private set; } = new List<LeaveStockBatchWorkStep>();
+    private readonly List<LeaveStockBatchWorkStep> _leaveStockBatchWorkSteps;
+
+    /// <summary>
+    /// 出库批次工序列表
+    /// </summary>
+    public IReadOnlyCollection<LeaveStockBatchWorkStep> LeaveStockBatchWorkSteps
+    {
+        get { return _leaveStockBatchWorkSteps.AsReadOnly(); }
+    }
+
     /// <summary>
     /// 出库批次跟踪列表
     /// </summary>
-    public virtual ICollection<LeaveStockBatchTracking> LeaveStockBatchTrackings { get; private set; } = new List<LeaveStockBatchTracking>();
+    private readonly List<LeaveStockBatchTracking> _leaveStockBatchTrackings;
+
+    /// <summary>
+    /// 出库批次跟踪列表
+    /// </summary>
+    public IReadOnlyCollection<LeaveStockBatchTracking> LeaveStockBatchTrackings
+    {
+        get { return _leaveStockBatchTrackings.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected LeaveStockBatch()
     {
+        _leaveStockBatchItems = new List<LeaveStockBatchItem>();
+        _leaveStockBatchWorkSteps = new List<LeaveStockBatchWorkStep>();
+        _leaveStockBatchTrackings = new List<LeaveStockBatchTracking>();
     }
 
     /// <summary>
@@ -169,7 +198,8 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockBatch(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal LeaveStockBatch(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+        : this()
     {
         ProductType = productType;
         LeaveStockPlanId = leaveStockPlanId;
@@ -201,7 +231,8 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockBatch(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
+    internal LeaveStockBatch(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+        : this()
     {
         ProductType = productType;
         LeaveStockPlanId = leaveStockPlanId;
@@ -214,33 +245,6 @@ public class LeaveStockBatch : OrderAggregateRoot
         RelationNumber = relationNumber;
         Remark = remark;
         Status = LeaveStockBatchStatusEnum.Pending;
-    }
-
-    /// <summary>
-    /// 获取出库批次项列表（只读）
-    /// </summary>
-    /// <returns>只读视图</returns>
-    public IReadOnlyList<LeaveStockBatchItem> GetLeaveStockBatchItems()
-    {
-        return LeaveStockBatchItems.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取出库批次工序列表（只读）
-    /// </summary>
-    /// <returns>只读视图</returns>
-    public IReadOnlyList<LeaveStockBatchWorkStep> GetLeaveStockBatchWorkSteps()
-    {
-        return LeaveStockBatchWorkSteps.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取出库批次跟踪列表（只读）
-    /// </summary>
-    /// <returns>只读视图</returns>
-    public IReadOnlyList<LeaveStockBatchTracking> GetLeaveStockBatchTrackings()
-    {
-        return LeaveStockBatchTrackings.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -309,7 +313,7 @@ public class LeaveStockBatch : OrderAggregateRoot
         if (!IsExistItem(skuId, warehouseId))
         {
             LeaveStockBatchItem item = new LeaveStockBatchItem(purchaseBatchItemId, relationItemId, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-            LeaveStockBatchItems.Add(item);
+            _leaveStockBatchItems.Add(item);
             UpdateQty();
             AddDomainEvent(new LeaveStockBatchItemAddedEvent(this, LeaveStockPlanId, RelationType, RelationId, RelationItemId, purchaseBatchItemId, relationItemId, RelationNumber, qty));
         }
@@ -337,15 +341,15 @@ public class LeaveStockBatch : OrderAggregateRoot
             return;
         }
 
-        if (BusinessOrderTypeEnum.BulkOrder == RelationType && LeaveStockBatchItems.Count > 0)
+        if (BusinessOrderTypeEnum.BulkOrder == RelationType && _leaveStockBatchItems.Count > 0)
         {
-            bool hasSameSalesSpu = LeaveStockBatchItems.Any(x => x.SalesSpuId == salesSpuId);
+            bool hasSameSalesSpu = _leaveStockBatchItems.Any(x => x.SalesSpuId == salesSpuId);
             if (!hasSameSalesSpu)
             {
                 throw new UserFriendlyException("关联类型为批量订单的出库批次不允许添加多个销售产品!");
             }
 
-            bool hasSameSpuAndWarehouse = LeaveStockBatchItems.Any(x => x.SpuId == spuId && x.WarehouseId == warehouseId);
+            bool hasSameSpuAndWarehouse = _leaveStockBatchItems.Any(x => x.SpuId == spuId && x.WarehouseId == warehouseId);
             if (!hasSameSpuAndWarehouse)
             {
                 throw new UserFriendlyException("关联类型为批量订单的出库批次不允许添加多个不同产品或不同仓库!");
@@ -355,7 +359,7 @@ public class LeaveStockBatch : OrderAggregateRoot
         if (!IsExistItem(salesSpuId, skuId, warehouseId))
         {
             LeaveStockBatchItem item = new LeaveStockBatchItem(purchaseBatchItemId, relationItemId, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-            LeaveStockBatchItems.Add(item);
+            _leaveStockBatchItems.Add(item);
             UpdateQty();
             AddDomainEvent(new LeaveStockBatchItemAddedEvent(this, LeaveStockPlanId, RelationType, RelationId, RelationItemId, purchaseBatchItemId, relationItemId, RelationNumber, qty));
         }
@@ -369,7 +373,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     {
         if (!IsExistWorkStep(workStepId))
         {
-            LeaveStockBatchWorkSteps.Add(new LeaveStockBatchWorkStep(workStepId));
+            _leaveStockBatchWorkSteps.Add(new LeaveStockBatchWorkStep(workStepId));
         }
     }
 
@@ -379,7 +383,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="leaveStockBatchWorkStepId">出库批次工序Id</param>
     public void DeleteWorkStep(long leaveStockBatchWorkStepId)
     {
-        LeaveStockBatchWorkStep? item = LeaveStockBatchWorkSteps.FirstOrDefault(x => !x.IsDeleted && x.Id == leaveStockBatchWorkStepId);
+        LeaveStockBatchWorkStep? item = _leaveStockBatchWorkSteps.FirstOrDefault(x => !x.IsDeleted && x.Id == leaveStockBatchWorkStepId);
         if (item is null)
         {
             return;
@@ -387,7 +391,7 @@ public class LeaveStockBatch : OrderAggregateRoot
 
         item.Delete();
 
-        List<LeaveStockBatchTracking> trackings = LeaveStockBatchTrackings.Where(x => !x.IsDeleted && x.WorkStepId == item.WorkStepId).ToList();
+        List<LeaveStockBatchTracking> trackings = _leaveStockBatchTrackings.Where(x => !x.IsDeleted && x.WorkStepId == item.WorkStepId).ToList();
         foreach (LeaveStockBatchTracking tracking in trackings)
         {
             tracking.Delete();
@@ -408,7 +412,7 @@ public class LeaveStockBatch : OrderAggregateRoot
             throw new UserFriendlyException("出库批次" + Number + "已取消,不允许录入!");
         }
 
-        LeaveStockBatchTrackings.Add(new LeaveStockBatchTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
+        _leaveStockBatchTrackings.Add(new LeaveStockBatchTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -420,7 +424,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="inDepartmentId">入部门Id</param>
     internal void AddTracking(string? reason, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        LeaveStockBatchTrackings.Add(new LeaveStockBatchTracking(reason, employeeId, outDepartmentId, inDepartmentId));
+        _leaveStockBatchTrackings.Add(new LeaveStockBatchTracking(reason, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -442,7 +446,7 @@ public class LeaveStockBatch : OrderAggregateRoot
             throw new UserFriendlyException("出库批次已开单,不允许添加出库数量!");
         }
 
-        LeaveStockBatchItem? item = LeaveStockBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
+        LeaveStockBatchItem? item = _leaveStockBatchItems.FirstOrDefault(x => x.Id == itemId && !x.IsDeleted);
         if (item is not null)
         {
             item.AddLeaveStockQty(qty);
@@ -478,7 +482,7 @@ public class LeaveStockBatch : OrderAggregateRoot
             return;
         }
 
-        List<LeaveStockBatchItem> items = LeaveStockBatchItems.Where(x => x.SalesSpuId == salesSpuId && x.SpuId == spuId).ToList();
+        List<LeaveStockBatchItem> items = _leaveStockBatchItems.Where(x => x.SalesSpuId == salesSpuId && x.SpuId == spuId).ToList();
 
         bool isAdd = qty > 0;
         double remaining = Math.Abs(qty);
@@ -559,7 +563,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductTypeEnum.SemiProduct == ProductType)
         {
@@ -592,7 +596,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <returns>true：存在</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return LeaveStockBatchItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _leaveStockBatchItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -604,7 +608,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <returns>true：存在</returns>
     private bool IsExistItem(long salesSpuId, long skuId, long warehouseId)
     {
-        return LeaveStockBatchItems.Any(x => x.SalesSpuId == salesSpuId && x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _leaveStockBatchItems.Any(x => x.SalesSpuId == salesSpuId && x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -614,7 +618,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <returns>true：存在</returns>
     private bool IsExistWorkStep(long workStepId)
     {
-        return LeaveStockBatchWorkSteps.Any(x => x.WorkStepId == workStepId && !x.IsDeleted);
+        return _leaveStockBatchWorkSteps.Any(x => x.WorkStepId == workStepId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -622,7 +626,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = LeaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _leaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -630,7 +634,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// </summary>
     private void UpdateLeaveStockQtyTotal()
     {
-        LeaveStockQty = LeaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
+        LeaveStockQty = _leaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
         if (Qty - LeaveStockQty < 0)
         {
             throw new UserFriendlyException("出库数量不允许超出出库批次数量!");
@@ -642,7 +646,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// </summary>
     private void UpdateBillingQtyTotal()
     {
-        BillingQty = LeaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.BillingQty);
+        BillingQty = _leaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.BillingQty);
         if (BillingQty == LeaveStockQty)
         {
             Status = LeaveStockBatchStatusEnum.BillIssued;

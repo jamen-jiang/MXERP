@@ -31,13 +31,22 @@ public class Routing : AuditedAggregateRoot
     /// <summary>
     /// 路线工序行列表
     /// </summary>
-    public virtual ICollection<RoutingStep> RoutingSteps { get; private set; } = new List<RoutingStep>();
+    private readonly List<RoutingStep> _routingSteps;
+
+    /// <summary>
+    /// 路线工序行列表
+    /// </summary>
+    public IReadOnlyCollection<RoutingStep> RoutingSteps
+    {
+        get { return _routingSteps.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected Routing()
     {
+        _routingSteps = new List<RoutingStep>();
     }
 
     /// <summary>
@@ -47,6 +56,7 @@ public class Routing : AuditedAggregateRoot
     /// <param name="name">路线名称</param>
     /// <param name="remark">备注(可空)</param>
     internal Routing(string code, string name, string? remark)
+        : this()
     {
         if (code.IsNullOrWhiteSpace())
         {
@@ -61,15 +71,6 @@ public class Routing : AuditedAggregateRoot
         Code = code.Trim();
         Name = name.Trim();
         Remark = remark;
-    }
-
-    /// <summary>
-    /// 获取路线工序行列表(只读)
-    /// </summary>
-    /// <returns>只读工序行列表</returns>
-    public IReadOnlyList<RoutingStep> GetRoutingSteps()
-    {
-        return RoutingSteps.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -119,7 +120,7 @@ public class Routing : AuditedAggregateRoot
             throw new UserFriendlyException("工序已存在!");
         }
 
-        RoutingSteps.Add(new RoutingStep(workStepId, sequence, isMust, timeInMins, remark));
+        _routingSteps.Add(new RoutingStep(workStepId, sequence, isMust, timeInMins, remark));
     }
 
     /// <summary>
@@ -167,7 +168,7 @@ public class Routing : AuditedAggregateRoot
     /// </summary>
     public void Resequence()
     {
-        List<RoutingStep> sorted = RoutingSteps
+        List<RoutingStep> sorted = _routingSteps
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Sequence)
             .ToList();
@@ -193,7 +194,7 @@ public class Routing : AuditedAggregateRoot
     /// <returns>工序行, 不存在返回 null</returns>
     private RoutingStep? FindStep(long routingStepId)
     {
-        return RoutingSteps.FirstOrDefault(x => x.Id == routingStepId);
+        return _routingSteps.FirstOrDefault(x => x.Id == routingStepId);
     }
 
     /// <summary>
@@ -203,6 +204,6 @@ public class Routing : AuditedAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistStep(long workStepId)
     {
-        return RoutingSteps.Any(x => x.WorkStepId == workStepId && !x.IsDeleted);
+        return _routingSteps.Any(x => x.WorkStepId == workStepId && !x.IsDeleted);
     }
 }

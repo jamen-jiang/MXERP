@@ -1,3 +1,4 @@
+using MXERP.Domain.RetailOrders;
 using MXERP.Domain.Common.Enums;
 using MXERP.Domain.Departments;
 using MXERP.Domain.Employees;
@@ -109,6 +110,6 @@ public class ExternalRetailOrderTrackingDomainService : IExternalRetailOrderTrac
     private async Task<List<RetailOrderWorkStep>> GetEffectiveWorkStepsAsync(CancellationToken cancellationToken)
     {
         List<RetailOrderWorkStep> workSteps = await _retailOrderWorkStepRepository.GetAllOrderBySequenceAsync(cancellationToken);
-        return workSteps.Where(x => x.Code != RetailOrderWorkStepEnum.SongCangKu && x.Code != RetailOrderWorkStepEnum.JieShouDingDan).ToList();
+        return workSteps.Where(x => x.Code != RetailOrderWorkStepEnum.SongCangKu.GetDescription() && x.Code != RetailOrderWorkStepEnum.JieShouDingDan.GetDescription()).ToList();
     }
 }

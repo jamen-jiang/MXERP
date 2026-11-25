@@ -26,13 +26,22 @@ public class Dictionary : AuditedAggregateRoot
     /// <summary>
     /// 字典值列表
     /// </summary>
-    public ICollection<DictionaryItem> DictionaryItems { get; private set; } = new List<DictionaryItem>();
+    private readonly List<DictionaryItem> _dictionaryItems;
+
+    /// <summary>
+    /// 字典值列表
+    /// </summary>
+    public IReadOnlyCollection<DictionaryItem> DictionaryItems
+    {
+        get { return _dictionaryItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器
     /// </summary>
     protected Dictionary()
     {
+        _dictionaryItems = new List<DictionaryItem>();
     }
 
     /// <summary>
@@ -42,8 +51,9 @@ public class Dictionary : AuditedAggregateRoot
     /// <param name="name">字典类型名称</param>
     /// <param name="remark">备注</param>
     internal Dictionary(string category, string name, string? remark)
+        : this()
     {
-        Category = category.Trim();
+        Category = category;
         Name = name.Trim();
         Remark = remark;
     }
@@ -56,7 +66,7 @@ public class Dictionary : AuditedAggregateRoot
     /// <param name="remark">备注</param>
     internal void Modify(string category, string name, string? remark)
     {
-        Category = category.Trim();
+        Category = category;
         Name = name.Trim();
         Remark = remark;
     }
@@ -67,7 +77,7 @@ public class Dictionary : AuditedAggregateRoot
     /// <returns>字典值列表</returns>
     public IReadOnlyList<DictionaryItem> GetDictionaryItems()
     {
-        return DictionaryItems.Where(x => !x.IsDeleted).ToList();
+        return _dictionaryItems.Where(x => !x.IsDeleted).ToList();
     }
 
     /// <summary>
@@ -89,7 +99,7 @@ public class Dictionary : AuditedAggregateRoot
             throw new UserFriendlyException($"字典类型{Category}字典项标签{label}已存在!");
         }
 
-        DictionaryItems.Add(new DictionaryItem(value, label, sort, remark));
+        _dictionaryItems.Add(new DictionaryItem(value, label, sort, remark));
     }
 
     /// <summary>
@@ -112,7 +122,7 @@ public class Dictionary : AuditedAggregateRoot
             throw new UserFriendlyException($"字典类型{Category}字典项标签{label}已存在!");
         }
 
-        DictionaryItem? item = DictionaryItems.FirstOrDefault(x => x.Id == itemId);
+        DictionaryItem? item = _dictionaryItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             throw new UserFriendlyException($"字典类型{Category}字典项不存在!");
@@ -127,7 +137,7 @@ public class Dictionary : AuditedAggregateRoot
     /// <param name="itemId">字典项Id</param>
     public void DeleteItem(long itemId)
     {
-        DictionaryItem? item = DictionaryItems.FirstOrDefault(x => x.Id == itemId);
+        DictionaryItem? item = _dictionaryItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -138,11 +148,11 @@ public class Dictionary : AuditedAggregateRoot
 
     private bool IsExistItemByValue(string value, long? excludeItemId)
     {
-        return DictionaryItems.Any(x => x.Id != excludeItemId && x.Value == value && !x.IsDeleted);
+        return _dictionaryItems.Any(x => x.Id != excludeItemId && x.Value == value && !x.IsDeleted);
     }
 
     private bool IsExistItemByLabel(string label, long? excludeItemId)
     {
-        return DictionaryItems.Any(x => x.Id != excludeItemId && x.Label == label && !x.IsDeleted);
+        return _dictionaryItems.Any(x => x.Id != excludeItemId && x.Label == label && !x.IsDeleted);
     }
 }

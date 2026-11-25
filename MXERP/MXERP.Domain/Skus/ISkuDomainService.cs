@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.Skus;
 
 /// <summary>
@@ -19,7 +21,7 @@ public interface ISkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>SKU聚合</returns>
-    Task<Sku> CreateAsync(string productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
+    Task<Sku> CreateAsync(ProductTypeEnum productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成(存在则修改, 不存在则新建)
@@ -35,7 +37,7 @@ public interface ISkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>SKU聚合</returns>
-    Task<Sku> ImportGenerateAsync(string productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
+    Task<Sku> ImportGenerateAsync(ProductTypeEnum productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改(按Id查询后修改)

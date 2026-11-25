@@ -12,11 +12,11 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; } = string.Empty;
+    public BusinessOrderTypeEnum RelationType { get; private set; }
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -65,13 +65,22 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <summary>
     /// 出库计划项列表
     /// </summary>
-    public virtual ICollection<LeaveStockPlanItem> LeaveStockPlanItems { get; private set; } = new List<LeaveStockPlanItem>();
+    private readonly List<LeaveStockPlanItem> _leaveStockPlanItems;
+
+    /// <summary>
+    /// 出库计划项列表
+    /// </summary>
+    public IReadOnlyCollection<LeaveStockPlanItem> LeaveStockPlanItems
+    {
+        get { return _leaveStockPlanItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器（供 EF 使用）
     /// </summary>
     protected LeaveStockPlan()
     {
+        _leaveStockPlanItems = new List<LeaveStockPlanItem>();
     }
 
     /// <summary>
@@ -88,7 +97,8 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockPlan(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal LeaveStockPlan(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+        : this()
     {
         ProductType = productType;
         StoreId = storeId;
@@ -113,7 +123,8 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockPlan(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
+    internal LeaveStockPlan(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+        : this()
     {
         ProductType = productType;
         DepartmentId = departmentId;
@@ -122,15 +133,6 @@ public class LeaveStockPlan : AuditedAggregateRoot
         RelationId = relationId;
         RelationNumber = relationNumber;
         Remark = remark;
-    }
-
-    /// <summary>
-    /// 获取出库计划项列表（只读）
-    /// </summary>
-    /// <returns>只读视图</returns>
-    public IReadOnlyList<LeaveStockPlanItem> GetLeaveStockPlanItems()
-    {
-        return LeaveStockPlanItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -156,7 +158,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
         }
 
         LeaveStockPlanItem item = new LeaveStockPlanItem(relationItemId, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-        LeaveStockPlanItems.Add(item);
+        _leaveStockPlanItems.Add(item);
         UpdateQty();
         AddDomainEvent(new LeaveStockPlanItemAddedEvent(this, RelationType, RelationId, RelationItemId, item.RelationItemId, skuId, warehouseId, qty));
     }
@@ -188,13 +190,13 @@ public class LeaveStockPlan : AuditedAggregateRoot
         }
 
         LeaveStockPlanItem item = new LeaveStockPlanItem(relationItemId, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
-        LeaveStockPlanItems.Add(item);
+        _leaveStockPlanItems.Add(item);
         UpdateQty();
         AddDomainEvent(new LeaveStockPlanItemAddedEvent(this, RelationType, RelationId, RelationItemId, item.RelationItemId, skuId, warehouseId, qty));
 
         if (BusinessOrderTypeEnum.BulkOrder == RelationType)
         {
-            int distinctSalesSpuCount = LeaveStockPlanItems.Select(x => x.SalesSpuId).Distinct().Count();
+            int distinctSalesSpuCount = _leaveStockPlanItems.Select(x => x.SalesSpuId).Distinct().Count();
             if (distinctSalesSpuCount > 1)
             {
                 throw new UserFriendlyException("关联类型为批量订单的出库计划不允许添加多个销售产品!");
@@ -208,7 +210,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <param name="itemId">出库计划项Id</param>
     public void DeleteItem(long itemId)
     {
-        LeaveStockPlanItem? item = LeaveStockPlanItems.FirstOrDefault(x => x.Id == itemId);
+        LeaveStockPlanItem? item = _leaveStockPlanItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -227,7 +229,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <returns>true 表示存在</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return LeaveStockPlanItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _leaveStockPlanItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -235,6 +237,6 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = LeaveStockPlanItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _leaveStockPlanItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MXERP.Domain.PurchaseBatches;
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Domain.Repositories.EntityFrameworkCore;
 using Snow.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public class PurchaseBatchRepository : EfCoreRepository<MXERPDbContext, Purchase
     }
 
     /// <inheritdoc />
-    public async Task<List<PurchaseBatch>> GetListByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<List<PurchaseBatch>> GetListByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .Include(x => x.PurchaseBatchItems)
@@ -46,13 +47,13 @@ public class PurchaseBatchRepository : EfCoreRepository<MXERPDbContext, Purchase
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != PurchaseBatchStatusEnum.Canceled, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId && x.Status != PurchaseBatchStatusEnum.Canceled, cancellationToken);
     }

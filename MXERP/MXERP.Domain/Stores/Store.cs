@@ -88,13 +88,22 @@ public class Store : AuditedAggregateRoot
     /// <summary>
     /// 联系人列表
     /// </summary>
-    public virtual ICollection<StoreContact> StoreContacts { get; private set; } = new List<StoreContact>();
+    private readonly List<StoreContact> _storeContacts;
+
+    /// <summary>
+    /// 联系人列表
+    /// </summary>
+    public IReadOnlyCollection<StoreContact> StoreContacts
+    {
+        get { return _storeContacts.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected Store()
     {
+        _storeContacts = new List<StoreContact>();
     }
 
     /// <summary>
@@ -120,6 +129,7 @@ public class Store : AuditedAggregateRoot
     /// <param name="address">门店地址(可空)</param>
     /// <param name="billingAddress">门店账户地址(可空)</param>
     internal Store(long companyId, string code, string name, string? shortName, string? number, string? invoiceTitle, string? telephone, string? fax, string? email, string? cityCode, string? cityName, string? areaCode, string? postCode, string? logisticsCode, string? logisticsName, string? signer, string? convertCode, string? address, string? billingAddress)
+        : this()
     {
         if (code.IsNullOrWhiteSpace())
         {
@@ -206,15 +216,6 @@ public class Store : AuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取联系人列表(只读)
-    /// </summary>
-    /// <returns>只读联系人列表</returns>
-    public IReadOnlyList<StoreContact> GetStoreContacts()
-    {
-        return StoreContacts.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 添加联系人
     /// </summary>
     /// <param name="name">姓名</param>
@@ -229,7 +230,7 @@ public class Store : AuditedAggregateRoot
             throw new UserFriendlyException($"联系人{name}已存在!");
         }
 
-        StoreContacts.Add(new StoreContact(name, companyId, telephone, area, address));
+        _storeContacts.Add(new StoreContact(name, companyId, telephone, area, address));
     }
 
     /// <summary>
@@ -242,7 +243,7 @@ public class Store : AuditedAggregateRoot
     /// <param name="address">地址(可空)</param>
     public void ModifyContact(long contactId, long companyId, string? telephone, string? area, string? address)
     {
-        StoreContact? contact = StoreContacts.FirstOrDefault(c => c.Id == contactId);
+        StoreContact? contact = _storeContacts.FirstOrDefault(c => c.Id == contactId);
         if (contact is null)
         {
             throw new UserFriendlyException($"联系人Id{contactId}不存在!");
@@ -257,7 +258,7 @@ public class Store : AuditedAggregateRoot
     /// <param name="contactId">联系人Id</param>
     public void DeleteContact(long contactId)
     {
-        StoreContact? contact = StoreContacts.FirstOrDefault(c => c.Id == contactId);
+        StoreContact? contact = _storeContacts.FirstOrDefault(c => c.Id == contactId);
         if (contact is null)
         {
             return;
@@ -273,6 +274,6 @@ public class Store : AuditedAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistContact(string name)
     {
-        return StoreContacts.Any(c => c.Name == name && !c.IsDeleted);
+        return _storeContacts.Any(c => c.Name == name && !c.IsDeleted);
     }
 }

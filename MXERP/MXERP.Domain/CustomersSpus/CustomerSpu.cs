@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 using Snow.Domain.Entities.Auditing;
 using Snow.Domain.Events;
 
@@ -11,7 +13,7 @@ public class CustomerSpu : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// 销售产品Id
@@ -54,9 +56,9 @@ public class CustomerSpu : AuditedAggregateRoot
     /// <param name="code">代码</param>
     /// <param name="name">名称</param>
     /// <param name="bagNumber">镜袋编号（可空）</param>
-    internal CustomerSpu(string productType, long salesSpuId, long brandId, string code, string name, string? bagNumber)
+    internal CustomerSpu(ProductTypeEnum productType, long salesSpuId, long brandId, string code, string name, string? bagNumber)
     {
-        ProductType = productType.Trim();
+        ProductType = productType;
         SalesSpuId = salesSpuId;
         BrandId = brandId;
         Code = code.Trim();
@@ -74,7 +76,7 @@ public class CustomerSpu : AuditedAggregateRoot
     /// <param name="name">名称</param>
     /// <param name="bagNumber">镜袋编号（可空）</param>
     /// <param name="attachmentIds">附件Id集合（可空）</param>
-    internal CustomerSpu(string productType, long salesSpuId, long brandId, string code, string name, string? bagNumber, IReadOnlyCollection<long>? attachmentIds)
+    internal CustomerSpu(ProductTypeEnum productType, long salesSpuId, long brandId, string code, string name, string? bagNumber, IReadOnlyCollection<long>? attachmentIds)
         : this(productType, salesSpuId, brandId, code, name, bagNumber)
     {
         AddDomainEvent(new CustomerSpuSavedEvent(this, attachmentIds));

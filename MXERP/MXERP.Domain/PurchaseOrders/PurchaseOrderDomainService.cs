@@ -67,7 +67,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
             return new List<PurchaseOrder>();
         }
 
-        string productType = purchaseBatchs[0].ProductType;
+        ProductTypeEnum productType = purchaseBatchs[0].ProductType;
 
         List<long> skuIds = datas.SelectMany(x => x.SkuInfos).Select(x => x.SkuId).Distinct().ToList();
         List<Sku> skus = await _skuRepository.GetListByIdsAsync(skuIds, cancellationToken);
@@ -134,7 +134,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
                             .Where(x => skuIdsTemp.Contains(x.SkuId) && x.WarehouseId == warehouseId && x.Qty > 0)
                             .ToList())
                         {
-                            PurchaseBatchItem? item = purchaseBatch.GetPurchaseBatchItems()
+                            PurchaseBatchItem? item = purchaseBatch.PurchaseBatchItems
                                 .FirstOrDefault(x => x.SkuId == skuInfo.SkuId && x.WarehouseId == warehouseId);
                             if (item is null)
                             {
@@ -177,7 +177,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
     /// <inheritdoc />
     public Task ModifyItemsAsync(PurchaseOrder purchaseOrder, IReadOnlyList<PurchaseOrderItemData> skuInfos, CancellationToken cancellationToken = default)
     {
-        foreach (PurchaseOrderItem item in purchaseOrder.GetPurchaseOrderItems())
+        foreach (PurchaseOrderItem item in purchaseOrder.PurchaseOrderItems)
         {
             PurchaseOrderItemData? purchaseOrderItem = skuInfos
                 .FirstOrDefault(x => x.SkuId == item.SkuId && x.WarehouseId == item.WarehouseId);

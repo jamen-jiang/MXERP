@@ -17,10 +17,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// </summary>
     protected EnterStockOrder()
     {
-        ProductType = string.Empty;
-        BusinessType = string.Empty;
-        Status = string.Empty;
-        EnterStockOrderItems = new List<EnterStockOrderItem>();
+        _enterStockOrderItems = new List<EnterStockOrderItem>();
     }
 
     /// <summary>
@@ -30,14 +27,14 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="originalId">原入库单Id（可空）</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal EnterStockOrder(string productType, long? originalId, string businessType, string? remark)
+    internal EnterStockOrder(ProductTypeEnum productType, long? originalId, EnterStockBusinessTypeEnum businessType, string? remark)
+        : this()
     {
-        ProductType = productType.Trim();
+        ProductType = productType;
         OriginalId = originalId;
-        BusinessType = businessType.Trim();
+        BusinessType = businessType;
         Remark = remark;
         Status = EnterStockOrderStatusEnum.Pending;
-        EnterStockOrderItems = new List<EnterStockOrderItem>();
     }
 
     /// <summary>
@@ -48,7 +45,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="relationType">关联类型</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal EnterStockOrder(string productType, long? originalId, string relationType, string businessType, string? remark)
+    internal EnterStockOrder(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum relationType, EnterStockBusinessTypeEnum businessType, string? remark)
         : this(productType, originalId, businessType, remark)
     {
         RelationType = relationType;
@@ -57,7 +54,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; }
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// 原入库单Id（可空）
@@ -67,12 +64,12 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 关联类型（可空）
     /// </summary>
-    public string? RelationType { get; private set; }
+    public BusinessOrderTypeEnum? RelationType { get; private set; }
 
     /// <summary>
     /// 业务类型
     /// </summary>
-    public string BusinessType { get; private set; }
+    public EnterStockBusinessTypeEnum BusinessType { get; private set; }
 
     /// <summary>
     /// 数量
@@ -87,7 +84,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; }
+    public EnterStockOrderStatusEnum Status { get; private set; }
 
     /// <summary>
     /// 备注（可空）
@@ -127,15 +124,14 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 入库单项列表
     /// </summary>
-    public virtual ICollection<EnterStockOrderItem> EnterStockOrderItems { get; private set; }
+    private readonly List<EnterStockOrderItem> _enterStockOrderItems;
 
     /// <summary>
-    /// 获取入库单项列表（只读）
+    /// 入库单项列表
     /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<EnterStockOrderItem> GetEnterStockOrderItems()
+    public IReadOnlyCollection<EnterStockOrderItem> EnterStockOrderItems
     {
-        return EnterStockOrderItems.ToList().AsReadOnly();
+        get { return _enterStockOrderItems.AsReadOnly(); }
     }
 
     /// <summary>
@@ -144,7 +140,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
     /// <exception cref="UserFriendlyException">当前状态不允许修改时抛出</exception>
-    public void Modify(string businessType, string? remark)
+    public void Modify(EnterStockBusinessTypeEnum businessType, string? remark)
     {
         if (EnterStockOrderStatusEnum.Pending != Status)
         {
@@ -188,7 +184,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">关联单生成不允许取消 / 当前状态不允许取消时抛出</exception>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (!string.IsNullOrWhiteSpace(RelationType))
+        if (RelationType is not null)
         {
             throw new UserFriendlyException("不允许取消关联单生成的入库单!");
         }
@@ -220,14 +216,14 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
     /// <exception cref="UserFriendlyException">红冲/正常入库单数量方向错误时抛出</exception>
-    internal void AddItem(long? originalId, string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal void AddItem(long? originalId, BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         if (qty == 0)
         {
             return;
         }
         ValidateQtyDirection(qty);
-        EnterStockOrderItem? item = EnterStockOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        EnterStockOrderItem? item = _enterStockOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
         if (item != null)
         {
             item.AddQty(qty);
@@ -235,7 +231,7 @@ public class EnterStockOrder : OrderAggregateRoot
         else
         {
             item = new EnterStockOrderItem(originalId, spuId, skuId, warehouseId, qty, price, skuAttributes, otherAttributes);
-            EnterStockOrderItems.Add(item);
+            _enterStockOrderItems.Add(item);
         }
         item.AddEnterStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty);
         UpdateQty();
@@ -255,7 +251,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="price">价格</param>
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
-    internal void AddItem(string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal void AddItem(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         AddItem(null, relationType, relationId, relationItemId, relationNumber, spuId, skuId, warehouseId, qty, price, skuAttributes, otherAttributes);
     }
@@ -279,7 +275,7 @@ public class EnterStockOrder : OrderAggregateRoot
             return;
         }
         ValidateQtyDirection(qty);
-        if (!string.IsNullOrWhiteSpace(RelationType))
+        if (RelationType is not null)
         {
             throw new UserFriendlyException("系统生成的入库单不允许添加入库单项!");
         }
@@ -288,7 +284,7 @@ public class EnterStockOrder : OrderAggregateRoot
             throw new UserFriendlyException($"产品Sku {skuId}仓库{warehouseId}已存在!");
         }
         EnterStockOrderItem item = new EnterStockOrderItem(originalId, spuId, skuId, warehouseId, qty, price, skuAttributes, otherAttributes);
-        EnterStockOrderItems.Add(item);
+        _enterStockOrderItems.Add(item);
         UpdateQty();
     }
 
@@ -315,11 +311,11 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">系统生成单不允许修改 / 项不存在时抛出</exception>
     public void ModifyItem(long itemId, double qty)
     {
-        if (!string.IsNullOrWhiteSpace(RelationType))
+        if (RelationType is not null)
         {
             throw new UserFriendlyException("系统生成的入库单不允许修改入库单项!");
         }
-        EnterStockOrderItem? item = EnterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
+        EnterStockOrderItem? item = _enterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item == null)
         {
             throw new UserFriendlyException($"入库单{Number}项{itemId}不存在!");
@@ -335,11 +331,11 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">系统生成单不允许删除 / 项不存在时抛出</exception>
     public void DeleteItem(long itemId)
     {
-        if (!string.IsNullOrWhiteSpace(RelationType))
+        if (RelationType is not null)
         {
             throw new UserFriendlyException("系统生成的入库单不允许删除入库项!");
         }
-        EnterStockOrderItem? item = EnterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
+        EnterStockOrderItem? item = _enterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item == null)
         {
             throw new UserFriendlyException($"入库单{Number}项{itemId}不存在!");
@@ -360,7 +356,7 @@ public class EnterStockOrder : OrderAggregateRoot
         {
             throw new UserFriendlyException($"入库单{Number}当前状态不允许冲销!");
         }
-        EnterStockOrderItem? item = EnterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
+        EnterStockOrderItem? item = _enterStockOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item == null)
         {
             throw new UserFriendlyException($"入库单{Number}项{itemId}不存在!");
@@ -373,7 +369,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductTypeEnum.SemiProduct == ProductType)
         {
@@ -411,7 +407,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <returns>true：存在</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return EnterStockOrderItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _enterStockOrderItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -419,7 +415,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = EnterStockOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _enterStockOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -428,7 +424,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">冲销数量超出入库数量时抛出</exception>
     private void UpdateReversalQty()
     {
-        ReversalQty = EnterStockOrderItems.Where(x => !x.IsDeleted).Sum(x => x.ReversalQty);
+        ReversalQty = _enterStockOrderItems.Where(x => !x.IsDeleted).Sum(x => x.ReversalQty);
         if (ReversalQty > Qty)
         {
             throw new UserFriendlyException("冲销数量不能超出入库数量!");

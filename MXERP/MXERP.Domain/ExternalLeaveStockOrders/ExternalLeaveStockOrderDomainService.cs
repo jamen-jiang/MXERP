@@ -135,7 +135,7 @@ public class ExternalLeaveStockOrderDomainService : IExternalLeaveStockOrderDoma
             List<WorkStep> workSteps = await GetWorkStepsAsync(order, cancellationToken);
             WorkStep workStep = FindWorkStep(workSteps, number, workStepId.Value);
 
-            bool duplicated = order.GetExternalLeaveStockOrderTrackings()
+            bool duplicated = order.ExternalLeaveStockOrderTrackings
                 .Any(x => x.WorkStepId == workStepId);
             if (duplicated)
             {
@@ -153,7 +153,7 @@ public class ExternalLeaveStockOrderDomainService : IExternalLeaveStockOrderDoma
                 .ToList();
             foreach (WorkStep aboveWorkStep in aboveWorkSteps)
             {
-                bool recorded = order.GetExternalLeaveStockOrderTrackings()
+                bool recorded = order.ExternalLeaveStockOrderTrackings
                     .Any(x => x.WorkStepId == aboveWorkStep.Id);
                 if (!recorded)
                 {
@@ -211,9 +211,9 @@ public class ExternalLeaveStockOrderDomainService : IExternalLeaveStockOrderDoma
     /// <param name="workSteps">全量工序列表</param>
     /// <param name="isExecute">是否执行</param>
     /// <param name="workStepCode">工序编码</param>
-    private static void AddStep(List<WorkStep> newWorkSteps, List<WorkStep> workSteps, bool isExecute, string workStepCode)
+    private static void AddStep(List<WorkStep> newWorkSteps, List<WorkStep> workSteps, bool isExecute, ExternalLeaveStockOrderWorkStepEnum workStepCode)
     {
-        WorkStep? workStep = workSteps.FirstOrDefault(x => x.Code == workStepCode);
+        WorkStep? workStep = workSteps.FirstOrDefault(x => x.Code == workStepCode.GetDescription());
         if (workStep is null)
         {
             throw new UserFriendlyException("工序:" + workStepCode + "不存在!");

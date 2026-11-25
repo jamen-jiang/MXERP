@@ -14,5 +14,5 @@ public interface IPrivilegeRepository : IRepository<Privilege>
     /// <param name="masterValue">主体值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>权限列表</returns>
-    Task<List<Privilege>> GetListByMasterAsync(string master, long masterValue, CancellationToken cancellationToken = default);
+    Task<List<Privilege>> GetListByMasterAsync(MasterEnum master, long masterValue, CancellationToken cancellationToken = default);
 }

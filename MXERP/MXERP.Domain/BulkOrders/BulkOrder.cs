@@ -14,7 +14,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 客户单号
     /// </summary>
@@ -50,7 +50,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public BulkOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 通过人Id(可空)
     /// </summary>
@@ -129,17 +129,11 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="deliveryOn">预出货时间(可空)</param>
     /// <param name="qty">数量</param>
     /// <param name="remark">备注(可空)</param>
-    internal BulkOrder(string productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark)
+    internal BulkOrder(ProductTypeEnum productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark)
     {
-        string? trimmedProductType = TrimToNull(productType);
         string? trimmedCustomerOrderNumber = TrimToNull(customerOrderNumber);
-        if (trimmedProductType is null)
-        {
-            throw new UserFriendlyException("产品类型不能为空");
-        }
 
-        ValidateProductType(trimmedProductType);
-        ProductType = trimmedProductType;
+        ProductType = productType;
         StoreId = storeId;
         CompanyId = companyId;
         CustomerOrderNumber = trimmedCustomerOrderNumber ?? string.Empty;
@@ -310,7 +304,7 @@ public class BulkOrder : OrderAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductType == ProductTypeEnum.SemiProduct)
         {
@@ -320,17 +314,6 @@ public class BulkOrder : OrderAggregateRoot
         return SerialNumberTypeEnum.EndProductBulkOrder;
     }
 
-    /// <summary>
-    /// 校验产品类型
-    /// </summary>
-    /// <param name="productType">产品类型</param>
-    private static void ValidateProductType(string productType)
-    {
-        if (!ProductTypeEnum.IsValid(productType))
-        {
-            throw new UserFriendlyException("产品类型" + productType + "有误!");
-        }
-    }
 
     /// <summary>
     /// 按出库数量推进状态

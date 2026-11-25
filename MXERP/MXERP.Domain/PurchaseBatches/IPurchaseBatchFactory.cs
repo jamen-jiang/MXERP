@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.PurchaseBatches;
 
 /// <summary>
@@ -22,7 +24,7 @@ public interface IPurchaseBatchFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购批次</returns>
-    Task<PurchaseBatch> CreateAsync(string productType, long? purchasePlanId, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
+    Task<PurchaseBatch> CreateAsync(ProductTypeEnum productType, long? purchasePlanId, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 创建采购批次（部门场景）
@@ -37,5 +39,5 @@ public interface IPurchaseBatchFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购批次</returns>
-    Task<PurchaseBatch> CreateAsync(string productType, long? purchasePlanId, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
+    Task<PurchaseBatch> CreateAsync(ProductTypeEnum productType, long? purchasePlanId, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
 }

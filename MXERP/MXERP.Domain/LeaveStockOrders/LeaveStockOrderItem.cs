@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Entities;
 using Snow.Domain.Entities.Auditing;
 
@@ -13,7 +14,7 @@ public class LeaveStockOrderItem : DeletionAuditedEntity
     /// </summary>
     protected LeaveStockOrderItem()
     {
-        LeaveStockOrderRelations = new List<LeaveStockOrderRelation>();
+        _leaveStockOrderRelations = new List<LeaveStockOrderRelation>();
     }
 
     /// <summary>
@@ -28,6 +29,7 @@ public class LeaveStockOrderItem : DeletionAuditedEntity
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
     internal LeaveStockOrderItem(long? originalId, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+        : this()
     {
         OriginalId = originalId;
         SpuId = spuId;
@@ -37,7 +39,6 @@ public class LeaveStockOrderItem : DeletionAuditedEntity
         Price = price;
         SkuAttributes = skuAttributes;
         OtherAttributes = otherAttributes;
-        LeaveStockOrderRelations = new List<LeaveStockOrderRelation>();
     }
 
     /// <summary>
@@ -93,15 +94,14 @@ public class LeaveStockOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 出库单项关联列表
     /// </summary>
-    public virtual ICollection<LeaveStockOrderRelation> LeaveStockOrderRelations { get; private set; }
+    private readonly List<LeaveStockOrderRelation> _leaveStockOrderRelations;
 
     /// <summary>
-    /// 获取出库单项关联列表（只读）
+    /// 出库单项关联列表
     /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<LeaveStockOrderRelation> GetLeaveStockOrderRelations()
+    public IReadOnlyCollection<LeaveStockOrderRelation> LeaveStockOrderRelations
     {
-        return LeaveStockOrderRelations.ToList().AsReadOnly();
+        get { return _leaveStockOrderRelations.AsReadOnly(); }
     }
 
     /// <summary>
@@ -139,8 +139,8 @@ public class LeaveStockOrderItem : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal void AddLeaveStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal void AddLeaveStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
-        LeaveStockOrderRelations.Add(new LeaveStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
+        _leaveStockOrderRelations.Add(new LeaveStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
     }
 }

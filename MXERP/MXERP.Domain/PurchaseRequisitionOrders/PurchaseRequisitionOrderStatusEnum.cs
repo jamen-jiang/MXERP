@@ -1,95 +1,75 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.PurchaseRequisitionOrders;
 
 /// <summary>
 /// 申购单状态
 /// </summary>
-public static class PurchaseRequisitionOrderStatusEnum
+public enum PurchaseRequisitionOrderStatusEnum
 {
     /// <summary>
     /// 待提交
     /// </summary>
-    public const string Pending = "Pending";
+    [Description("待提交")]
+    Pending,
 
     /// <summary>
     /// 待审批
     /// </summary>
-    public const string PendingApproval = "PendingApproval";
+    [Description("待审批")]
+    PendingApproval,
 
     /// <summary>
     /// 待采购审核
     /// </summary>
-    public const string PendingPurchaseCheck = "PendingPurchaseCheck";
+    [Description("待采购审核")]
+    PendingPurchaseCheck,
 
     /// <summary>
     /// 待发货
     /// </summary>
-    public const string Delivery = "Delivery";
+    [Description("待发货")]
+    Delivery,
 
     /// <summary>
     /// 部分发货
     /// </summary>
-    public const string PartialDelivered = "PartialDelivered";
+    [Description("部分发货")]
+    PartialDelivered,
 
     /// <summary>
     /// 全部发货
     /// </summary>
-    public const string AllDelivered = "AllDelivered";
+    [Description("全部发货")]
+    AllDelivered,
 
     /// <summary>
     /// 超出发货
     /// </summary>
-    public const string OverDelivered = "OverDelivered";
+    [Description("超出发货")]
+    OverDelivered,
 
     /// <summary>
     /// 已完成
     /// </summary>
-    public const string Finished = "Finished";
+    [Description("已完成")]
+    Finished,
 
     /// <summary>
     /// 审批拒绝
     /// </summary>
-    public const string ApprovalRejected = "ApprovalRejected";
+    [Description("审批拒绝")]
+    ApprovalRejected,
 
     /// <summary>
     /// 采购审核拒绝
     /// </summary>
-    public const string PurchaseCheckRejected = "PurchaseCheckRejected";
+    [Description("采购审核拒绝")]
+    PurchaseCheckRejected,
 
     /// <summary>
     /// 已取消
     /// </summary>
-    public const string Canceled = "Canceled";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>
-    {
-        Pending,
-        PendingApproval,
-        PendingPurchaseCheck,
-        Delivery,
-        PartialDelivered,
-        AllDelivered,
-        OverDelivered,
-        Finished,
-        ApprovalRejected,
-        PurchaseCheckRejected,
-        Canceled
-    };
-
-    /// <summary>
-    /// 判断编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>true 表示有效</returns>
-    public static bool IsValid(string? code)
-    {
-        if (code is null)
-        {
-            return false;
-        }
-
-        return All.Contains(code);
-    }
+    [Description("已取消")]
+    Canceled
 }

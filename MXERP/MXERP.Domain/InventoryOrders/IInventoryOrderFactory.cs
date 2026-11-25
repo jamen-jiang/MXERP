@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,5 +16,5 @@ public interface IInventoryOrderFactory
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>盘点单聚合</returns>
-    Task<InventoryOrder> CreateAsync(string productType, string? remark, CancellationToken cancellationToken = default);
+    Task<InventoryOrder> CreateAsync(ProductTypeEnum productType, string? remark, CancellationToken cancellationToken = default);
 }

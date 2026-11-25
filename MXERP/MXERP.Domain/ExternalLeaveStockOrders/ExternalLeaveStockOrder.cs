@@ -14,7 +14,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 门店Id
     /// </summary>
@@ -54,7 +54,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public ExternalLeaveStockOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 订单时间
     /// </summary>
@@ -167,14 +167,22 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 外部出库单跟踪列表
     /// </summary>
-    public virtual ICollection<ExternalLeaveStockOrderTracking> ExternalLeaveStockOrderTrackings { get; private set; }
-        = new List<ExternalLeaveStockOrderTracking>();
+    private readonly List<ExternalLeaveStockOrderTracking> _externalLeaveStockOrderTrackings;
+
+    /// <summary>
+    /// 外部出库单跟踪列表
+    /// </summary>
+    public IReadOnlyCollection<ExternalLeaveStockOrderTracking> ExternalLeaveStockOrderTrackings
+    {
+        get { return _externalLeaveStockOrderTrackings.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 供 EF 使用的无参构造器
     /// </summary>
     protected ExternalLeaveStockOrder()
     {
+        _externalLeaveStockOrderTrackings = new List<ExternalLeaveStockOrderTracking>();
     }
 
     /// <summary>
@@ -208,7 +216,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="deliveryOn">预出货时间（可空）</param>
     /// <param name="remark">备注（可空）</param>
     internal ExternalLeaveStockOrder(
-        string productType,
+        ProductTypeEnum productType,
         long storeId,
         long companyId,
         string customerOrderNumber,
@@ -235,6 +243,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         DateTime orderOn,
         DateTime? deliveryOn,
         string? remark)
+        : this()
     {
         ProductType = productType;
         StoreId = storeId;
@@ -265,15 +274,6 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         Remark = remark;
         Status = ExternalLeaveStockOrderStatusEnum.Pending;
         AddDomainEvent(new ExternalLeaveStockOrderAddedOrModifiedEvent(this));
-    }
-
-    /// <summary>
-    /// 获取外部出库单跟踪列表（只读）
-    /// </summary>
-    /// <returns>跟踪列表</returns>
-    public IReadOnlyList<ExternalLeaveStockOrderTracking> GetExternalLeaveStockOrderTrackings()
-    {
-        return ExternalLeaveStockOrderTrackings.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -376,7 +376,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
             throw new UserFriendlyException("外部出库单" + Number + "已取消,不允许录入!");
         }
 
-        ExternalLeaveStockOrderTrackings.Add(new ExternalLeaveStockOrderTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
+        _externalLeaveStockOrderTrackings.Add(new ExternalLeaveStockOrderTracking(workStepId, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -388,7 +388,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="inDepartmentId">入部门Id</param>
     internal void AddTracking(string? reason, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        ExternalLeaveStockOrderTrackings.Add(new ExternalLeaveStockOrderTracking(reason, employeeId, outDepartmentId, inDepartmentId));
+        _externalLeaveStockOrderTrackings.Add(new ExternalLeaveStockOrderTracking(reason, employeeId, outDepartmentId, inDepartmentId));
     }
 
     /// <summary>
@@ -446,7 +446,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductType == ProductTypeEnum.SemiProduct)
         {

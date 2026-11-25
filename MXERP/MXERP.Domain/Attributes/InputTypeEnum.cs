@@ -1,72 +1,57 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.Attributes;
 
 /// <summary>
 /// 输入类型
 /// </summary>
-public static class InputTypeEnum
+public enum InputTypeEnum
 {
     /// <summary>
     /// 文本输入框
     /// </summary>
-    public const string Text = "Text";
+    [Description("文本输入框")]
+    Text,
 
     /// <summary>
     /// 数字输入框
     /// </summary>
-    public const string Number = "Number";
+    [Description("数字输入框")]
+    Number,
 
     /// <summary>
     /// 日期选择框
     /// </summary>
-    public const string DateTime = "DateTime";
+    [Description("日期选择框")]
+    DateTime,
 
     /// <summary>
     /// 下拉单选
     /// </summary>
-    public const string Select = "Select";
+    [Description("下拉单选")]
+    Select,
 
     /// <summary>
     /// 下拉多选
     /// </summary>
-    public const string MultiSelect = "MultiSelect";
+    [Description("下拉多选")]
+    MultiSelect,
 
     /// <summary>
     /// 复选框
     /// </summary>
-    public const string Checkbox = "Checkbox";
+    [Description("复选框")]
+    Checkbox,
 
     /// <summary>
     /// 单选框
     /// </summary>
-    public const string Radio = "Radio";
+    [Description("单选框")]
+    Radio,
 
     /// <summary>
     /// 开关
     /// </summary>
-    public const string Switch = "Switch";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>
-    {
-        Text,
-        Number,
-        DateTime,
-        Select,
-        MultiSelect,
-        Checkbox,
-        Radio,
-        Switch
-    };
-
-    /// <summary>
-    /// 判断编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>是否有效</returns>
-    public static bool IsValid(string? code)
-    {
-        return !string.IsNullOrWhiteSpace(code) && All.Contains(code);
-    }
+    [Description("开关")]
+    Switch
 }

@@ -13,7 +13,7 @@ public interface ISerialNumberRepository : IRepository<SerialNumber>
     /// <param name="type">类型</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>流水号, 不存在返回 null</returns>
-    Task<SerialNumber?> GetByTypeAsync(string type, CancellationToken cancellationToken = default);
+    Task<SerialNumber?> GetByTypeAsync(SerialNumberTypeEnum type, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断类型是否存在(排除指定主键)
@@ -22,7 +22,7 @@ public interface ISerialNumberRepository : IRepository<SerialNumber>
     /// <param name="id">排除的主键Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByTypeExcludeIdAsync(string type, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByTypeExcludeIdAsync(SerialNumberTypeEnum type, long? id = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断前缀是否存在(排除指定主键)

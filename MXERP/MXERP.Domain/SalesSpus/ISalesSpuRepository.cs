@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Repositories;
 
 namespace MXERP.Domain.SalesSpus;
@@ -15,7 +16,7 @@ public interface ISalesSpuRepository : IRepository<SalesSpu>
     /// <param name="code">销售产品代码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>销售产品, 不存在返回 null</returns>
-    Task<SalesSpu?> GetByProductTypeAndCompanyIdAndCodeAsync(string productType, long companyId, string code, CancellationToken cancellationToken = default);
+    Task<SalesSpu?> GetByProductTypeAndCompanyIdAndCodeAsync(ProductTypeEnum productType, long companyId, string code, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断产品类型 + 公司Id + 代码是否存在(排除指定主键)
@@ -26,5 +27,5 @@ public interface ISalesSpuRepository : IRepository<SalesSpu>
     /// <param name="id">排除的主键Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(string productType, long companyId, string code, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(ProductTypeEnum productType, long companyId, string code, long? id = null, CancellationToken cancellationToken = default);
 }

@@ -13,7 +13,7 @@ public class Sku : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// SpuId
@@ -91,7 +91,7 @@ public class Sku : AuditedAggregateRoot
     /// <param name="keyAttributes">关键属性值</param>
     /// <param name="otherAttributes">非关键属性值</param>
     internal Sku(
-        string productType,
+        ProductTypeEnum productType,
         long spuId,
         string? opc,
         decimal? purchasePrice,
@@ -102,7 +102,6 @@ public class Sku : AuditedAggregateRoot
         SortedDictionary<string, object?>? keyAttributes,
         SortedDictionary<string, object?>? otherAttributes)
     {
-        ValidateProductType(productType);
         ProductType = productType;
         SpuId = spuId;
         Opc = opc;
@@ -232,22 +231,6 @@ public class Sku : AuditedAggregateRoot
         return CalculateSignature(SpuId, KeyAttributes);
     }
 
-    /// <summary>
-    /// 校验产品类型
-    /// </summary>
-    /// <param name="productType">产品类型</param>
-    private static void ValidateProductType(string productType)
-    {
-        if (string.IsNullOrWhiteSpace(productType))
-        {
-            throw new UserFriendlyException("产品类型不能为空");
-        }
-
-        if (!ProductTypeEnum.IsValid(productType))
-        {
-            throw new UserFriendlyException("产品类型" + productType + "有误!");
-        }
-    }
 
     /// <summary>
     /// 变更关键属性值(自动包装为有序字典)

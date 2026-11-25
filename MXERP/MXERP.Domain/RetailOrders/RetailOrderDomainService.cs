@@ -176,7 +176,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
         }
 
         bool hasLast = false;
-        foreach (RetailOrderTracking tracking in model.GetRetailOrderTrackings())
+        foreach (RetailOrderTracking tracking in model.RetailOrderTrackings)
         {
             if (tracking.WorkStepId == lastWorkStepId)
             {
@@ -251,7 +251,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
             }
 
             bool isDuplicate = false;
-            foreach (RetailOrderTracking tracking in model.GetRetailOrderTrackings())
+            foreach (RetailOrderTracking tracking in model.RetailOrderTrackings)
             {
                 if (tracking.WorkStepId == workStepId)
                 {
@@ -285,7 +285,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
             foreach (RetailOrderWorkStep above in aboveWorkSteps)
             {
                 bool aboveDone = false;
-                foreach (RetailOrderTracking tracking in model.GetRetailOrderTrackings())
+                foreach (RetailOrderTracking tracking in model.RetailOrderTrackings)
                 {
                     if (tracking.WorkStepId == above.Id)
                     {
@@ -550,7 +550,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
 
     private static void AddItem(
         RetailOrder model,
-        string eyeType,
+        EyeTypeEnum eyeType,
         SalesSpu salesSpu,
         CustomerSpu? customerSpu,
         Spu spu,
@@ -635,12 +635,12 @@ public class RetailOrderDomainService : IRetailOrderDomainService
         List<RetailOrderWorkStep> result = new List<RetailOrderWorkStep>();
         foreach (RetailOrderWorkStep workStep in workSteps)
         {
-            if (RetailOrderWorkStepEnum.JieShouDingDan == workStep.Code)
+            if (workStep.Code == RetailOrderWorkStepEnum.JieShouDingDan.GetDescription())
             {
                 continue;
             }
 
-            if (RetailOrderWorkStepEnum.QuXiao == workStep.Code)
+            if (workStep.Code == RetailOrderWorkStepEnum.QuXiao.GetDescription())
             {
                 continue;
             }
@@ -651,9 +651,9 @@ public class RetailOrderDomainService : IRetailOrderDomainService
         return result;
     }
 
-    private async Task AddTrackingAsync(RetailOrder retailOrder, string workStepCode, CancellationToken cancellationToken)
+    private async Task AddTrackingAsync(RetailOrder retailOrder, RetailOrderWorkStepEnum workStepCode, CancellationToken cancellationToken)
     {
-        RetailOrderWorkStep? workStep = await _retailOrderWorkStepRepository.GetByCodeAsync(workStepCode, cancellationToken);
+        RetailOrderWorkStep? workStep = await _retailOrderWorkStepRepository.GetByCodeAsync(workStepCode.GetDescription(), cancellationToken);
         if (workStep is null)
         {
             throw new UserFriendlyException("工序" + workStepCode + "不存在!");

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MXERP.Domain.Brands;
 using MXERP.Domain.Currencies;
 using MXERP.Domain.Units;
@@ -42,6 +44,8 @@ using MXERP.Domain.CustomerInvoiceTitleNumbers;
 using MXERP.Domain.EndProductCodeConfigs;
 using MXERP.Domain.Processes;
 using MXERP.Domain.RetailOrders;
+using MXERP.Domain.RetailOrderWorkSteps;
+using MXERP.Domain.CustomersSpus;
 using MXERP.Domain.TripleInvoices;
 using MXERP.Domain.LeaveStockBatches;
 using MXERP.Domain.ExpressOrders;
@@ -369,6 +373,16 @@ public class MXERPDbContext : SnowDbContext
     public DbSet<RetailOrderTracking> RetailOrderTrackings => Set<RetailOrderTracking>();
 
     /// <summary>
+    /// 散镜订单工作步骤
+    /// </summary>
+    public DbSet<RetailOrderWorkStep> RetailOrderWorkSteps => Set<RetailOrderWorkStep>();
+
+    /// <summary>
+    /// 客人镜种
+    /// </summary>
+    public DbSet<CustomerSpu> CustomerSpus => Set<CustomerSpu>();
+
+    /// <summary>
     /// 三联发票
     /// </summary>
     public DbSet<TripleInvoice> TripleInvoices => Set<TripleInvoice>();
@@ -587,5 +601,19 @@ public class MXERPDbContext : SnowDbContext
     protected override void ConfigureByConvention(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MXERPDbContext).Assembly);
+
+        // 枚举一律按字符串入库(与既有列类型保持一致), 无需逐个配置写 HasConversion。
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (IMutableProperty property in entityType.GetProperties())
+            {
+                Type clrType = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
+                if (clrType.IsEnum)
+                {
+                    Type converterType = typeof(EnumToStringConverter<>).MakeGenericType(clrType);
+                    property.SetValueConverter((ValueConverter)Activator.CreateInstance(converterType)!);
+                }
+            }
+        }
     }
 }

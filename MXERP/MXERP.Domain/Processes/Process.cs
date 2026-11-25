@@ -11,7 +11,7 @@ public class Process : AuditedAggregateRoot
     /// <summary>
     /// 工序类型
     /// </summary>
-    public string Type { get; private set; } = string.Empty;
+    public ProcessTypeEnum Type { get; private set; }
 
     /// <summary>
     /// 工序代码
@@ -66,7 +66,7 @@ public class Process : AuditedAggregateRoot
     /// <param name="isCFUsable">车房可用</param>
     /// <param name="isKCUsable">库存可用</param>
     /// <param name="remark">备注(可空)</param>
-    internal Process(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
+    internal Process(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
     {
         string? trimmedCode = code?.Trim();
         string? trimmedName = name?.Trim();
@@ -80,7 +80,7 @@ public class Process : AuditedAggregateRoot
             throw new UserFriendlyException("工序名称不能为空");
         }
 
-        Type = ValidateType(type);
+        Type = type;
         Code = trimmedCode;
         Name = trimmedName;
         Price = price;
@@ -101,7 +101,7 @@ public class Process : AuditedAggregateRoot
     /// <param name="isCFUsable">车房可用</param>
     /// <param name="isKCUsable">库存可用</param>
     /// <param name="remark">备注(可空)</param>
-    internal void Modify(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
+    internal void Modify(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
     {
         string? trimmedCode = code?.Trim();
         string? trimmedName = name?.Trim();
@@ -115,7 +115,7 @@ public class Process : AuditedAggregateRoot
             throw new UserFriendlyException("工序名称不能为空");
         }
 
-        Type = ValidateType(type);
+        Type = type;
         Code = trimmedCode;
         Name = trimmedName;
         Price = price;
@@ -125,19 +125,5 @@ public class Process : AuditedAggregateRoot
         Remark = remark;
     }
 
-    /// <summary>
-    /// 校验工序类型
-    /// </summary>
-    /// <param name="type">工序类型</param>
-    /// <returns>校验并去空格后的类型</returns>
-    private static string ValidateType(string? type)
-    {
-        string? trimmed = type?.Trim();
-        if (trimmed is null || !ProcessTypeEnum.IsValid(trimmed))
-        {
-            throw new UserFriendlyException($"工序类型{type}有误!");
-        }
 
-        return trimmed;
-    }
 }

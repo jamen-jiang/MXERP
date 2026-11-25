@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.Spus;
 
 /// <summary>
@@ -26,7 +28,7 @@ public interface ISpuDomainService
     /// <param name="attachmentIds">附件Id集合</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>产品聚合</returns>
-    Task<Spu> CreateAsync(string productType, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
+    Task<Spu> CreateAsync(ProductTypeEnum productType, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成产品(存在则修改, 不存在则新建)
@@ -48,7 +50,7 @@ public interface ISpuDomainService
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>产品聚合</returns>
-    Task<Spu> ImportCreateAsync(string productType, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, CancellationToken cancellationToken = default);
+    Task<Spu> ImportCreateAsync(ProductTypeEnum productType, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改产品(按Id查询后修改)
@@ -71,7 +73,7 @@ public interface ISpuDomainService
     /// <param name="attachmentIds">附件Id集合</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>产品聚合</returns>
-    Task<Spu> ModifyAsync(long id, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
+    Task<Spu> ModifyAsync(long id, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改产品(使用已有聚合)
@@ -93,5 +95,5 @@ public interface ISpuDomainService
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="attachmentIds">附件Id集合</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task ModifyAsync(Spu spu, string? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
+    Task ModifyAsync(Spu spu, SpuGroupEnum? group, long supplierId, long? brandId, string code, string name, string? description, decimal purchasePrice, long currencyId, long unitId, long? taxRateId, decimal? moq, string? remark, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? companyIds, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
 }

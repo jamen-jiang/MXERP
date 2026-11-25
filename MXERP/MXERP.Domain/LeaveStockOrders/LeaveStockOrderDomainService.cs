@@ -56,7 +56,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 1. 删除未在输入中出现的属性（通过主键）
-        List<LeaveStockOrderItem> toRemoves = leaveStockOrder.GetLeaveStockOrderItems()
+        List<LeaveStockOrderItem> toRemoves = leaveStockOrder.LeaveStockOrderItems
             .Where(a => !finalSkuInfos.Any(i => i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId))
             .ToList();
         foreach (LeaveStockOrderItem item in toRemoves)
@@ -66,7 +66,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
 
         // 2. 建立"业务标识 → 已持久化属性主键"的映射（仅用于已存在的属性）
         Dictionary<SkuWarehouse, long> existingDict = new Dictionary<SkuWarehouse, long>();
-        foreach (LeaveStockOrderItem a in leaveStockOrder.GetLeaveStockOrderItems())
+        foreach (LeaveStockOrderItem a in leaveStockOrder.LeaveStockOrderItems)
         {
             existingDict[new SkuWarehouse(a.SkuId, a.WarehouseId)] = a.Id;
         }
@@ -121,13 +121,13 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
 
         // 2. 生成红冲出库单（委托工厂，含发号）
         LeaveStockOrder model;
-        if (string.IsNullOrWhiteSpace(originalLeaveStockOrder.RelationType))
+        if (originalLeaveStockOrder.RelationType is null)
         {
             model = await _leaveStockOrderFactory.CreateAsync(originalLeaveStockOrder.ProductType, leaveStockOrderId, LeaveStockBusinessTypeEnum.ReversalLeaveStock, remark, cancellationToken);
         }
         else
         {
-            model = await _leaveStockOrderFactory.CreateAsync(originalLeaveStockOrder.ProductType, leaveStockOrderId, originalLeaveStockOrder.RelationType, LeaveStockBusinessTypeEnum.ReversalLeaveStock, remark, cancellationToken);
+            model = await _leaveStockOrderFactory.CreateAsync(originalLeaveStockOrder.ProductType, leaveStockOrderId, originalLeaveStockOrder.RelationType.Value, LeaveStockBusinessTypeEnum.ReversalLeaveStock, remark, cancellationToken);
         }
 
         // 3. 添加明细
@@ -143,7 +143,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
             {
                 throw new UserFriendlyException($"产品{sku.SpuId}不存在!");
             }
-            LeaveStockOrderItem? leaveStockOrderItem = originalLeaveStockOrder.GetLeaveStockOrderItems()
+            LeaveStockOrderItem? leaveStockOrderItem = originalLeaveStockOrder.LeaveStockOrderItems
                 .FirstOrDefault(x => x.SkuId == item.SkuId && x.WarehouseId == item.WarehouseId);
             if (leaveStockOrderItem == null)
             {
@@ -156,11 +156,11 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
                 price = sku.PurchasePrice.Value;
             }
 
-            if (!string.IsNullOrWhiteSpace(originalLeaveStockOrder.RelationType))
+            if (originalLeaveStockOrder.RelationType is not null)
             {
                 // 3.1 有关联：按关联项拆分红冲数量
                 double remainingToReverse = Math.Abs(item.Qty);
-                foreach (LeaveStockOrderRelation relation in leaveStockOrderItem.GetLeaveStockOrderRelations())
+                foreach (LeaveStockOrderRelation relation in leaveStockOrderItem.LeaveStockOrderRelations)
                 {
                     double reverseQty = Math.Min(remainingToReverse, relation.Qty);
                     if (reverseQty > 0)
@@ -209,13 +209,13 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 3. 生成出库单（委托工厂）
-        string businessType = LeaveStockBusinessTypeEnum.OrderLeaveStock;
+        LeaveStockBusinessTypeEnum businessType = LeaveStockBusinessTypeEnum.OrderLeaveStock;
         if (deductCount > 0)
         {
             businessType = LeaveStockBusinessTypeEnum.SalesLeaveStock;
         }
-        string productType = batches[0].ProductType;
-        string relationType = BusinessOrderTypeEnum.LeaveStockBatch;
+        ProductTypeEnum productType = batches[0].ProductType;
+        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.LeaveStockBatch;
         LeaveStockOrder model = await _leaveStockOrderFactory.CreateAsync(productType, null, relationType, businessType, null, cancellationToken);
 
         foreach (GenerateLeaveStockOrderFromBatchData data in datas)
@@ -237,7 +237,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
             foreach (UniqueSkuInfoData item in data.SkuInfos.Where(x => x.Qty != 0).ToList())
             {
                 // 3.3.1 查出库批次项
-                LeaveStockBatchItem? batchItem = batch.GetLeaveStockBatchItems().FirstOrDefault(x => x.Id == item.Id);
+                LeaveStockBatchItem? batchItem = batch.LeaveStockBatchItems.FirstOrDefault(x => x.Id == item.Id);
                 if (batchItem == null)
                 {
                     throw new UserFriendlyException("出库批次项不存在!");
@@ -285,8 +285,8 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 2. 生成出库单（委托工厂）
-        string relationType = BusinessOrderTypeEnum.LeaveStockBatch;
-        string businessType = LeaveStockBusinessTypeEnum.OrderLeaveStock;
+        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.LeaveStockBatch;
+        LeaveStockBusinessTypeEnum businessType = LeaveStockBusinessTypeEnum.OrderLeaveStock;
         if (batch.LeaveStockPlanId != null)
         {
             businessType = LeaveStockBusinessTypeEnum.SalesLeaveStock;
@@ -294,7 +294,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         LeaveStockOrder model = await _leaveStockOrderFactory.CreateAsync(batch.ProductType, null, relationType, businessType, null, cancellationToken);
 
         // 3. 添加明细
-        foreach (LeaveStockBatchItem item in batch.GetLeaveStockBatchItems())
+        foreach (LeaveStockBatchItem item in batch.LeaveStockBatchItems)
         {
             // 3.1 查产品Sku、产品
             Sku? sku = await _skuRepository.FindAsync(item.SkuId, true, cancellationToken);
@@ -337,12 +337,12 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 1. 生成出库单（委托工厂）
-        string relationType = BusinessOrderTypeEnum.InventoryOrder;
-        string businessType = LeaveStockBusinessTypeEnum.InventoryLeaveStock;
+        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.InventoryOrder;
+        LeaveStockBusinessTypeEnum businessType = LeaveStockBusinessTypeEnum.InventoryLeaveStock;
         LeaveStockOrder model = await _leaveStockOrderFactory.CreateAsync(inventoryOrder.ProductType, null, relationType, businessType, inventoryOrder.Remark, cancellationToken);
 
         // 2. 添加明细
-        foreach (InventoryOrderItem item in inventoryOrder.GetInventoryOrderItems().Where(x => x.LossQty > 0).ToList())
+        foreach (InventoryOrderItem item in inventoryOrder.InventoryOrderItems.Where(x => x.LossQty > 0).ToList())
         {
             // 2.1 查产品Sku、产品
             Sku? sku = await _skuRepository.FindAsync(item.SkuId, true, cancellationToken);
@@ -388,12 +388,12 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 3. 查散镜订单项
-        RetailOrderItem? itemR = retailOrder.GetRetailOrderItems().FirstOrDefault(x => x.Id == retailOrderItemIdR);
+        RetailOrderItem? itemR = retailOrder.RetailOrderItems.FirstOrDefault(x => x.Id == retailOrderItemIdR);
         if (itemR == null)
         {
             throw new UserFriendlyException($"散镜订单项{retailOrderItemIdR}不存在!");
         }
-        RetailOrderItem? itemL = retailOrder.GetRetailOrderItems().FirstOrDefault(x => x.Id == retailOrderItemIdL);
+        RetailOrderItem? itemL = retailOrder.RetailOrderItems.FirstOrDefault(x => x.Id == retailOrderItemIdL);
         if (itemL == null)
         {
             throw new UserFriendlyException($"散镜订单项{retailOrderItemIdL}不存在!");
@@ -417,8 +417,8 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         foreach (LeaveStockBatch leaveStockBatch in leaveStockBatches)
         {
             // 5.1 匹配散镜订单项对应的出库批次项
-            LeaveStockBatchItem? leaveStockBatchItemR = leaveStockBatch.GetLeaveStockBatchItems().FirstOrDefault(x => x.RelationItemId == retailOrderItemIdR);
-            LeaveStockBatchItem? leaveStockBatchItemL = leaveStockBatch.GetLeaveStockBatchItems().FirstOrDefault(x => x.RelationItemId == retailOrderItemIdL);
+            LeaveStockBatchItem? leaveStockBatchItemR = leaveStockBatch.LeaveStockBatchItems.FirstOrDefault(x => x.RelationItemId == retailOrderItemIdR);
+            LeaveStockBatchItem? leaveStockBatchItemL = leaveStockBatch.LeaveStockBatchItems.FirstOrDefault(x => x.RelationItemId == retailOrderItemIdL);
 
             // 5.2 构造出库单（委托工厂）
             LeaveStockOrder model = await _leaveStockOrderFactory.CreateAsync(leaveStockBatch.ProductType, null, BusinessOrderTypeEnum.LeaveStockBatch, LeaveStockBusinessTypeEnum.SalesLeaveStock, leaveStockBatch.Remark, cancellationToken);
@@ -492,7 +492,7 @@ public class LeaveStockOrderDomainService : ILeaveStockOrderDomainService
         }
 
         // 3. 累加冲销数量
-        foreach (LeaveStockOrderItem item in reversalLeaveStockOrder.GetLeaveStockOrderItems())
+        foreach (LeaveStockOrderItem item in reversalLeaveStockOrder.LeaveStockOrderItems)
         {
             if (item.OriginalId == null)
             {

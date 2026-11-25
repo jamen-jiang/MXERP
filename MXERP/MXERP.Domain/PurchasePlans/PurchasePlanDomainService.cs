@@ -41,14 +41,14 @@ public class PurchasePlanDomainService : IPurchasePlanDomainService
             target = skuInfos.ToList();
         }
 
-        List<PurchasePlanItem> toRemoves = purchasePlan.GetPurchasePlanItems().Where(a => !target.Any(i => i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId)).ToList();
+        List<PurchasePlanItem> toRemoves = purchasePlan.PurchasePlanItems.Where(a => !target.Any(i => i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId)).ToList();
         foreach (PurchasePlanItem item in toRemoves)
         {
             purchasePlan.DeleteItem(item.Id);
         }
 
         Dictionary<ItemKey, long> existingDict = new Dictionary<ItemKey, long>();
-        foreach (PurchasePlanItem item in purchasePlan.GetPurchasePlanItems())
+        foreach (PurchasePlanItem item in purchasePlan.PurchasePlanItems)
         {
             existingDict.TryAdd(new ItemKey(item.SkuId, item.WarehouseId), item.Id);
         }

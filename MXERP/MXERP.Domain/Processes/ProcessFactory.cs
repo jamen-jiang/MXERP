@@ -18,7 +18,7 @@ public class ProcessFactory : IProcessFactory
     }
 
     /// <inheritdoc />
-    public async Task<Process> CreateAsync(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Process> CreateAsync(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistByTypeAndCodeExcludeIdAsync(type, code, null, cancellationToken))
         {

@@ -248,7 +248,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单:" + bulkOrderItem.BulkOrderId + "不存在!");
         }
 
-        string businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrder.Id, id, cancellationToken);
         if (leaveStockPlan is null)
@@ -426,7 +426,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单" + bulkOrder.Number + ":销售产品不存在!");
         }
 
-        string businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrder.Id, bulkOrderItem.Id, cancellationToken);
         if (leaveStockPlan is null)
@@ -443,7 +443,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
         List<LeaveStockPlanItemData> leaveStockPlanItems = new List<LeaveStockPlanItemData>();
         List<PurchasePlanItemData> purchasePlanItems = new List<PurchasePlanItemData>();
 
-        List<SalesSpuAssignItem> sortedBySequence = salesSpu.GetSalesSpuAssignItems()
+        List<SalesSpuAssignItem> sortedBySequence = salesSpu.SalesSpuAssignItems
             .OrderBy(x => x.Sequence)
             .ToList();
 
@@ -464,7 +464,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
                     .Where(x => AreEqual(sku.KeyAttributes, x.SkuAttributes))
                     .Sum(x => x.Qty);
 
-                double alreadyQty = leaveStockPlan.GetLeaveStockPlanItems()
+                double alreadyQty = leaveStockPlan.LeaveStockPlanItems
                     .Where(x => x.SkuId == sku.Id && x.WarehouseId == assignItem.WarehouseId)
                     .Sum(x => x.Qty);
 
@@ -487,7 +487,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             }
         }
 
-        List<SalesSpuAssignItem> sortedByPriority = salesSpu.GetSalesSpuAssignItems()
+        List<SalesSpuAssignItem> sortedByPriority = salesSpu.SalesSpuAssignItems
             .OrderByDescending(x => x.IsPriorityCustomized)
             .ThenBy(x => x.Sequence)
             .ToList();
@@ -539,7 +539,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("销售产品:" + bulkOrderItem.SalesSpuId + "不存在!");
         }
 
-        string businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
         if (leaveStockPlan is null)
@@ -555,7 +555,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
 
         List<PurchasePlanItemData> purchasePlanItems = new List<PurchasePlanItemData>();
 
-        List<SalesSpuAssignItem> sortedAssignItems = salesSpu.GetSalesSpuAssignItems()
+        List<SalesSpuAssignItem> sortedAssignItems = salesSpu.SalesSpuAssignItems
             .OrderByDescending(x => x.IsPriorityCustomized)
             .ThenBy(x => x.Sequence)
             .ToList();

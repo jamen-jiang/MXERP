@@ -55,7 +55,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 1. 删除未在输入中出现的属性（通过主键）
-        List<EnterStockOrderItem> toRemoves = enterStockOrder.GetEnterStockOrderItems()
+        List<EnterStockOrderItem> toRemoves = enterStockOrder.EnterStockOrderItems
             .Where(a => !finalSkuInfos.Any(i => i.SkuId == a.SkuId && i.WarehouseId == a.WarehouseId))
             .ToList();
         foreach (EnterStockOrderItem item in toRemoves)
@@ -65,7 +65,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
 
         // 2. 建立"业务标识 → 已持久化属性主键"的映射（仅用于已存在的属性）
         Dictionary<SkuWarehouse, long> existingDict = new Dictionary<SkuWarehouse, long>();
-        foreach (EnterStockOrderItem a in enterStockOrder.GetEnterStockOrderItems())
+        foreach (EnterStockOrderItem a in enterStockOrder.EnterStockOrderItems)
         {
             existingDict[new SkuWarehouse(a.SkuId, a.WarehouseId)] = a.Id;
         }
@@ -114,13 +114,13 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
 
         // 2. 生成红冲入库单（委托工厂，含发号）
         EnterStockOrder model;
-        if (string.IsNullOrWhiteSpace(originalEnterStockOrder.RelationType))
+        if (originalEnterStockOrder.RelationType is null)
         {
             model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, EnterStockBusinessTypeEnum.ReversalEnterStock, remark, cancellationToken);
         }
         else
         {
-            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, originalEnterStockOrder.RelationType, EnterStockBusinessTypeEnum.ReversalEnterStock, remark, cancellationToken);
+            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, originalEnterStockOrder.RelationType.Value, EnterStockBusinessTypeEnum.ReversalEnterStock, remark, cancellationToken);
         }
 
         // 3. 添加明细
@@ -136,18 +136,18 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
             {
                 throw new UserFriendlyException($"产品{sku.SpuId}不存在!");
             }
-            EnterStockOrderItem? enterStockOrderItem = originalEnterStockOrder.GetEnterStockOrderItems()
+            EnterStockOrderItem? enterStockOrderItem = originalEnterStockOrder.EnterStockOrderItems
                 .FirstOrDefault(x => x.SkuId == item.SkuId && x.WarehouseId == item.WarehouseId);
             if (enterStockOrderItem == null)
             {
                 throw new UserFriendlyException("入库单项不存在!");
             }
 
-            if (!string.IsNullOrWhiteSpace(originalEnterStockOrder.RelationType))
+            if (originalEnterStockOrder.RelationType is not null)
             {
                 // 3.1 有关联：按关联项拆分冲销数量
                 double remainingToReverse = Math.Abs(item.Qty);
-                foreach (EnterStockOrderRelation relation in enterStockOrderItem.GetEnterStockOrderRelations())
+                foreach (EnterStockOrderRelation relation in enterStockOrderItem.EnterStockOrderRelations)
                 {
                     double reverseQty = Math.Min(remainingToReverse, relation.Qty);
                     if (reverseQty > 0)
@@ -187,14 +187,14 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 2. 生成入库单（委托工厂）
-        string relationType = BusinessOrderTypeEnum.PurchaseOrder;
+        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.PurchaseOrder;
         EnterStockOrder model = await _enterStockOrderFactory.CreateAsync(purchaseOrder.ProductType, null, relationType, EnterStockBusinessTypeEnum.PurchaseEnterStock, purchaseOrder.Remark, cancellationToken);
 
         // 3. 添加明细
         foreach (UniqueSkuInfoData item in skuInfos.Where(x => x.Qty != 0))
         {
             // 3.1 查采购单项
-            PurchaseOrderItem? purchaseOrderItem = purchaseOrder.GetPurchaseOrderItems().FirstOrDefault(x => x.Id == item.Id);
+            PurchaseOrderItem? purchaseOrderItem = purchaseOrder.PurchaseOrderItems.FirstOrDefault(x => x.Id == item.Id);
             if (purchaseOrderItem == null)
             {
                 throw new UserFriendlyException("采购单项不存在!");
@@ -235,13 +235,13 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 1. 生成入库单（委托工厂）
-        string relationType = BusinessOrderTypeEnum.InventoryOrder;
-        string businessType = EnterStockBusinessTypeEnum.InventoryEnterStock;
+        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.InventoryOrder;
+        EnterStockBusinessTypeEnum businessType = EnterStockBusinessTypeEnum.InventoryEnterStock;
 
         EnterStockOrder model = await _enterStockOrderFactory.CreateAsync(inventoryOrder.ProductType, null, relationType, businessType, inventoryOrder.Remark, cancellationToken);
 
         // 2. 添加明细
-        foreach (InventoryOrderItem item in inventoryOrder.GetInventoryOrderItems().Where(x => x.ProfitQty > 0))
+        foreach (InventoryOrderItem item in inventoryOrder.InventoryOrderItems.Where(x => x.ProfitQty > 0))
         {
             // 2.1 查产品Sku、产品
             Sku? sku = await _skuRepository.FindAsync(item.SkuId, false, cancellationToken);
@@ -264,7 +264,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
     }
 
     /// <inheritdoc />
-    public async Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, string businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default)
+    public async Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, EnterStockBusinessTypeEnum businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default)
     {
         // 1. 查出库批次
         LeaveStockBatch? leaveStockBatch = await _leaveStockBatchRepository.FindAsync(leaveStockBatchId, false, cancellationToken);
@@ -334,7 +334,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 3. 累加冲销数量
-        foreach (EnterStockOrderItem item in reversalEnterStockOrder.GetEnterStockOrderItems())
+        foreach (EnterStockOrderItem item in reversalEnterStockOrder.EnterStockOrderItems)
         {
             if (item.OriginalId == null)
             {

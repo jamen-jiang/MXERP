@@ -11,7 +11,7 @@ public class App : AuditedAggregateRoot
     /// <summary>
     /// 类型
     /// </summary>
-    public string Type { get; private set; } = string.Empty;
+    public AppTypeEnum Type { get; private set; }
     /// <summary>
     /// 父Id(可空)
     /// </summary>
@@ -76,9 +76,9 @@ public class App : AuditedAggregateRoot
     /// <param name="isMultiTab">是否多页签</param>
     /// <param name="isHide">是否隐藏</param>
     /// <param name="sort">排序(可空)</param>
-    internal App(string type, long? parentId, string? level, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort)
+    internal App(AppTypeEnum type, long? parentId, string? level, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort)
     {
-        Type = ValidateType(type);
+        Type = type;
         ParentId = parentId;
         Level = level?.Trim();
         Name = name?.Trim();
@@ -136,19 +136,5 @@ public class App : AuditedAggregateRoot
         Level = level;
     }
 
-    /// <summary>
-    /// 校验类型
-    /// </summary>
-    /// <param name="type">类型</param>
-    /// <returns>校验并 trim 后的类型</returns>
-    private static string ValidateType(string type)
-    {
-        string? trimmed = type?.Trim();
-        if (trimmed is null || trimmed.Length == 0 || !AppTypeEnum.IsValid(trimmed))
-        {
-            throw new UserFriendlyException($"类型{type}有误!");
-        }
 
-        return trimmed;
-    }
 }

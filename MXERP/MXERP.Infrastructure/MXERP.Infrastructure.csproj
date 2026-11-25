@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="Snow.EntityFrameworkCore" />
     <PackageReference Include="Snow.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Snow.DistributedLocking" />
   </ItemGroup>
 
   <ItemGroup>

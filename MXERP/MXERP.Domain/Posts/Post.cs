@@ -28,13 +28,22 @@ public class Post : AuditedAggregateRoot
     /// <summary>
     /// 岗位角色列表
     /// </summary>
-    public virtual ICollection<PostRole> PostRoles { get; private set; } = new List<PostRole>();
+    private readonly List<PostRole> _postRoles;
+
+    /// <summary>
+    /// 岗位角色列表
+    /// </summary>
+    public IReadOnlyCollection<PostRole> PostRoles
+    {
+        get { return _postRoles.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected Post()
     {
+        _postRoles = new List<PostRole>();
     }
 
     /// <summary>
@@ -46,6 +55,7 @@ public class Post : AuditedAggregateRoot
     /// <param name="remark">备注(可空)</param>
     /// <param name="roleIds">角色Id列表</param>
     internal Post(string name, long departmentId, long rankId, string? remark, List<long> roleIds)
+        : this()
     {
         if (name.IsNullOrWhiteSpace())
         {
@@ -82,21 +92,12 @@ public class Post : AuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取岗位角色列表(只读)
-    /// </summary>
-    /// <returns>只读角色列表</returns>
-    public IReadOnlyList<PostRole> GetPostRoles()
-    {
-        return PostRoles.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 删除角色
     /// </summary>
     /// <param name="roleId">角色Id</param>
     internal void DeleteRole(long roleId)
     {
-        PostRole? item = PostRoles.FirstOrDefault(x => x.Id == roleId && !x.IsDeleted);
+        PostRole? item = _postRoles.FirstOrDefault(x => x.Id == roleId && !x.IsDeleted);
         if (item is not null)
         {
             item.Delete();
@@ -109,7 +110,7 @@ public class Post : AuditedAggregateRoot
     /// <param name="roleIds">角色Id列表</param>
     private void SyncRoles(List<long> roleIds)
     {
-        List<PostRole> toRemoves = PostRoles
+        List<PostRole> toRemoves = _postRoles
             .Where(a => roleIds.All(i => i != a.RoleId))
             .ToList();
         foreach (PostRole item in toRemoves)
@@ -119,9 +120,9 @@ public class Post : AuditedAggregateRoot
 
         foreach (long roleId in roleIds)
         {
-            if (PostRoles.All(x => x.RoleId != roleId))
+            if (_postRoles.All(x => x.RoleId != roleId))
             {
-                PostRoles.Add(new PostRole(roleId));
+                _postRoles.Add(new PostRole(roleId));
             }
         }
     }

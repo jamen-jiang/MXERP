@@ -13,7 +13,7 @@ public class Stock : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// SpuId
     /// </summary>
@@ -62,9 +62,8 @@ public class Stock : AuditedAggregateRoot
     /// <param name="skuId">SkuId</param>
     /// <param name="warehouseId">仓库Id</param>
     /// <param name="skuAttributes">Sku属性值（可空）</param>
-    public Stock(string productType, long spuId, long skuId, long warehouseId, SortedDictionary<string, object?>? skuAttributes)
+    public Stock(ProductTypeEnum productType, long spuId, long skuId, long warehouseId, SortedDictionary<string, object?>? skuAttributes)
     {
-        ValidateProductType(productType);
         ProductType = productType;
         SpuId = spuId;
         SkuId = skuId;
@@ -184,22 +183,6 @@ public class Stock : AuditedAggregateRoot
         FreezeQty -= qty;
     }
 
-    /// <summary>
-    /// 校验产品类型
-    /// </summary>
-    /// <param name="productType">产品类型</param>
-    private static void ValidateProductType(string productType)
-    {
-        if (string.IsNullOrWhiteSpace(productType))
-        {
-            throw new UserFriendlyException("产品类型不能为空");
-        }
-
-        if (!ProductTypeEnum.IsValid(productType))
-        {
-            throw new UserFriendlyException("产品类型" + productType + "有误!");
-        }
-    }
 
     /// <summary>
     /// Sku属性展示串, 供错误提示使用

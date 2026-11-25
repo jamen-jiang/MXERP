@@ -1,5 +1,6 @@
 using Snow.DependencyInjection;
 using Snow.Exceptions;
+using MXERP.Domain.Common.Enums;
 
 namespace MXERP.Domain.SerialNumbers;
 
@@ -18,7 +19,7 @@ public class SerialNumberFactory : ISerialNumberFactory
     }
 
     /// <inheritdoc />
-    public async Task<SerialNumber> CreateAsync(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule, CancellationToken cancellationToken = default)
+    public async Task<SerialNumber> CreateAsync(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistByTypeExcludeIdAsync(type, null, cancellationToken))
         {

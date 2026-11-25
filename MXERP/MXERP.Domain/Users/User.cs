@@ -32,17 +32,36 @@ public class User : AuditedAggregateRoot
     /// <summary>
     /// 用户岗位列表
     /// </summary>
-    public virtual ICollection<UserPost> UserPosts { get; private set; } = new List<UserPost>();
+    private readonly List<UserPost> _userPosts;
+
+    /// <summary>
+    /// 用户岗位列表
+    /// </summary>
+    public IReadOnlyCollection<UserPost> UserPosts
+    {
+        get { return _userPosts.AsReadOnly(); }
+    }
+
     /// <summary>
     /// 用户角色列表
     /// </summary>
-    public virtual ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
+    private readonly List<UserRole> _userRoles;
+
+    /// <summary>
+    /// 用户角色列表
+    /// </summary>
+    public IReadOnlyCollection<UserRole> UserRoles
+    {
+        get { return _userRoles.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected User()
     {
+        _userPosts = new List<UserPost>();
+        _userRoles = new List<UserRole>();
     }
 
     /// <summary>
@@ -56,6 +75,7 @@ public class User : AuditedAggregateRoot
     /// <param name="postIds">岗位Id列表</param>
     /// <param name="roleIds">角色Id列表(可空)</param>
     internal User(string name, string userName, string? email, string password, string? remark, List<long> postIds, List<long>? roleIds)
+        : this()
     {
         Validate(name, userName, password, postIds);
 
@@ -92,24 +112,6 @@ public class User : AuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取用户岗位列表(只读)
-    /// </summary>
-    /// <returns>只读岗位列表</returns>
-    public IReadOnlyList<UserPost> GetUserPosts()
-    {
-        return UserPosts.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取用户角色列表(只读)
-    /// </summary>
-    /// <returns>只读角色列表</returns>
-    public IReadOnlyList<UserRole> GetUserRoles()
-    {
-        return UserRoles.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 校验必填项
     /// </summary>
     /// <param name="name">用户名称</param>
@@ -142,7 +144,7 @@ public class User : AuditedAggregateRoot
     /// <param name="postIds">岗位Id列表</param>
     private void SyncPosts(List<long> postIds)
     {
-        List<UserPost> toRemoves = UserPosts
+        List<UserPost> toRemoves = _userPosts
             .Where(a => postIds.All(i => i != a.PostId))
             .ToList();
         foreach (UserPost item in toRemoves)
@@ -152,10 +154,10 @@ public class User : AuditedAggregateRoot
 
         foreach (long postId in postIds)
         {
-            bool exists = UserPosts.Any(x => x.PostId == postId && !x.IsDeleted);
+            bool exists = _userPosts.Any(x => x.PostId == postId && !x.IsDeleted);
             if (!exists)
             {
-                UserPosts.Add(new UserPost(postId));
+                _userPosts.Add(new UserPost(postId));
             }
         }
     }
@@ -168,7 +170,7 @@ public class User : AuditedAggregateRoot
     {
         List<long> target = roleIds ?? new List<long>();
 
-        List<UserRole> toRemoves = UserRoles
+        List<UserRole> toRemoves = _userRoles
             .Where(a => target.All(i => i != a.RoleId))
             .ToList();
         foreach (UserRole item in toRemoves)
@@ -178,10 +180,10 @@ public class User : AuditedAggregateRoot
 
         foreach (long roleId in target)
         {
-            bool exists = UserRoles.Any(x => x.RoleId == roleId && !x.IsDeleted);
+            bool exists = _userRoles.Any(x => x.RoleId == roleId && !x.IsDeleted);
             if (!exists)
             {
-                UserRoles.Add(new UserRole(roleId));
+                _userRoles.Add(new UserRole(roleId));
             }
         }
     }
@@ -192,7 +194,7 @@ public class User : AuditedAggregateRoot
     /// <param name="userPostId">用户岗位关联Id</param>
     private void DeletePost(long userPostId)
     {
-        UserPost? item = UserPosts.FirstOrDefault(x => x.Id == userPostId);
+        UserPost? item = _userPosts.FirstOrDefault(x => x.Id == userPostId);
         if (item is not null)
         {
             item.Delete();
@@ -205,7 +207,7 @@ public class User : AuditedAggregateRoot
     /// <param name="userRoleId">用户角色关联Id</param>
     private void DeleteRole(long userRoleId)
     {
-        UserRole? item = UserRoles.FirstOrDefault(x => x.Id == userRoleId);
+        UserRole? item = _userRoles.FirstOrDefault(x => x.Id == userRoleId);
         if (item is not null)
         {
             item.Delete();

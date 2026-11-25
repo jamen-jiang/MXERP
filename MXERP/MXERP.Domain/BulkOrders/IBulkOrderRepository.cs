@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Repositories;
 
 namespace MXERP.Domain.BulkOrders;
@@ -24,7 +25,7 @@ public interface IBulkOrderRepository : IRepository<BulkOrder>
     /// <param name="id">排除的主键Id(可空), 修改时排除自身</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByCustomerOrderNumberAndCustomerPONumberAndProductTypeExcludeIdAsync(string customerOrderNumber, string? customerPONumber, string productType, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByCustomerOrderNumberAndCustomerPONumberAndProductTypeExcludeIdAsync(string customerOrderNumber, string? customerPONumber, ProductTypeEnum productType, long? id = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断客户PO号 + 产品类型是否存在
@@ -34,5 +35,5 @@ public interface IBulkOrderRepository : IRepository<BulkOrder>
     /// <param name="id">排除的主键Id(可空), 修改时排除自身</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByCustomerPONumberAndProductTypeExcludeIdAsync(string customerPONumber, string productType, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByCustomerPONumberAndProductTypeExcludeIdAsync(string customerPONumber, ProductTypeEnum productType, long? id = null, CancellationToken cancellationToken = default);
 }

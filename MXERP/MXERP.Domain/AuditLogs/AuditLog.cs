@@ -21,7 +21,7 @@ public class AuditLog : CreationAuditedAggregateRoot
     /// <summary>
     /// 动作
     /// </summary>
-    public string Action { get; private set; } = string.Empty;
+    public AuditActionEnum Action { get; private set; }
 
     /// <summary>
     /// 备注(可空)
@@ -42,21 +42,16 @@ public class AuditLog : CreationAuditedAggregateRoot
     /// <param name="entityId">实体Id</param>
     /// <param name="action">动作</param>
     /// <param name="remark">备注(可空)</param>
-    public AuditLog(string entityType, long entityId, string action, string? remark)
+    public AuditLog(string entityType, long entityId, AuditActionEnum action, string? remark)
     {
         if (entityType.IsNullOrWhiteSpace())
         {
             throw new UserFriendlyException("实体类型不能为空");
         }
 
-        if (action.IsNullOrWhiteSpace())
-        {
-            throw new UserFriendlyException("动作不能为空");
-        }
-
         EntityType = entityType.Trim();
         EntityId = entityId;
-        Action = action.Trim();
+        Action = action;
         Remark = remark;
     }
 }

@@ -1,108 +1,93 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.ExternalLeaveStockOrders;
 
 /// <summary>
 /// 外部出库单工序(对应 Java 的 WorkStepEnum, 编码与名称均为中文)
 /// </summary>
-public static class ExternalLeaveStockOrderWorkStepEnum
+public enum ExternalLeaveStockOrderWorkStepEnum
 {
     /// <summary>
     /// 送仓库
     /// </summary>
-    public const string SongCangKu = "送仓库";
+    [Description("送仓库")]
+    SongCangKu,
 
     /// <summary>
     /// 发料
     /// </summary>
-    public const string FaLiao = "发料";
+    [Description("发料")]
+    FaLiao,
 
     /// <summary>
     /// 扣账
     /// </summary>
-    public const string KouZhang = "扣账";
+    [Description("扣账")]
+    KouZhang,
 
     /// <summary>
     /// 送包装
     /// </summary>
-    public const string SongBaoZhuang = "送包装";
+    [Description("送包装")]
+    SongBaoZhuang,
 
     /// <summary>
     /// ETC
     /// </summary>
-    public const string Etc = "ETC";
+    [Description("ETC")]
+    Etc,
 
     /// <summary>
     /// 打唛
     /// </summary>
-    public const string DaMai = "打唛";
+    [Description("打唛")]
+    DaMai,
 
     /// <summary>
     /// 黄油
     /// </summary>
-    public const string HuangYou = "黄油";
+    [Description("黄油")]
+    HuangYou,
 
     /// <summary>
     /// 打印条码
     /// </summary>
-    public const string DaYinTiaoMa = "打印条码";
+    [Description("打印条码")]
+    DaYinTiaoMa,
 
     /// <summary>
     /// 换镜袋
     /// </summary>
-    public const string HuanJingDai = "换镜袋";
+    [Description("换镜袋")]
+    HuanJingDai,
 
     /// <summary>
     /// 贴背贴
     /// </summary>
-    public const string TieBeiTie = "贴背贴";
+    [Description("贴背贴")]
+    TieBeiTie,
 
     /// <summary>
     /// 打包
     /// </summary>
-    public const string DaBao = "打包";
+    [Description("打包")]
+    DaBao,
 
     /// <summary>
     /// 装箱明细
     /// </summary>
-    public const string ZhuangXiangMingXi = "装箱明细";
+    [Description("装箱明细")]
+    ZhuangXiangMingXi,
 
     /// <summary>
     /// 出货检查
     /// </summary>
-    public const string ChuHuoJianCha = "出货检查";
+    [Description("出货检查")]
+    ChuHuoJianCha,
 
     /// <summary>
     /// 封箱
     /// </summary>
-    public const string FengXiang = "封箱";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
-    {
-        SongCangKu,
-        FaLiao,
-        KouZhang,
-        SongBaoZhuang,
-        Etc,
-        DaMai,
-        HuangYou,
-        DaYinTiaoMa,
-        HuanJingDai,
-        TieBeiTie,
-        DaBao,
-        ZhuangXiangMingXi,
-        ChuHuoJianCha,
-        FengXiang
-    };
-
-    /// <summary>
-    /// 编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>有效返回 true</returns>
-    public static bool IsValid(string? code)
-    {
-        return code is not null && All.Contains(code);
-    }
+    [Description("封箱")]
+    FengXiang
 }

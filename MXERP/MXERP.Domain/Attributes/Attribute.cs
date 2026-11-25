@@ -12,12 +12,12 @@ public class Attribute : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// 范围
     /// </summary>
-    public string Scope { get; private set; } = string.Empty;
+    public AttributeScopeEnum Scope { get; private set; }
 
     /// <summary>
     /// 属性代码
@@ -37,12 +37,12 @@ public class Attribute : AuditedAggregateRoot
     /// <summary>
     /// 输入类型
     /// </summary>
-    public string InputType { get; private set; } = string.Empty;
+    public InputTypeEnum InputType { get; private set; }
 
     /// <summary>
     /// 数据类型
     /// </summary>
-    public string DataType { get; private set; } = string.Empty;
+    public DataTypeEnum DataType { get; private set; }
 
     /// <summary>
     /// 是否必填
@@ -67,18 +67,36 @@ public class Attribute : AuditedAggregateRoot
     /// <summary>
     /// 属性项列表
     /// </summary>
-    public virtual ICollection<AttributeItem> AttributeItems { get; private set; } = new List<AttributeItem>();
+    private readonly List<AttributeItem> _attributeItems;
+
+    /// <summary>
+    /// 属性项列表
+    /// </summary>
+    public IReadOnlyCollection<AttributeItem> AttributeItems
+    {
+        get { return _attributeItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 校验规则列表
     /// </summary>
-    public virtual ICollection<AttributeValidateRule> AttributeValidateRules { get; private set; } = new List<AttributeValidateRule>();
+    private readonly List<AttributeValidateRule> _attributeValidateRules;
+
+    /// <summary>
+    /// 校验规则列表
+    /// </summary>
+    public IReadOnlyCollection<AttributeValidateRule> AttributeValidateRules
+    {
+        get { return _attributeValidateRules.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 供EF使用的无参构造器
     /// </summary>
     protected Attribute()
     {
+        _attributeItems = new List<AttributeItem>();
+        _attributeValidateRules = new List<AttributeValidateRule>();
     }
 
     /// <summary>
@@ -96,32 +114,21 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="sort">排序</param>
     /// <param name="remark">备注</param>
     internal Attribute(
-        string productType,
-        string scope,
+        ProductTypeEnum productType,
+        AttributeScopeEnum scope,
         string code,
         string name,
         bool isKey,
-        string inputType,
-        string dataType,
+        InputTypeEnum inputType,
+        DataTypeEnum dataType,
         bool isRequired,
         bool isFilter,
         int? sort,
         string? remark)
+        : this()
     {
-        string? trimmedProductType = productType?.Trim();
-        string? trimmedScope = scope?.Trim();
         string? trimmedCode = code?.Trim();
         string? trimmedName = name?.Trim();
-        if (string.IsNullOrEmpty(trimmedProductType))
-        {
-            throw new UserFriendlyException("产品类型不能为空");
-        }
-
-        if (string.IsNullOrEmpty(trimmedScope))
-        {
-            throw new UserFriendlyException("范围不能为空");
-        }
-
         if (string.IsNullOrEmpty(trimmedCode))
         {
             throw new UserFriendlyException("属性代码不能为空");
@@ -132,13 +139,8 @@ public class Attribute : AuditedAggregateRoot
             throw new UserFriendlyException("属性名称不能为空");
         }
 
-        ValidateProductType(trimmedProductType);
-        ValidateScope(trimmedScope);
-        ValidateInputType(inputType);
-        ValidateDataType(dataType);
-
-        ProductType = trimmedProductType;
-        Scope = trimmedScope;
+        ProductType = productType;
+        Scope = scope;
         Code = trimmedCode;
         Name = trimmedName;
         IsKey = isKey;
@@ -151,24 +153,6 @@ public class Attribute : AuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取属性项列表(只读)
-    /// </summary>
-    /// <returns>不可变列表</returns>
-    public IReadOnlyList<AttributeItem> GetAttributeItems()
-    {
-        return AttributeItems.ToList().AsReadOnly();
-    }
-
-    /// <summary>
-    /// 获取校验规则列表(只读)
-    /// </summary>
-    /// <returns>不可变列表</returns>
-    public IReadOnlyList<AttributeValidateRule> GetAttributeValidateRules()
-    {
-        return AttributeValidateRules.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 修改
     /// </summary>
     /// <param name="name">属性名称</param>
@@ -177,16 +161,13 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="isFilter">是否用于筛选</param>
     /// <param name="sort">排序</param>
     /// <param name="remark">备注</param>
-    public void Modify(string name, string inputType, bool isRequired, bool isFilter, int? sort, string? remark)
+    public void Modify(string name, InputTypeEnum inputType, bool isRequired, bool isFilter, int? sort, string? remark)
     {
         string? trimmedName = name?.Trim();
         if (string.IsNullOrEmpty(trimmedName))
         {
             throw new UserFriendlyException("属性名称不能为空");
         }
-
-        ValidateInputType(inputType);
-        ValidateDataType(DataType);
 
         Name = trimmedName;
         InputType = inputType;
@@ -210,7 +191,7 @@ public class Attribute : AuditedAggregateRoot
             throw new UserFriendlyException("属性" + Name + ":属性项" + value + " 已存在!");
         }
 
-        AttributeItems.Add(new AttributeItem(value, name, isDefault, sort));
+        _attributeItems.Add(new AttributeItem(value, name, isDefault, sort));
     }
 
     /// <summary>
@@ -222,7 +203,7 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="sort">排序</param>
     public void ModifyItem(long itemId, string name, bool isDefault, int? sort)
     {
-        AttributeItem? item = AttributeItems.FirstOrDefault(i => i.Id == itemId);
+        AttributeItem? item = _attributeItems.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
         {
             throw new UserFriendlyException("属性" + Name + ":属性项不存在!");
@@ -237,7 +218,7 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="itemId">属性项Id</param>
     public void DeleteItem(long itemId)
     {
-        AttributeItem? item = AttributeItems.FirstOrDefault(i => i.Id == itemId);
+        AttributeItem? item = _attributeItems.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
         {
             return;
@@ -259,7 +240,7 @@ public class Attribute : AuditedAggregateRoot
             throw new UserFriendlyException("属性" + Name + ":校验规则已存在!");
         }
 
-        AttributeValidateRules.Add(new AttributeValidateRule(expression, errorMessage, sort));
+        _attributeValidateRules.Add(new AttributeValidateRule(expression, errorMessage, sort));
     }
 
     /// <summary>
@@ -271,7 +252,7 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="sort">排序</param>
     public void ModifyValidateRule(long validateRuleId, string expression, string errorMessage, int? sort)
     {
-        AttributeValidateRule? validateRule = AttributeValidateRules.FirstOrDefault(r => r.Id == validateRuleId);
+        AttributeValidateRule? validateRule = _attributeValidateRules.FirstOrDefault(r => r.Id == validateRuleId);
         if (validateRule == null)
         {
             throw new UserFriendlyException("属性" + Name + ":校验规则不存在!");
@@ -286,7 +267,7 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="validateRuleId">校验规则Id</param>
     public void DeleteValidateRule(long validateRuleId)
     {
-        AttributeValidateRule? validateRule = AttributeValidateRules.FirstOrDefault(r => r.Id == validateRuleId);
+        AttributeValidateRule? validateRule = _attributeValidateRules.FirstOrDefault(r => r.Id == validateRuleId);
         if (validateRule == null)
         {
             return;
@@ -295,53 +276,13 @@ public class Attribute : AuditedAggregateRoot
         validateRule.Delete();
     }
 
-    /// <summary>
-    /// 校验产品类型
-    /// </summary>
-    /// <param name="productType">产品类型</param>
-    private static void ValidateProductType(string productType)
-    {
-        if (!ProductTypeEnum.IsValid(productType))
-        {
-            throw new UserFriendlyException("产品类型" + productType + "有误!");
-        }
-    }
 
-    /// <summary>
-    /// 校验范围
-    /// </summary>
-    /// <param name="scope">范围</param>
-    private static void ValidateScope(string scope)
-    {
-        if (!AttributeScopeEnum.IsValid(scope))
-        {
-            throw new UserFriendlyException("范围" + scope + "有误!");
-        }
-    }
 
-    /// <summary>
-    /// 校验输入类型
-    /// </summary>
-    /// <param name="inputType">输入类型</param>
-    private static void ValidateInputType(string inputType)
-    {
-        if (!InputTypeEnum.IsValid(inputType))
-        {
-            throw new UserFriendlyException("输入类型" + inputType + "有误!");
-        }
-    }
 
-    /// <summary>
-    /// 校验数据类型
-    /// </summary>
-    /// <param name="dataType">数据类型</param>
-    private static void ValidateDataType(string dataType)
-    {
-        if (!DataTypeEnum.IsValid(dataType))
-        {
-            throw new UserFriendlyException("数据类型" + dataType + "有误!");
-        }
-    }
+
+
+
+
 
     /// <summary>
     /// 判断属性项是否存在
@@ -350,7 +291,7 @@ public class Attribute : AuditedAggregateRoot
     /// <returns>是否存在</returns>
     private bool IsExistItem(string value)
     {
-        return AttributeItems.Any(i => i.Value == value && !i.IsDeleted);
+        return _attributeItems.Any(i => i.Value == value && !i.IsDeleted);
     }
 
     /// <summary>
@@ -360,6 +301,6 @@ public class Attribute : AuditedAggregateRoot
     /// <returns>是否存在</returns>
     private bool IsExistValidateRule(string expression)
     {
-        return AttributeValidateRules.Any(r => r.Expression == expression && !r.IsDeleted);
+        return _attributeValidateRules.Any(r => r.Expression == expression && !r.IsDeleted);
     }
 }

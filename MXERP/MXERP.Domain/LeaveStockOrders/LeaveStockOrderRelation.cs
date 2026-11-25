@@ -1,5 +1,6 @@
 using Snow.Domain.Entities;
 using Snow.Domain.Entities.Auditing;
+using MXERP.Domain.Common.Enums;
 
 namespace MXERP.Domain.LeaveStockOrders;
 
@@ -13,7 +14,6 @@ public class LeaveStockOrderRelation : DeletionAuditedEntity
     /// </summary>
     protected LeaveStockOrderRelation()
     {
-        RelationType = string.Empty;
         RelationNumber = string.Empty;
     }
 
@@ -25,7 +25,7 @@ public class LeaveStockOrderRelation : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    public LeaveStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    public LeaveStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         RelationType = relationType;
         RelationId = relationId;
@@ -42,7 +42,7 @@ public class LeaveStockOrderRelation : DeletionAuditedEntity
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; }
+    public BusinessOrderTypeEnum RelationType { get; private set; }
 
     /// <summary>
     /// 关联Id

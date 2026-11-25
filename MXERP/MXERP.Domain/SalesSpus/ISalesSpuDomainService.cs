@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.SalesSpus;
 
 /// <summary>
@@ -20,7 +22,7 @@ public interface ISalesSpuDomainService
     /// <param name="markingAttachmentIds">打标附件Id集合</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>销售产品聚合</returns>
-    Task<SalesSpu> CreateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default);
+    Task<SalesSpu> CreateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成(存在则修改, 不存在则新建)
@@ -37,7 +39,7 @@ public interface ISalesSpuDomainService
     /// <param name="salesSpuAssignItems">分配项列表</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>销售产品聚合</returns>
-    Task<SalesSpu> ImportGenerateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default);
+    Task<SalesSpu> ImportGenerateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改(按Id查询后修改)

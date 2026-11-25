@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using MXERP.Domain.SerialNumbers;
 using Snow.DependencyInjection;
 
@@ -25,7 +26,7 @@ public class ExternalLeaveStockOrderFactory : IExternalLeaveStockOrderFactory
 
     /// <inheritdoc />
     public async Task<ExternalLeaveStockOrder> CreateAsync(
-        string productType,
+        ProductTypeEnum productType,
         long storeId,
         long companyId,
         string customerOrderNumber,

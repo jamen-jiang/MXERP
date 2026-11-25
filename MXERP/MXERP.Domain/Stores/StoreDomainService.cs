@@ -65,7 +65,7 @@ public class StoreDomainService : IStoreDomainService
     {
         List<StoreContactData> target = contacts ?? new List<StoreContactData>();
 
-        List<StoreContact> toRemoves = store.GetStoreContacts()
+        List<StoreContact> toRemoves = store.StoreContacts
             .Where(c => target.All(i => i.Name != c.Name))
             .ToList();
         foreach (StoreContact item in toRemoves)
@@ -74,7 +74,7 @@ public class StoreDomainService : IStoreDomainService
         }
 
         Dictionary<string, long> existingDict = new Dictionary<string, long>();
-        foreach (StoreContact contact in store.GetStoreContacts())
+        foreach (StoreContact contact in store.StoreContacts)
         {
             if (!existingDict.ContainsKey(contact.Name))
             {

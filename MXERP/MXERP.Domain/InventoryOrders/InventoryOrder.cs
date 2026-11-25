@@ -17,7 +17,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
     /// <summary>
     /// 盘点数量
     /// </summary>
@@ -33,7 +33,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public string Status { get; private set; } = string.Empty;
+    public InventoryOrderStatusEnum Status { get; private set; }
     /// <summary>
     /// 完成人Id(可空)
     /// </summary>
@@ -65,13 +65,22 @@ public class InventoryOrder : OrderAggregateRoot
     /// <summary>
     /// 盘点单项列表
     /// </summary>
-    public virtual ICollection<InventoryOrderItem> InventoryOrderItems { get; private set; } = new List<InventoryOrderItem>();
+    private readonly List<InventoryOrderItem> _inventoryOrderItems;
+
+    /// <summary>
+    /// 盘点单项列表
+    /// </summary>
+    public IReadOnlyCollection<InventoryOrderItem> InventoryOrderItems
+    {
+        get { return _inventoryOrderItems.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected InventoryOrder()
     {
+        _inventoryOrderItems = new List<InventoryOrderItem>();
     }
 
     /// <summary>
@@ -79,20 +88,12 @@ public class InventoryOrder : OrderAggregateRoot
     /// </summary>
     /// <param name="productType">产品类型</param>
     /// <param name="remark">备注(可空)</param>
-    internal InventoryOrder(string productType, string? remark)
+    internal InventoryOrder(ProductTypeEnum productType, string? remark)
+        : this()
     {
-        ProductType = productType.Trim();
+        ProductType = productType;
         Remark = remark;
         Status = InventoryOrderStatusEnum.Pending;
-    }
-
-    /// <summary>
-    /// 获取盘点单项列表(只读)
-    /// </summary>
-    /// <returns>只读列表</returns>
-    public IReadOnlyList<InventoryOrderItem> GetInventoryOrderItems()
-    {
-        return InventoryOrderItems.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -173,7 +174,7 @@ public class InventoryOrder : OrderAggregateRoot
             throw new UserFriendlyException("产品Sku " + skuId + "仓库 " + warehouseId + "已存在!");
         }
 
-        InventoryOrderItems.Add(new InventoryOrderItem(spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes));
+        _inventoryOrderItems.Add(new InventoryOrderItem(spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes));
         UpdateQty();
     }
 
@@ -184,7 +185,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="qty">数量</param>
     public void ModifyItem(long itemId, double qty)
     {
-        InventoryOrderItem? item = InventoryOrderItems.FirstOrDefault(x => x.Id == itemId);
+        InventoryOrderItem? item = _inventoryOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             throw new UserFriendlyException("盘点单" + Number + "盘点单项不存在!");
@@ -200,7 +201,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="itemId">盘点单项Id</param>
     public void DeleteItem(long itemId)
     {
-        InventoryOrderItem? item = InventoryOrderItems.FirstOrDefault(x => x.Id == itemId);
+        InventoryOrderItem? item = _inventoryOrderItems.FirstOrDefault(x => x.Id == itemId);
         if (item is null)
         {
             return;
@@ -218,7 +219,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="stockQty">库存数量</param>
     public void TaskStock(long skuId, long warehouseId, double stockQty)
     {
-        InventoryOrderItem? item = InventoryOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId);
+        InventoryOrderItem? item = _inventoryOrderItems.FirstOrDefault(x => x.SkuId == skuId && x.WarehouseId == warehouseId);
         if (item is null)
         {
             return;
@@ -230,7 +231,7 @@ public class InventoryOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         if (ProductType == ProductTypeEnum.SemiProduct)
         {
@@ -253,7 +254,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistItem(long skuId, long warehouseId)
     {
-        return InventoryOrderItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
+        return _inventoryOrderItems.Any(x => x.SkuId == skuId && x.WarehouseId == warehouseId && !x.IsDeleted);
     }
 
     /// <summary>
@@ -261,7 +262,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateQty()
     {
-        Qty = InventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
+        Qty = _inventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.Qty);
     }
 
     /// <summary>
@@ -269,7 +270,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateProfitQty()
     {
-        ProfitQty = InventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.ProfitQty);
+        ProfitQty = _inventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.ProfitQty);
     }
 
     /// <summary>
@@ -277,6 +278,6 @@ public class InventoryOrder : OrderAggregateRoot
     /// </summary>
     private void UpdateLossQty()
     {
-        LossQty = InventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LossQty);
+        LossQty = _inventoryOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LossQty);
     }
 }

@@ -11,7 +11,7 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <summary>
     /// 权限对象
     /// </summary>
-    public string Master { get; private set; } = string.Empty;
+    public MasterEnum Master { get; private set; }
     /// <summary>
     /// 权限对象值
     /// </summary>
@@ -19,7 +19,7 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <summary>
     /// 权限通道
     /// </summary>
-    public string Access { get; private set; } = string.Empty;
+    public AccessEnum Access { get; private set; }
     /// <summary>
     /// 权限通道值
     /// </summary>
@@ -43,44 +43,16 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <param name="masterValue">权限对象值</param>
     /// <param name="access">权限通道</param>
     /// <param name="accessValue">权限通道值</param>
-    public Privilege(string master, long masterValue, string access, long accessValue)
+    public Privilege(MasterEnum master, long masterValue, AccessEnum access, long accessValue)
     {
-        Master = ValidateMaster(master);
+        Master = master;
         MasterValue = masterValue;
-        Access = ValidateAccess(access);
+        Access = access;
         AccessValue = accessValue;
         Operation = 0;
     }
 
-    /// <summary>
-    /// 校验权限对象
-    /// </summary>
-    /// <param name="master">权限对象</param>
-    /// <returns>校验并 trim 后的权限对象</returns>
-    private static string ValidateMaster(string master)
-    {
-        string? trimmed = master?.Trim();
-        if (trimmed is null || trimmed.Length == 0 || !MasterEnum.IsValid(trimmed))
-        {
-            throw new UserFriendlyException($"权限对象{master}有误!");
-        }
 
-        return trimmed;
-    }
 
-    /// <summary>
-    /// 校验权限通道
-    /// </summary>
-    /// <param name="access">权限通道</param>
-    /// <returns>校验并 trim 后的权限通道</returns>
-    private static string ValidateAccess(string access)
-    {
-        string? trimmed = access?.Trim();
-        if (trimmed is null || trimmed.Length == 0 || !AccessEnum.IsValid(trimmed))
-        {
-            throw new UserFriendlyException($"权限通道{access}有误!");
-        }
 
-        return trimmed;
-    }
 }

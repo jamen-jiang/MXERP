@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MXERP.Domain.LeaveStockBatches;
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 using Snow.Domain.Repositories.EntityFrameworkCore;
 using Snow.EntityFrameworkCore;
@@ -35,7 +36,7 @@ public class LeaveStockBatchRepository : EfCoreRepository<MXERPDbContext, LeaveS
     }
 
     /// <inheritdoc />
-    public async Task<List<LeaveStockBatch>> GetListByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<List<LeaveStockBatch>> GetListByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).Where(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != LeaveStockBatchStatusEnum.Canceled).ToListAsync(cancellationToken);
     }
@@ -47,13 +48,13 @@ public class LeaveStockBatchRepository : EfCoreRepository<MXERPDbContext, LeaveS
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
     }

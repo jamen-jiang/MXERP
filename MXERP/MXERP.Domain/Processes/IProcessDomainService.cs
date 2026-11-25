@@ -19,7 +19,7 @@ public interface IProcessDomainService
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>工序聚合</returns>
-    Task<Process> ModifyAsync(long id, string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
+    Task<Process> ModifyAsync(long id, ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改工序(使用已有聚合)
@@ -34,7 +34,7 @@ public interface IProcessDomainService
     /// <param name="isKCUsable">库存可用</param>
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task ModifyAsync(Process process, string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
+    Task ModifyAsync(Process process, ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成: 工序存在则修改, 不存在则创建
@@ -49,5 +49,5 @@ public interface IProcessDomainService
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>工序聚合</returns>
-    Task<Process> ImportGenerateAsync(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
+    Task<Process> ImportGenerateAsync(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark, CancellationToken cancellationToken = default);
 }

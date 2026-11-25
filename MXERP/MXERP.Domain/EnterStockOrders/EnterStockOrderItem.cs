@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Entities;
 using Snow.Domain.Entities.Auditing;
 
@@ -13,7 +14,7 @@ public class EnterStockOrderItem : DeletionAuditedEntity
     /// </summary>
     protected EnterStockOrderItem()
     {
-        EnterStockOrderRelations = new List<EnterStockOrderRelation>();
+        _enterStockOrderRelations = new List<EnterStockOrderRelation>();
     }
 
     /// <summary>
@@ -28,6 +29,7 @@ public class EnterStockOrderItem : DeletionAuditedEntity
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
     internal EnterStockOrderItem(long? originalId, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+        : this()
     {
         OriginalId = originalId;
         SpuId = spuId;
@@ -37,7 +39,6 @@ public class EnterStockOrderItem : DeletionAuditedEntity
         Price = price;
         SkuAttributes = skuAttributes;
         // 与 Java 保持一致：非关键属性不赋值
-        EnterStockOrderRelations = new List<EnterStockOrderRelation>();
     }
 
     /// <summary>
@@ -93,15 +94,14 @@ public class EnterStockOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 入库单项关联列表
     /// </summary>
-    public virtual ICollection<EnterStockOrderRelation> EnterStockOrderRelations { get; private set; }
+    private readonly List<EnterStockOrderRelation> _enterStockOrderRelations;
 
     /// <summary>
-    /// 获取入库单项关联列表（只读）
+    /// 入库单项关联列表
     /// </summary>
-    /// <returns>不可变视图</returns>
-    public IReadOnlyList<EnterStockOrderRelation> GetEnterStockOrderRelations()
+    public IReadOnlyCollection<EnterStockOrderRelation> EnterStockOrderRelations
     {
-        return EnterStockOrderRelations.ToList().AsReadOnly();
+        get { return _enterStockOrderRelations.AsReadOnly(); }
     }
 
     /// <summary>
@@ -139,8 +139,8 @@ public class EnterStockOrderItem : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal void AddEnterStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal void AddEnterStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
-        EnterStockOrderRelations.Add(new EnterStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
+        _enterStockOrderRelations.Add(new EnterStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
     }
 }

@@ -1,5 +1,6 @@
 using MXERP.Domain.Common.Aggregates;
 using MXERP.Domain.SerialNumbers;
+using MXERP.Domain.Common.Enums;
 
 namespace MXERP.Domain.TripleInvoices;
 
@@ -84,7 +85,7 @@ public class TripleInvoice : OrderAggregateRoot
     /// <summary>
     /// 度数类型R
     /// </summary>
-    public string DegreesTypeR { get; private set; } = string.Empty;
+    public DegreesTypeEnum DegreesTypeR { get; private set; }
     /// <summary>
     /// SPHR
     /// </summary>
@@ -165,7 +166,7 @@ public class TripleInvoice : OrderAggregateRoot
     /// <summary>
     /// 度数类型L
     /// </summary>
-    public string DegreesTypeL { get; private set; } = string.Empty;
+    public DegreesTypeEnum DegreesTypeL { get; private set; }
     /// <summary>
     /// SPHL
     /// </summary>
@@ -300,7 +301,7 @@ public class TripleInvoice : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override string GetSerialNumberType()
+    public override SerialNumberTypeEnum GetSerialNumberType()
     {
         return SerialNumberTypeEnum.TripleInvoice;
     }

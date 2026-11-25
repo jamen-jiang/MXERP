@@ -1,165 +1,177 @@
+using System.ComponentModel;
+
 namespace MXERP.Domain.SerialNumbers;
 
 /// <summary>
 /// 流水号类型(对应 Java 的 SerialNumberTypeEnum, 以编码字符串存储)
 /// </summary>
-public static class SerialNumberTypeEnum
+public enum SerialNumberTypeEnum
 {
     /// <summary>
     /// 成品批量订单
     /// </summary>
-    public const string EndProductBulkOrder = "EndProductBulkOrder";
+    [Description("成品批量订单")]
+    EndProductBulkOrder,
+
     /// <summary>
     /// 成品盘点单
     /// </summary>
-    public const string EndProductInventoryOrder = "EndProductInventoryOrder";
+    [Description("成品盘点单")]
+    EndProductInventoryOrder,
+
     /// <summary>
     /// 成品出库批次
     /// </summary>
-    public const string EndProductLeaveStockBatch = "EndProductLeaveStockBatch";
+    [Description("成品出库批次")]
+    EndProductLeaveStockBatch,
+
     /// <summary>
     /// 成品采购批次
     /// </summary>
-    public const string EndProductPurchaseBatch = "EndProductPurchaseBatch";
+    [Description("成品采购批次")]
+    EndProductPurchaseBatch,
+
     /// <summary>
     /// 成品入库单
     /// </summary>
-    public const string EndProductEnterStockOrder = "EndProductEnterStockOrder";
+    [Description("成品入库单")]
+    EndProductEnterStockOrder,
+
     /// <summary>
     /// 成品出库单
     /// </summary>
-    public const string EndProductLeaveStockOrder = "EndProductLeaveStockOrder";
+    [Description("成品出库单")]
+    EndProductLeaveStockOrder,
+
     /// <summary>
     /// 成品采购单
     /// </summary>
-    public const string EndProductPurchaseOrder = "EndProductPurchaseOrder";
+    [Description("成品采购单")]
+    EndProductPurchaseOrder,
+
     /// <summary>
     /// 半成品批量订单
     /// </summary>
-    public const string SemiProductBulkOrder = "SemiProductBulkOrder";
+    [Description("半成品批量订单")]
+    SemiProductBulkOrder,
+
     /// <summary>
     /// 半成品盘点单
     /// </summary>
-    public const string SemiProductInventoryOrder = "SemiProductInventoryOrder";
+    [Description("半成品盘点单")]
+    SemiProductInventoryOrder,
+
     /// <summary>
     /// 半成品出库批次
     /// </summary>
-    public const string SemiProductLeaveStockBatch = "SemiProductLeaveStockBatch";
+    [Description("半成品出库批次")]
+    SemiProductLeaveStockBatch,
+
     /// <summary>
     /// 半成品采购批次
     /// </summary>
-    public const string SemiProductPurchaseBatch = "SemiProductPurchaseBatch";
+    [Description("半成品采购批次")]
+    SemiProductPurchaseBatch,
+
     /// <summary>
     /// 半成品入库单
     /// </summary>
-    public const string SemiProductEnterStockOrder = "SemiProductEnterStockOrder";
+    [Description("半成品入库单")]
+    SemiProductEnterStockOrder,
+
     /// <summary>
     /// 半成品出库单
     /// </summary>
-    public const string SemiProductLeaveStockOrder = "SemiProductLeaveStockOrder";
+    [Description("半成品出库单")]
+    SemiProductLeaveStockOrder,
+
     /// <summary>
     /// 半成品采购单
     /// </summary>
-    public const string SemiProductPurchaseOrder = "SemiProductPurchaseOrder";
+    [Description("半成品采购单")]
+    SemiProductPurchaseOrder,
+
     /// <summary>
     /// 辅料盘点单
     /// </summary>
-    public const string AccessoryInventoryOrder = "AccessoryInventoryOrder";
+    [Description("辅料盘点单")]
+    AccessoryInventoryOrder,
+
     /// <summary>
     /// 辅料出库批次
     /// </summary>
-    public const string AccessoryLeaveStockBatch = "AccessoryLeaveStockBatch";
+    [Description("辅料出库批次")]
+    AccessoryLeaveStockBatch,
+
     /// <summary>
     /// 辅料采购批次
     /// </summary>
-    public const string AccessoryPurchaseBatch = "AccessoryPurchaseBatch";
+    [Description("辅料采购批次")]
+    AccessoryPurchaseBatch,
+
     /// <summary>
     /// 辅料入库单
     /// </summary>
-    public const string AccessoryEnterStockOrder = "AccessoryEnterStockOrder";
+    [Description("辅料入库单")]
+    AccessoryEnterStockOrder,
+
     /// <summary>
     /// 辅料出库单
     /// </summary>
-    public const string AccessoryLeaveStockOrder = "AccessoryLeaveStockOrder";
+    [Description("辅料出库单")]
+    AccessoryLeaveStockOrder,
+
     /// <summary>
     /// 辅料采购单
     /// </summary>
-    public const string AccessoryPurchaseOrder = "AccessoryPurchaseOrder";
+    [Description("辅料采购单")]
+    AccessoryPurchaseOrder,
+
     /// <summary>
     /// 散镜订单
     /// </summary>
-    public const string RetailOrder = "RetailOrder";
+    [Description("散镜订单")]
+    RetailOrder,
+
     /// <summary>
     /// 申购单
     /// </summary>
-    public const string PurchaseRequisitionOrder = "PurchaseRequisitionOrder";
+    [Description("申购单")]
+    PurchaseRequisitionOrder,
+
     /// <summary>
     /// 正常出仓单
     /// </summary>
-    public const string NormalLeaveWarehouseOrder = "NormalLeaveWarehouseOrder";
+    [Description("正常出仓单")]
+    NormalLeaveWarehouseOrder,
+
     /// <summary>
     /// 借调出仓单
     /// </summary>
-    public const string SecondLeaveWarehouseOrder = "SecondLeaveWarehouseOrder";
+    [Description("借调出仓单")]
+    SecondLeaveWarehouseOrder,
+
     /// <summary>
     /// 发票
     /// </summary>
-    public const string Invoice = "Invoice";
+    [Description("发票")]
+    Invoice,
+
     /// <summary>
     /// 三联发票
     /// </summary>
-    public const string TripleInvoice = "TripleInvoice";
+    [Description("三联发票")]
+    TripleInvoice,
+
     /// <summary>
     /// 成品外部出库单
     /// </summary>
-    public const string EndProductExternalLeaveStockOrder = "EndProductExternalLeaveStockOrder";
+    [Description("成品外部出库单")]
+    EndProductExternalLeaveStockOrder,
+
     /// <summary>
     /// 半成品外部出库单
     /// </summary>
-    public const string SemiProductExternalLeaveStockOrder = "SemiProductExternalLeaveStockOrder";
-
-    /// <summary>
-    /// 全部编码
-    /// </summary>
-    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
-    {
-        EndProductBulkOrder,
-        EndProductInventoryOrder,
-        EndProductLeaveStockBatch,
-        EndProductPurchaseBatch,
-        EndProductEnterStockOrder,
-        EndProductLeaveStockOrder,
-        EndProductPurchaseOrder,
-        SemiProductBulkOrder,
-        SemiProductInventoryOrder,
-        SemiProductLeaveStockBatch,
-        SemiProductPurchaseBatch,
-        SemiProductEnterStockOrder,
-        SemiProductLeaveStockOrder,
-        SemiProductPurchaseOrder,
-        AccessoryInventoryOrder,
-        AccessoryLeaveStockBatch,
-        AccessoryPurchaseBatch,
-        AccessoryEnterStockOrder,
-        AccessoryLeaveStockOrder,
-        AccessoryPurchaseOrder,
-        RetailOrder,
-        PurchaseRequisitionOrder,
-        NormalLeaveWarehouseOrder,
-        SecondLeaveWarehouseOrder,
-        Invoice,
-        TripleInvoice,
-        EndProductExternalLeaveStockOrder,
-        SemiProductExternalLeaveStockOrder
-    };
-
-    /// <summary>
-    /// 编码是否有效
-    /// </summary>
-    /// <param name="code">编码</param>
-    /// <returns>有效返回 true</returns>
-    public static bool IsValid(string? code)
-    {
-        return code is not null && All.Contains(code);
-    }
+    [Description("半成品外部出库单")]
+    SemiProductExternalLeaveStockOrder
 }

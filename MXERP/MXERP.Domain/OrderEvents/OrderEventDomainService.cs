@@ -53,7 +53,7 @@ public class OrderEventDomainService : IOrderEventDomainService
     {
         IReadOnlyCollection<OrderEventItemData> target = orderEventItems ?? Array.Empty<OrderEventItemData>();
 
-        List<OrderEventItem> toRemoves = orderEvent.GetOrderEventItems()
+        List<OrderEventItem> toRemoves = orderEvent.OrderEventItems
             .Where(a => !target.Any(i => i.Id == a.Id))
             .ToList();
         foreach (OrderEventItem item in toRemoves)

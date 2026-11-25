@@ -1,3 +1,5 @@
+using MXERP.Domain.Common.Enums;
+
 namespace MXERP.Domain.LeaveWarehouseOrders;
 
 /// <summary>
@@ -23,5 +25,5 @@ public interface ILeaveWarehouseOrderFactory
     /// <param name="deliveryAddress">收货地址(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出仓单聚合</returns>
-    Task<LeaveWarehouseOrder> CreateAsync(string productType, string type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress, CancellationToken cancellationToken = default);
+    Task<LeaveWarehouseOrder> CreateAsync(ProductTypeEnum productType, LeaveWarehouseOrderTypeEnum type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress, CancellationToken cancellationToken = default);
 }

@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.DependencyInjection;
 
 namespace MXERP.Domain.CustomersSpus;
@@ -23,7 +24,7 @@ public class CustomerSpuDomainService : ICustomerSpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<CustomerSpu> ImportGenerateAsync(string productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, CancellationToken cancellationToken = default)
+    public async Task<CustomerSpu> ImportGenerateAsync(ProductTypeEnum productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, CancellationToken cancellationToken = default)
     {
         CustomerSpu? model = await _customerSpuRepository.GetByProductTypeAndCodeAsync(productType, code, cancellationToken);
         if (model == null)

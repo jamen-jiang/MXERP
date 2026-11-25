@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using MXERP.Domain.SerialNumbers;
 using Snow.DependencyInjection;
 
@@ -41,7 +42,7 @@ public interface IExternalLeaveStockOrderFactory
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>外部出库单聚合</returns>
     Task<ExternalLeaveStockOrder> CreateAsync(
-        string productType,
+        ProductTypeEnum productType,
         long storeId,
         long companyId,
         string customerOrderNumber,

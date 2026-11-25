@@ -13,7 +13,7 @@ public class AttributeDomainService : IAttributeDomainService
     {
         IReadOnlyCollection<AttributeItemData> target = attributeItems ?? Array.Empty<AttributeItemData>();
 
-        List<AttributeItem> toRemoves = attribute.GetAttributeItems()
+        List<AttributeItem> toRemoves = attribute.AttributeItems
             .Where(i => !target.Any(d => d.Value == i.Value))
             .ToList();
         foreach (AttributeItem item in toRemoves)
@@ -21,7 +21,7 @@ public class AttributeDomainService : IAttributeDomainService
             attribute.DeleteItem(item.Id);
         }
 
-        Dictionary<string, long> existingDict = attribute.GetAttributeItems()
+        Dictionary<string, long> existingDict = attribute.AttributeItems
             .Where(i => !i.IsDeleted)
             .GroupBy(i => i.Value)
             .ToDictionary(g => g.Key, g => g.First().Id);
@@ -47,7 +47,7 @@ public class AttributeDomainService : IAttributeDomainService
     {
         IReadOnlyCollection<AttributeValidateRuleData> target = attributeValidateRules ?? Array.Empty<AttributeValidateRuleData>();
 
-        List<AttributeValidateRule> toRemoves = attribute.GetAttributeValidateRules()
+        List<AttributeValidateRule> toRemoves = attribute.AttributeValidateRules
             .Where(r => !target.Any(d => d.Expression == r.Expression))
             .ToList();
         foreach (AttributeValidateRule rule in toRemoves)
@@ -55,7 +55,7 @@ public class AttributeDomainService : IAttributeDomainService
             attribute.DeleteValidateRule(rule.Id);
         }
 
-        Dictionary<string, long> existingDict = attribute.GetAttributeValidateRules()
+        Dictionary<string, long> existingDict = attribute.AttributeValidateRules
             .Where(r => !r.IsDeleted)
             .GroupBy(r => r.Expression)
             .ToDictionary(g => g.Key, g => g.First().Id);

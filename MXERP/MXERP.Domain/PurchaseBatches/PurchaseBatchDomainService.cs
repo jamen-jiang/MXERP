@@ -82,14 +82,14 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
         }
 
         PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.PurchaseRequisitionOrder, purchaseRequisitionOrderId, null, cancellationToken);
-        if (plan is null || plan.GetPurchasePlanItems().Count == 0)
+        if (plan is null || plan.PurchasePlanItems.Count == 0)
         {
             return null;
         }
 
         PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(plan.ProductType, plan.Id, plan.DepartmentId ?? 0, plan.CompanyId, plan.RelationType, plan.RelationId, plan.RelationNumber, plan.Remark, cancellationToken);
 
-        foreach (PurchasePlanItem item in plan.GetPurchasePlanItems())
+        foreach (PurchasePlanItem item in plan.PurchasePlanItems)
         {
             model.AddItem(item.RelationItemId, item.SpuId, item.SkuId, item.WarehouseId, item.Qty, item.SkuAttributes, item.OtherAttributes);
         }
@@ -126,12 +126,12 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
         List<PurchaseBatch> list = new List<PurchaseBatch>();
 
         PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.BulkOrder, bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
-        if (plan is null || plan.GetPurchasePlanItems().Count == 0)
+        if (plan is null || plan.PurchasePlanItems.Count == 0)
         {
             return list;
         }
 
-        List<SpuWarehouse> spuWarehouses = plan.GetPurchasePlanItems()
+        List<SpuWarehouse> spuWarehouses = plan.PurchasePlanItems
             .Select(x => new SpuWarehouse(x.SpuId, x.WarehouseId))
             .Distinct()
             .ToList();
@@ -140,7 +140,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
         {
             PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(plan.ProductType, plan.Id, plan.StoreId ?? 0, plan.CompanyId, plan.RelationType, plan.RelationId, plan.RelationItemId, plan.RelationNumber, plan.RelationCustomerOrderNumber, plan.RelationCustomerPONumber, plan.RelationOrderRef, plan.Remark, cancellationToken);
 
-            List<PurchasePlanItem> purchasePlanItems = plan.GetPurchasePlanItems()
+            List<PurchasePlanItem> purchasePlanItems = plan.PurchasePlanItems
                 .Where(x => x.SpuId == spuWarehouse.SpuId && x.WarehouseId == spuWarehouse.WarehouseId)
                 .ToList();
 
@@ -177,7 +177,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
         {
             PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(ProductTypeEnum.Accessory, null, leaveStockBatch.DepartmentId ?? 0, leaveStockBatch.CompanyId, BusinessOrderTypeEnum.LeaveStockBatch, leaveStockBatchId, leaveStockBatch.Number, leaveStockBatch.Remark, cancellationToken);
 
-            foreach (LeaveStockBatchItem item in leaveStockBatch.GetLeaveStockBatchItems())
+            foreach (LeaveStockBatchItem item in leaveStockBatch.LeaveStockBatchItems)
             {
                 Sku? sku = await _skuRepository.FindAsync(item.SkuId, true, cancellationToken);
                 if (sku is null)
@@ -186,7 +186,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
                 }
 
                 double alreadyQty = alreadyGeneratePurchaseBatches
-                    .SelectMany(x => x.GetPurchaseBatchItems())
+                    .SelectMany(x => x.PurchaseBatchItems)
                     .Where(x => x.SkuId == item.SkuId && x.WarehouseId == item.WarehouseId && x.RelationItemId == item.Id)
                     .Sum(x => x.Qty);
 
@@ -207,7 +207,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
             return list;
         }
 
-        List<SpuWarehouse> spuWarehouses = leaveStockBatch.GetLeaveStockBatchItems()
+        List<SpuWarehouse> spuWarehouses = leaveStockBatch.LeaveStockBatchItems
             .Select(x => new SpuWarehouse(x.SpuId, x.WarehouseId))
             .Distinct()
             .ToList();
@@ -216,7 +216,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
         {
             PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(leaveStockBatch.ProductType, null, leaveStockBatch.StoreId ?? 0, leaveStockBatch.CompanyId, BusinessOrderTypeEnum.LeaveStockBatch, leaveStockBatchId, null, leaveStockBatch.Number, leaveStockBatch.RelationCustomerOrderNumber, leaveStockBatch.RelationCustomerPONumber, leaveStockBatch.RelationOrderRef, leaveStockBatch.Remark, cancellationToken);
 
-            List<LeaveStockBatchItem> leaveStockBatchItems = leaveStockBatch.GetLeaveStockBatchItems()
+            List<LeaveStockBatchItem> leaveStockBatchItems = leaveStockBatch.LeaveStockBatchItems
                 .Where(x => x.SpuId == spuWarehouse.SpuId && x.WarehouseId == spuWarehouse.WarehouseId)
                 .ToList();
 
@@ -229,7 +229,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
                 }
 
                 double alreadyQty = alreadyGeneratePurchaseBatches
-                    .SelectMany(x => x.GetPurchaseBatchItems())
+                    .SelectMany(x => x.PurchaseBatchItems)
                     .Where(x => x.SkuId == item.SkuId && x.WarehouseId == item.WarehouseId && x.RelationItemId == item.Id)
                     .Sum(x => x.Qty);
 

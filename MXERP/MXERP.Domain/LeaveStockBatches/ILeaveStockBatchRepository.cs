@@ -1,3 +1,4 @@
+using MXERP.Domain.Common.Enums;
 using Snow.Domain.Repositories;
 
 namespace MXERP.Domain.LeaveStockBatches;
@@ -30,7 +31,7 @@ public interface ILeaveStockBatchRepository : IRepository<LeaveStockBatch>
     /// <param name="relationId">关联Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出库批次列表</returns>
-    Task<List<LeaveStockBatch>> GetListByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default);
+    Task<List<LeaveStockBatch>> GetListByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 按采购批次Id查询列表（不含已取消）
@@ -47,7 +48,7 @@ public interface ILeaveStockBatchRepository : IRepository<LeaveStockBatch>
     /// <param name="relationId">关联Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>存在返回 true</returns>
-    Task<bool> IsExistByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断关联类型 + 关联Id + 关联项Id是否存在（不含已取消）
@@ -57,7 +58,7 @@ public interface ILeaveStockBatchRepository : IRepository<LeaveStockBatch>
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>存在返回 true</returns>
-    Task<bool> IsExistByRelationAsync(string relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断采购批次Id是否存在（不含已取消）

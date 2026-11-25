@@ -12,12 +12,12 @@ public class Spu : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public string ProductType { get; private set; } = string.Empty;
+    public ProductTypeEnum ProductType { get; private set; }
 
     /// <summary>
     /// 组别
     /// </summary>
-    public string? Group { get; private set; }
+    public SpuGroupEnum? Group { get; private set; }
 
     /// <summary>
     /// 供应商Id
@@ -111,8 +111,8 @@ public class Spu : AuditedAggregateRoot
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="attachmentIds">附件Id集合</param>
     internal Spu(
-        string productType,
-        string? group,
+        ProductTypeEnum productType,
+        SpuGroupEnum? group,
         long supplierId,
         long? brandId,
         string code,
@@ -128,8 +128,6 @@ public class Spu : AuditedAggregateRoot
         IReadOnlyCollection<long>? companyIds,
         IReadOnlyCollection<long>? attachmentIds)
     {
-        ValidateProductType(productType);
-        ValidateGroup(group);
         ProductType = productType;
         Group = group;
         SupplierId = supplierId;
@@ -166,7 +164,7 @@ public class Spu : AuditedAggregateRoot
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="attachmentIds">附件Id集合</param>
     public void Modify(
-        string? group,
+        SpuGroupEnum? group,
         long supplierId,
         long? brandId,
         string code,
@@ -182,7 +180,6 @@ public class Spu : AuditedAggregateRoot
         IReadOnlyCollection<long>? companyIds,
         IReadOnlyCollection<long>? attachmentIds)
     {
-        ValidateGroup(group);
         Group = group;
         SupplierId = supplierId;
         BrandId = brandId;
@@ -222,35 +219,6 @@ public class Spu : AuditedAggregateRoot
     public void Disable()
     {
         Disabled = true;
-    }
-
-    /// <summary>
-    /// 校验产品类型
-    /// </summary>
-    /// <param name="productType">产品类型</param>
-    private static void ValidateProductType(string productType)
-    {
-        if (string.IsNullOrWhiteSpace(productType))
-        {
-            throw new UserFriendlyException("产品类型不能为空");
-        }
-
-        if (!ProductTypeEnum.IsValid(productType))
-        {
-            throw new UserFriendlyException("产品类型" + productType + "有误!");
-        }
-    }
-
-    /// <summary>
-    /// 校验组别
-    /// </summary>
-    /// <param name="group">组别</param>
-    private static void ValidateGroup(string? group)
-    {
-        if (!string.IsNullOrWhiteSpace(group) && !SpuGroupEnum.IsValid(group))
-        {
-            throw new UserFriendlyException("组别" + group + "有误!");
-        }
     }
 
     /// <summary>

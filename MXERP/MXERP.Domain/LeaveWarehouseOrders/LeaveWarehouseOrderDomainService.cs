@@ -49,7 +49,7 @@ public class LeaveWarehouseOrderDomainService : ILeaveWarehouseOrderDomainServic
     {
         IReadOnlyCollection<LeaveWarehouseOrderItemData> finalItems = leaveWarehouseOrderItems ?? new List<LeaveWarehouseOrderItemData>();
 
-        List<LeaveWarehouseOrderItem> toRemoves = leaveWarehouseOrder.GetLeaveWarehouseOrderItems()
+        List<LeaveWarehouseOrderItem> toRemoves = leaveWarehouseOrder.LeaveWarehouseOrderItems
             .Where(a => !finalItems.Any(i => i.LeaveStockBatchId == a.LeaveStockBatchId && i.SalesSpuId == a.SalesSpuId && i.SpuId == a.SpuId))
             .ToList();
 
@@ -59,7 +59,7 @@ public class LeaveWarehouseOrderDomainService : ILeaveWarehouseOrderDomainServic
         }
 
         Dictionary<BusinessKey, long> existingDict = new Dictionary<BusinessKey, long>();
-        foreach (LeaveWarehouseOrderItem a in leaveWarehouseOrder.GetLeaveWarehouseOrderItems())
+        foreach (LeaveWarehouseOrderItem a in leaveWarehouseOrder.LeaveWarehouseOrderItems)
         {
             existingDict[new BusinessKey(a.LeaveStockBatchId, a.SalesSpuId, a.SpuId)] = a.Id;
         }

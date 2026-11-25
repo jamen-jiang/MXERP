@@ -1,5 +1,6 @@
 using Snow.Domain.Entities;
 using Snow.Domain.Entities.Auditing;
+using MXERP.Domain.Common.Enums;
 
 namespace MXERP.Domain.EnterStockOrders;
 
@@ -13,7 +14,6 @@ public class EnterStockOrderRelation : DeletionAuditedEntity
     /// </summary>
     protected EnterStockOrderRelation()
     {
-        RelationType = string.Empty;
         RelationNumber = string.Empty;
     }
 
@@ -25,7 +25,7 @@ public class EnterStockOrderRelation : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    public EnterStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    public EnterStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         RelationType = relationType;
         RelationId = relationId;
@@ -42,7 +42,7 @@ public class EnterStockOrderRelation : DeletionAuditedEntity
     /// <summary>
     /// 关联类型
     /// </summary>
-    public string RelationType { get; private set; }
+    public BusinessOrderTypeEnum RelationType { get; private set; }
 
     /// <summary>
     /// 关联Id

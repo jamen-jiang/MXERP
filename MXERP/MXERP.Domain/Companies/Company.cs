@@ -11,11 +11,11 @@ public class Company : AuditedAggregateRoot
     /// <summary>
     /// 区域
     /// </summary>
-    public string Region { get; private set; } = string.Empty;
+    public CompanyRegionEnum Region { get; private set; }
     /// <summary>
     /// 组别(可空)
     /// </summary>
-    public string? Group { get; private set; }
+    public CompanyGroupEnum? Group { get; private set; }
     /// <summary>
     /// 代码
     /// </summary>
@@ -80,13 +80,22 @@ public class Company : AuditedAggregateRoot
     /// <summary>
     /// 联系人列表
     /// </summary>
-    public virtual ICollection<CompanyContact> CompanyContacts { get; private set; } = new List<CompanyContact>();
+    private readonly List<CompanyContact> _companyContacts;
+
+    /// <summary>
+    /// 联系人列表
+    /// </summary>
+    public IReadOnlyCollection<CompanyContact> CompanyContacts
+    {
+        get { return _companyContacts.AsReadOnly(); }
+    }
 
     /// <summary>
     /// 构造器(供 EF 使用)
     /// </summary>
     protected Company()
     {
+        _companyContacts = new List<CompanyContact>();
     }
 
     /// <summary>
@@ -108,17 +117,17 @@ public class Company : AuditedAggregateRoot
     /// <param name="billingAddress">账户地址(可空)</param>
     /// <param name="sort">排序(可空)</param>
     /// <param name="remark">备注(可空)</param>
-    internal Company(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
+    internal Company(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
+        : this()
     {
         if (code.IsNullOrWhiteSpace())
         {
             throw new UserFriendlyException("代码不能为空");
         }
 
-        ValidateRegionAndGroup(region?.Trim(), group?.Trim());
 
-        Region = region!.Trim();
-        Group = group?.Trim();
+        Region = region;
+        Group = group;
         Code = code.Trim();
         Name = name?.Trim() ?? string.Empty;
         ShortName = shortName?.Trim();
@@ -154,17 +163,16 @@ public class Company : AuditedAggregateRoot
     /// <param name="billingAddress">账户地址(可空)</param>
     /// <param name="sort">排序(可空)</param>
     /// <param name="remark">备注(可空)</param>
-    internal void Modify(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
+    internal void Modify(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
     {
         if (code.IsNullOrWhiteSpace())
         {
             throw new UserFriendlyException("代码不能为空");
         }
 
-        ValidateRegionAndGroup(region?.Trim(), group?.Trim());
 
-        Region = region!.Trim();
-        Group = group?.Trim();
+        Region = region;
+        Group = group;
         Code = code.Trim();
         Name = name?.Trim() ?? string.Empty;
         ShortName = shortName?.Trim();
@@ -191,15 +199,6 @@ public class Company : AuditedAggregateRoot
     }
 
     /// <summary>
-    /// 获取联系人列表(只读)
-    /// </summary>
-    /// <returns>只读联系人列表</returns>
-    public IReadOnlyList<CompanyContact> GetCompanyContacts()
-    {
-        return CompanyContacts.ToList().AsReadOnly();
-    }
-
-    /// <summary>
     /// 添加联系人
     /// </summary>
     /// <param name="name">姓名</param>
@@ -213,7 +212,7 @@ public class Company : AuditedAggregateRoot
             throw new UserFriendlyException($"联系人{name}已存在!");
         }
 
-        CompanyContacts.Add(new CompanyContact(name, telephone, area, address));
+        _companyContacts.Add(new CompanyContact(name, telephone, area, address));
     }
 
     /// <summary>
@@ -225,7 +224,7 @@ public class Company : AuditedAggregateRoot
     /// <param name="address">地址(可空)</param>
     public void ModifyContact(long contactId, string? telephone, string? area, string? address)
     {
-        CompanyContact? contact = CompanyContacts.FirstOrDefault(c => c.Id == contactId);
+        CompanyContact? contact = _companyContacts.FirstOrDefault(c => c.Id == contactId);
         if (contact is null)
         {
             throw new UserFriendlyException($"联系人Id{contactId}不存在!");
@@ -240,7 +239,7 @@ public class Company : AuditedAggregateRoot
     /// <param name="contactId">联系人Id</param>
     public void DeleteContact(long contactId)
     {
-        CompanyContact? contact = CompanyContacts.FirstOrDefault(c => c.Id == contactId);
+        CompanyContact? contact = _companyContacts.FirstOrDefault(c => c.Id == contactId);
         if (contact is null)
         {
             return;
@@ -249,23 +248,7 @@ public class Company : AuditedAggregateRoot
         contact.Delete();
     }
 
-    /// <summary>
-    /// 校验区域和组别
-    /// </summary>
-    /// <param name="region">区域</param>
-    /// <param name="group">组别(可空)</param>
-    private static void ValidateRegionAndGroup(string? region, string? group)
-    {
-        if (!CompanyRegionEnum.IsValid(region))
-        {
-            throw new UserFriendlyException($"区域{region}有误!");
-        }
 
-        if (!string.IsNullOrWhiteSpace(group) && !CompanyGroupEnum.IsValid(group))
-        {
-            throw new UserFriendlyException($"组别{group}有误!");
-        }
-    }
 
     /// <summary>
     /// 判断联系人是否存在(未删除)
@@ -274,6 +257,6 @@ public class Company : AuditedAggregateRoot
     /// <returns>存在返回 true</returns>
     private bool IsExistContact(string name)
     {
-        return CompanyContacts.Any(c => c.Name == name && !c.IsDeleted);
+        return _companyContacts.Any(c => c.Name == name && !c.IsDeleted);
     }
 }
