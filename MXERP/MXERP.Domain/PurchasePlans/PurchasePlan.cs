@@ -12,11 +12,11 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -97,7 +97,7 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchasePlan(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal PurchasePlan(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
         : this()
     {
         ProductType = productType;
@@ -123,7 +123,7 @@ public class PurchasePlan : AuditedAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchasePlan(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+    internal PurchasePlan(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
         : this()
     {
         ProductType = productType;
@@ -192,7 +192,7 @@ public class PurchasePlan : AuditedAggregateRoot
         PurchasePlanItem item = new PurchasePlanItem(relationItemId, salesSpuId, salesSpuCode, customerSpuId, customerSpuCode, spuId, skuId, warehouseId, qty, skuAttributes, otherAttributes);
         _purchasePlanItems.Add(item);
         UpdateQty();
-        if (RelationType == BusinessOrderTypeEnum.BulkOrder)
+        if (RelationType == nameof(BusinessOrderTypeEnum.BulkOrder))
         {
             long distinctSalesSpuCount = _purchasePlanItems.Select(x => x.SalesSpuId).Distinct().LongCount();
             if (distinctSalesSpuCount > 1)

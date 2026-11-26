@@ -14,7 +14,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 采购单号（可空）
     /// </summary>
@@ -26,7 +26,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 关联类型（可空）
     /// </summary>
-    public BusinessOrderTypeEnum? RelationType { get; private set; }
+    public string? RelationType { get; private set; }
     /// <summary>
     /// 关联Id（可空）
     /// </summary>
@@ -78,7 +78,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public PurchaseBatchStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 备注（可空）
     /// </summary>
@@ -144,7 +144,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(ProductTypeEnum productType, long? purchasePlanId, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal PurchaseBatch(string productType, long? purchasePlanId, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
         : this()
     {
         ProductType = productType;
@@ -159,7 +159,7 @@ public class PurchaseBatch : OrderAggregateRoot
         RelationCustomerPONumber = relationCustomerPONumber;
         RelationOrderRef = relationOrderRef;
         Remark = remark;
-        Status = PurchaseBatchStatusEnum.Pending;
+        Status = nameof(PurchaseBatchStatusEnum.Pending);
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(ProductTypeEnum productType, long? purchasePlanId, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+    internal PurchaseBatch(string productType, long? purchasePlanId, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
         : this(productType, departmentId, companyId, remark)
     {
         PurchasePlanId = purchasePlanId;
@@ -189,14 +189,14 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="departmentId">部门Id</param>
     /// <param name="companyId">公司Id</param>
     /// <param name="remark">备注（可空）</param>
-    internal PurchaseBatch(ProductTypeEnum productType, long departmentId, long companyId, string? remark)
+    internal PurchaseBatch(string productType, long departmentId, long companyId, string? remark)
         : this()
     {
         ProductType = productType;
         DepartmentId = departmentId;
         CompanyId = companyId;
         Remark = remark;
-        Status = PurchaseBatchStatusEnum.Pending;
+        Status = nameof(PurchaseBatchStatusEnum.Pending);
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Check(long userId, string name, string? remark)
     {
-        if (Status != PurchaseBatchStatusEnum.Pending)
+        if (Status != nameof(PurchaseBatchStatusEnum.Pending))
         {
             throw new UserFriendlyException("采购批次" + Number + "当前状态不允许审核!");
         }
@@ -216,8 +216,8 @@ public class PurchaseBatch : OrderAggregateRoot
         FinishedByName = name;
         FinishedOn = DateTime.Now;
         PurchaseOrderNumber = remark;
-        Status = PurchaseBatchStatusEnum.Finished;
-        Audit(AuditActionEnum.Finish, remark);
+        Status = nameof(PurchaseBatchStatusEnum.Finished);
+        Audit(nameof(AuditActionEnum.Finish), remark);
     }
 
     /// <summary>
@@ -226,7 +226,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     internal void UnCheck(string? remark)
     {
-        if (Status != PurchaseBatchStatusEnum.Finished)
+        if (Status != nameof(PurchaseBatchStatusEnum.Finished))
         {
             throw new UserFriendlyException("采购批次" + Number + "当前状态不允许取消!");
         }
@@ -234,8 +234,8 @@ public class PurchaseBatch : OrderAggregateRoot
         FinishedBy = null;
         FinishedByName = null;
         FinishedOn = null;
-        Status = PurchaseBatchStatusEnum.Pending;
-        Audit(AuditActionEnum.UnCheck, remark);
+        Status = nameof(PurchaseBatchStatusEnum.Pending);
+        Audit(nameof(AuditActionEnum.UnCheck), remark);
     }
 
     /// <summary>
@@ -246,7 +246,7 @@ public class PurchaseBatch : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (Status != PurchaseBatchStatusEnum.Pending)
+        if (Status != nameof(PurchaseBatchStatusEnum.Pending))
         {
             throw new UserFriendlyException("采购批次" + Number + "当前状态不允许取消!");
         }
@@ -254,9 +254,9 @@ public class PurchaseBatch : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = PurchaseBatchStatusEnum.Canceled;
+        Status = nameof(PurchaseBatchStatusEnum.Canceled);
         AddDomainEvent(new PurchaseBatchCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -306,7 +306,7 @@ public class PurchaseBatch : OrderAggregateRoot
             return;
         }
 
-        if (_purchaseBatchItems.Count > 0 && RelationType == BusinessOrderTypeEnum.BulkOrder)
+        if (_purchaseBatchItems.Count > 0 && RelationType == nameof(BusinessOrderTypeEnum.BulkOrder))
         {
             bool hasSameSalesSpu = _purchaseBatchItems.Any(x => x.SalesSpuId is not null && x.SalesSpuId == salesSpuId);
             if (!hasSameSalesSpu)
@@ -382,19 +382,19 @@ public class PurchaseBatch : OrderAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
-            return SerialNumberTypeEnum.SemiProductPurchaseBatch;
+            return nameof(SerialNumberTypeEnum.SemiProductPurchaseBatch);
         }
 
-        if (ProductType == ProductTypeEnum.EndProduct)
+        if (ProductType == nameof(ProductTypeEnum.EndProduct))
         {
-            return SerialNumberTypeEnum.EndProductPurchaseBatch;
+            return nameof(SerialNumberTypeEnum.EndProductPurchaseBatch);
         }
 
-        return SerialNumberTypeEnum.AccessoryPurchaseBatch;
+        return nameof(SerialNumberTypeEnum.AccessoryPurchaseBatch);
     }
 
     /// <summary>
@@ -436,19 +436,19 @@ public class PurchaseBatch : OrderAggregateRoot
         PurchaseQty = _purchaseBatchItems.Where(x => !x.IsDeleted).Sum(x => x.PurchaseQty);
         if (PurchaseQty == 0)
         {
-            Status = PurchaseBatchStatusEnum.Pending;
+            Status = nameof(PurchaseBatchStatusEnum.Pending);
         }
         else if (Qty - PurchaseQty > 0)
         {
-            Status = PurchaseBatchStatusEnum.PartialPurchased;
+            Status = nameof(PurchaseBatchStatusEnum.PartialPurchased);
         }
         else if (Qty - PurchaseQty == 0)
         {
-            Status = PurchaseBatchStatusEnum.AllPurchased;
+            Status = nameof(PurchaseBatchStatusEnum.AllPurchased);
         }
         else
         {
-            Status = PurchaseBatchStatusEnum.OverPurchased;
+            Status = nameof(PurchaseBatchStatusEnum.OverPurchased);
         }
     }
 

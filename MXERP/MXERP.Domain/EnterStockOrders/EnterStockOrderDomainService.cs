@@ -107,7 +107,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         {
             throw new UserFriendlyException("入库单不存在!");
         }
-        if (EnterStockOrderStatusEnum.Finished != originalEnterStockOrder.Status)
+        if (nameof(EnterStockOrderStatusEnum.Finished) != originalEnterStockOrder.Status)
         {
             throw new UserFriendlyException($"入库单{originalEnterStockOrder.Number}当前状态不允许冲销!");
         }
@@ -116,11 +116,11 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         EnterStockOrder model;
         if (originalEnterStockOrder.RelationType is null)
         {
-            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, EnterStockBusinessTypeEnum.ReversalEnterStock, remark, cancellationToken);
+            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, nameof(EnterStockBusinessTypeEnum.ReversalEnterStock), remark, cancellationToken);
         }
         else
         {
-            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, originalEnterStockOrder.RelationType.Value, EnterStockBusinessTypeEnum.ReversalEnterStock, remark, cancellationToken);
+            model = await _enterStockOrderFactory.CreateAsync(originalEnterStockOrder.ProductType, enterStockOrderId, originalEnterStockOrder.RelationType, nameof(EnterStockBusinessTypeEnum.ReversalEnterStock), remark, cancellationToken);
         }
 
         // 3. 添加明细
@@ -187,8 +187,8 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 2. 生成入库单（委托工厂）
-        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.PurchaseOrder;
-        EnterStockOrder model = await _enterStockOrderFactory.CreateAsync(purchaseOrder.ProductType, null, relationType, EnterStockBusinessTypeEnum.PurchaseEnterStock, purchaseOrder.Remark, cancellationToken);
+        string relationType = nameof(BusinessOrderTypeEnum.PurchaseOrder);
+        EnterStockOrder model = await _enterStockOrderFactory.CreateAsync(purchaseOrder.ProductType, null, relationType, nameof(EnterStockBusinessTypeEnum.PurchaseEnterStock), purchaseOrder.Remark, cancellationToken);
 
         // 3. 添加明细
         foreach (UniqueSkuInfoData item in skuInfos.Where(x => x.Qty != 0))
@@ -235,8 +235,8 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         }
 
         // 1. 生成入库单（委托工厂）
-        BusinessOrderTypeEnum relationType = BusinessOrderTypeEnum.InventoryOrder;
-        EnterStockBusinessTypeEnum businessType = EnterStockBusinessTypeEnum.InventoryEnterStock;
+        string relationType = nameof(BusinessOrderTypeEnum.InventoryOrder);
+        string businessType = nameof(EnterStockBusinessTypeEnum.InventoryEnterStock);
 
         EnterStockOrder model = await _enterStockOrderFactory.CreateAsync(inventoryOrder.ProductType, null, relationType, businessType, inventoryOrder.Remark, cancellationToken);
 
@@ -264,7 +264,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
     }
 
     /// <inheritdoc />
-    public async Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, EnterStockBusinessTypeEnum businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default)
+    public async Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, string businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default)
     {
         // 1. 查出库批次
         LeaveStockBatch? leaveStockBatch = await _leaveStockBatchRepository.FindAsync(leaveStockBatchId, false, cancellationToken);
@@ -276,7 +276,7 @@ public class EnterStockOrderDomainService : IEnterStockOrderDomainService
         {
             throw new UserFriendlyException($"出库批次{leaveStockBatch.Number}不允许生成入库单!");
         }
-        if (LeaveStockBatchStatusEnum.Pending != leaveStockBatch.Status)
+        if (nameof(LeaveStockBatchStatusEnum.Pending) != leaveStockBatch.Status)
         {
             throw new UserFriendlyException($"出库批次{leaveStockBatch.Number}当前状态不允许生成入库单!");
         }

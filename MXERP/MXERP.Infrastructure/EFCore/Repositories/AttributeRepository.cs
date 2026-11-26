@@ -24,14 +24,14 @@ public class AttributeRepository : EfCoreRepository<MXERPDbContext, AttributeEnt
     }
 
     /// <inheritdoc />
-    public async Task<AttributeEntity?> GetByProductTypeAndScopeAndCodeAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, CancellationToken cancellationToken = default)
+    public async Task<AttributeEntity?> GetByProductTypeAndScopeAndCodeAsync(string productType, string scope, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .FirstOrDefaultAsync(x => x.ProductType == productType && x.Scope == scope && x.Code == code, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<List<AttributeEntity>> GetListByProductTypeAndScopeAsync(ProductTypeEnum productType, AttributeScopeEnum scope, CancellationToken cancellationToken = default)
+    public async Task<List<AttributeEntity>> GetListByProductTypeAndScopeAsync(string productType, string scope, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .Where(x => x.ProductType == productType && x.Scope == scope)
@@ -39,7 +39,7 @@ public class AttributeRepository : EfCoreRepository<MXERPDbContext, AttributeEnt
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(string productType, string scope, string code, long? id = null, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .AnyAsync(x => x.ProductType == productType && x.Scope == scope && x.Code == code && x.Id != id, cancellationToken);

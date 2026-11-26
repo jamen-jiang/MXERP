@@ -23,5 +23,5 @@ public interface IAttributeFactory
     /// <param name="remark">备注</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>属性聚合</returns>
-    Task<Attribute> CreateAsync(ProductTypeEnum productType, AttributeScopeEnum scope, string code, string name, bool isKey, InputTypeEnum inputType, DataTypeEnum dataType, bool isRequired, bool isFilter, int? sort, string? remark, CancellationToken cancellationToken = default);
+    Task<Attribute> CreateAsync(string productType, string scope, string code, string name, bool isKey, string inputType, string dataType, bool isRequired, bool isFilter, int? sort, string? remark, CancellationToken cancellationToken = default);
 }

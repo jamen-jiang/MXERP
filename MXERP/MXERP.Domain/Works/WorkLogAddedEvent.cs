@@ -13,7 +13,7 @@ public class WorkLogAddedEvent : DomainEvent
     /// <param name="work">工作聚合(作为事件来源)</param>
     /// <param name="taskName">任务名称</param>
     /// <param name="status">任务状态</param>
-    public WorkLogAddedEvent(Work work, string taskName, UserTaskStatusEnum status) : base(work)
+    public WorkLogAddedEvent(Work work, string taskName, string status) : base(work)
     {
         BusinessId = work.BusinessId;
         TaskName = taskName;
@@ -33,5 +33,5 @@ public class WorkLogAddedEvent : DomainEvent
     /// <summary>
     /// 任务状态(Approve / Refuse)
     /// </summary>
-    public UserTaskStatusEnum Status { get; }
+    public string Status { get; }
 }

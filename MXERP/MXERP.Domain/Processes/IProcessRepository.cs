@@ -14,7 +14,7 @@ public interface IProcessRepository : IRepository<Process>
     /// <param name="code">工序代码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>工序, 不存在返回 null</returns>
-    Task<Process?> GetByTypeAndCodeAsync(ProcessTypeEnum type, string code, CancellationToken cancellationToken = default);
+    Task<Process?> GetByTypeAndCodeAsync(string type, string code, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断同类型下工序代码是否存在(排除指定主键)
@@ -24,5 +24,5 @@ public interface IProcessRepository : IRepository<Process>
     /// <param name="id">排除的主键Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByTypeAndCodeExcludeIdAsync(ProcessTypeEnum type, string code, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByTypeAndCodeExcludeIdAsync(string type, string code, long? id = null, CancellationToken cancellationToken = default);
 }

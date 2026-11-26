@@ -23,13 +23,13 @@ public class SerialNumberRepository : EfCoreRepository<MXERPDbContext, SerialNum
     }
 
     /// <inheritdoc />
-    public async Task<SerialNumber?> GetByTypeAsync(SerialNumberTypeEnum type, CancellationToken cancellationToken = default)
+    public async Task<SerialNumber?> GetByTypeAsync(string type, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.Type == type, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByTypeExcludeIdAsync(SerialNumberTypeEnum type, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByTypeExcludeIdAsync(string type, long? id = null, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.Type == type && x.Id != id, cancellationToken);
     }

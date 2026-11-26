@@ -81,7 +81,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
             throw new UserFriendlyException("申购单" + purchaseRequisitionOrderId + "不存在!");
         }
 
-        PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.PurchaseRequisitionOrder, purchaseRequisitionOrderId, null, cancellationToken);
+        PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder), purchaseRequisitionOrderId, null, cancellationToken);
         if (plan is null || plan.PurchasePlanItems.Count == 0)
         {
             return null;
@@ -112,12 +112,12 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
             throw new UserFriendlyException("批量订单" + bulkOrderItem.BulkOrderId + "不存在!");
         }
 
-        if (bulkOrder.Status == BulkOrderStatusEnum.Canceled)
+        if (bulkOrder.Status == nameof(BulkOrderStatusEnum.Canceled))
         {
             throw new UserFriendlyException("批量订单" + bulkOrder.Number + "已取消不允许生成采购批次!");
         }
 
-        bool isExist = await _purchaseBatchRepository.IsExistByRelationAsync(BusinessOrderTypeEnum.BulkOrder, bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
+        bool isExist = await _purchaseBatchRepository.IsExistByRelationAsync(nameof(BusinessOrderTypeEnum.BulkOrder), bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
         if (isExist)
         {
             throw new UserFriendlyException("批量订单项" + bulkOrderItemId + "已生成采购批次!");
@@ -125,7 +125,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
 
         List<PurchaseBatch> list = new List<PurchaseBatch>();
 
-        PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.BulkOrder, bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
+        PurchasePlan? plan = await _purchasePlanRepository.GetByRelationAsync(nameof(BusinessOrderTypeEnum.BulkOrder), bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
         if (plan is null || plan.PurchasePlanItems.Count == 0)
         {
             return list;
@@ -171,11 +171,11 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
             return list;
         }
 
-        List<PurchaseBatch> alreadyGeneratePurchaseBatches = await _purchaseBatchRepository.GetListByRelationAsync(BusinessOrderTypeEnum.LeaveStockBatch, leaveStockBatchId, cancellationToken);
+        List<PurchaseBatch> alreadyGeneratePurchaseBatches = await _purchaseBatchRepository.GetListByRelationAsync(nameof(BusinessOrderTypeEnum.LeaveStockBatch), leaveStockBatchId, cancellationToken);
 
-        if (leaveStockBatch.ProductType == ProductTypeEnum.Accessory)
+        if (leaveStockBatch.ProductType == nameof(ProductTypeEnum.Accessory))
         {
-            PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(ProductTypeEnum.Accessory, null, leaveStockBatch.DepartmentId ?? 0, leaveStockBatch.CompanyId, BusinessOrderTypeEnum.LeaveStockBatch, leaveStockBatchId, leaveStockBatch.Number, leaveStockBatch.Remark, cancellationToken);
+            PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(nameof(ProductTypeEnum.Accessory), null, leaveStockBatch.DepartmentId ?? 0, leaveStockBatch.CompanyId, nameof(BusinessOrderTypeEnum.LeaveStockBatch), leaveStockBatchId, leaveStockBatch.Number, leaveStockBatch.Remark, cancellationToken);
 
             foreach (LeaveStockBatchItem item in leaveStockBatch.LeaveStockBatchItems)
             {
@@ -214,7 +214,7 @@ public class PurchaseBatchDomainService : IPurchaseBatchDomainService
 
         foreach (SpuWarehouse spuWarehouse in spuWarehouses)
         {
-            PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(leaveStockBatch.ProductType, null, leaveStockBatch.StoreId ?? 0, leaveStockBatch.CompanyId, BusinessOrderTypeEnum.LeaveStockBatch, leaveStockBatchId, null, leaveStockBatch.Number, leaveStockBatch.RelationCustomerOrderNumber, leaveStockBatch.RelationCustomerPONumber, leaveStockBatch.RelationOrderRef, leaveStockBatch.Remark, cancellationToken);
+            PurchaseBatch model = await _purchaseBatchFactory.CreateAsync(leaveStockBatch.ProductType, null, leaveStockBatch.StoreId ?? 0, leaveStockBatch.CompanyId, nameof(BusinessOrderTypeEnum.LeaveStockBatch), leaveStockBatchId, null, leaveStockBatch.Number, leaveStockBatch.RelationCustomerOrderNumber, leaveStockBatch.RelationCustomerPONumber, leaveStockBatch.RelationOrderRef, leaveStockBatch.Remark, cancellationToken);
 
             List<LeaveStockBatchItem> leaveStockBatchItems = leaveStockBatch.LeaveStockBatchItems
                 .Where(x => x.SpuId == spuWarehouse.SpuId && x.WarehouseId == spuWarehouse.WarehouseId)

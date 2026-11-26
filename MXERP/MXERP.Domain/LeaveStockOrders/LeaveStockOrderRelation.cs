@@ -25,7 +25,7 @@ public class LeaveStockOrderRelation : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    public LeaveStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    public LeaveStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         RelationType = relationType;
         RelationId = relationId;
@@ -42,7 +42,7 @@ public class LeaveStockOrderRelation : DeletionAuditedEntity
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 关联Id

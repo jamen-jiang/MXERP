@@ -19,5 +19,5 @@ public interface ICustomerSpuFactory
     /// <param name="attachmentIds">附件Id集合（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>客人镜种</returns>
-    Task<CustomerSpu> CreateAsync(ProductTypeEnum productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
+    Task<CustomerSpu> CreateAsync(string productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default);
 }

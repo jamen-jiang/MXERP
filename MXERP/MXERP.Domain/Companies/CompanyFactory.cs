@@ -18,7 +18,7 @@ public class CompanyFactory : ICompanyFactory
     }
 
     /// <inheritdoc />
-    public async Task<Company> CreateAsync(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Company> CreateAsync(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistByCodeExcludeIdAsync(code, null, cancellationToken))
         {

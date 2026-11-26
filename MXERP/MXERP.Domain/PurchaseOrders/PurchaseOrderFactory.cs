@@ -26,8 +26,8 @@ public class PurchaseOrderFactory : IPurchaseOrderFactory
 
     /// <inheritdoc />
     public async Task<PurchaseOrder> CreateAsync(
-        ProductTypeEnum productType,
-        BusinessOrderTypeEnum relationType,
+        string productType,
+        string relationType,
         long companyId,
         long? positionId,
         long supplierId,

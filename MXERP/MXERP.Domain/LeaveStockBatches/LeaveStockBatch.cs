@@ -14,7 +14,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 出库计划Id（可空）
     /// </summary>
@@ -30,7 +30,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -82,7 +82,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public LeaveStockBatchStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 是否打印
     /// </summary>
@@ -198,7 +198,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockBatch(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal LeaveStockBatch(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
         : this()
     {
         ProductType = productType;
@@ -215,7 +215,7 @@ public class LeaveStockBatch : OrderAggregateRoot
         RelationCustomerPONumber = relationCustomerPONumber;
         RelationOrderRef = relationOrderRef;
         Remark = remark;
-        Status = LeaveStockBatchStatusEnum.Pending;
+        Status = nameof(LeaveStockBatchStatusEnum.Pending);
     }
 
     /// <summary>
@@ -231,7 +231,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockBatch(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+    internal LeaveStockBatch(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
         : this()
     {
         ProductType = productType;
@@ -244,7 +244,7 @@ public class LeaveStockBatch : OrderAggregateRoot
         RelationId = relationId;
         RelationNumber = relationNumber;
         Remark = remark;
-        Status = LeaveStockBatchStatusEnum.Pending;
+        Status = nameof(LeaveStockBatchStatusEnum.Pending);
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (LeaveStockBatchStatusEnum.Pending != Status)
+        if (nameof(LeaveStockBatchStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException("出库批次" + Number + "当前状态不允许取消!");
         }
@@ -268,9 +268,9 @@ public class LeaveStockBatch : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = LeaveStockBatchStatusEnum.Canceled;
+        Status = nameof(LeaveStockBatchStatusEnum.Canceled);
         AddDomainEvent(new LeaveStockBatchCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -280,7 +280,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="name">打印人名称</param>
     public void Print(long userId, string name)
     {
-        if (BusinessOrderTypeEnum.BulkOrder != RelationType)
+        if (nameof(BusinessOrderTypeEnum.BulkOrder) != RelationType)
         {
             throw new UserFriendlyException("出库批次" + Number + "业务单类型不是批量订单,不允许打印!");
         }
@@ -289,7 +289,7 @@ public class LeaveStockBatch : OrderAggregateRoot
         PrintedBy = userId;
         PrintedByName = name;
         PrintedOn = DateTime.Now;
-        Audit(AuditActionEnum.Print);
+        Audit(nameof(AuditActionEnum.Print));
     }
 
     /// <summary>
@@ -341,7 +341,7 @@ public class LeaveStockBatch : OrderAggregateRoot
             return;
         }
 
-        if (BusinessOrderTypeEnum.BulkOrder == RelationType && _leaveStockBatchItems.Count > 0)
+        if (nameof(BusinessOrderTypeEnum.BulkOrder) == RelationType && _leaveStockBatchItems.Count > 0)
         {
             bool hasSameSalesSpu = _leaveStockBatchItems.Any(x => x.SalesSpuId == salesSpuId);
             if (!hasSameSalesSpu)
@@ -407,7 +407,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="inDepartmentId">入部门Id</param>
     internal void AddTracking(long workStepId, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        if (LeaveStockBatchStatusEnum.Canceled == Status)
+        if (nameof(LeaveStockBatchStatusEnum.Canceled) == Status)
         {
             throw new UserFriendlyException("出库批次" + Number + "已取消,不允许录入!");
         }
@@ -452,7 +452,7 @@ public class LeaveStockBatch : OrderAggregateRoot
             item.AddLeaveStockQty(qty);
             UpdateLeaveStockQtyTotal();
 
-            if (!IsThaw && (BusinessOrderTypeEnum.BulkOrder == RelationType || BusinessOrderTypeEnum.PurchaseRequisitionOrder == RelationType))
+            if (!IsThaw && (nameof(BusinessOrderTypeEnum.BulkOrder) == RelationType || nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder) == RelationType))
             {
                 IsThaw = true;
                 AddDomainEvent(new LeaveStockBatchThawStockEvent(this));
@@ -534,7 +534,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// <param name="name">完成人名称</param>
     internal void Finish(long userId, string name)
     {
-        Status = LeaveStockBatchStatusEnum.Finished;
+        Status = nameof(LeaveStockBatchStatusEnum.Finished);
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
@@ -549,7 +549,7 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// </summary>
     internal void UnFinish()
     {
-        Status = LeaveStockBatchStatusEnum.Pending;
+        Status = nameof(LeaveStockBatchStatusEnum.Pending);
         FinishedBy = null;
         FinishedByName = null;
         FinishedOn = null;
@@ -563,19 +563,19 @@ public class LeaveStockBatch : OrderAggregateRoot
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductTypeEnum.SemiProduct == ProductType)
+        if (nameof(ProductTypeEnum.SemiProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.SemiProductLeaveStockBatch;
+            return nameof(SerialNumberTypeEnum.SemiProductLeaveStockBatch);
         }
 
-        if (ProductTypeEnum.EndProduct == ProductType)
+        if (nameof(ProductTypeEnum.EndProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.EndProductLeaveStockBatch;
+            return nameof(SerialNumberTypeEnum.EndProductLeaveStockBatch);
         }
 
-        return SerialNumberTypeEnum.AccessoryLeaveStockBatch;
+        return nameof(SerialNumberTypeEnum.AccessoryLeaveStockBatch);
     }
 
     /// <summary>
@@ -649,11 +649,11 @@ public class LeaveStockBatch : OrderAggregateRoot
         BillingQty = _leaveStockBatchItems.Where(x => !x.IsDeleted).Sum(x => x.BillingQty);
         if (BillingQty == LeaveStockQty)
         {
-            Status = LeaveStockBatchStatusEnum.BillIssued;
+            Status = nameof(LeaveStockBatchStatusEnum.BillIssued);
         }
         else if (BillingQty < LeaveStockQty)
         {
-            Status = LeaveStockBatchStatusEnum.Finished;
+            Status = nameof(LeaveStockBatchStatusEnum.Finished);
         }
         else
         {

@@ -17,11 +17,11 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
     /// <summary>
     /// 仓位Id(可空)
     /// </summary>
@@ -77,7 +77,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public PurchaseOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 用途(可空)
     /// </summary>
@@ -160,8 +160,8 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="deliveryAddress">收货地址</param>
     /// <param name="remark">备注(可空)</param>
     internal PurchaseOrder(
-        ProductTypeEnum productType,
-        BusinessOrderTypeEnum relationType,
+        string productType,
+        string relationType,
         long companyId,
         long? positionId,
         long supplierId,
@@ -188,7 +188,7 @@ public class PurchaseOrder : OrderAggregateRoot
         DeliveryArea = deliveryArea;
         DeliveryAddress = deliveryAddress;
         Remark = remark;
-        Status = PurchaseOrderStatusEnum.Pending;
+        Status = nameof(PurchaseOrderStatusEnum.Pending);
         AddDomainEvent(new PurchaseOrderAddedEvent(this));
     }
 
@@ -215,7 +215,7 @@ public class PurchaseOrder : OrderAggregateRoot
         string deliveryAddress,
         string? remark)
     {
-        if (Status != PurchaseOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("采购单" + Number + "当前状态不允许修改!");
         }
@@ -229,7 +229,7 @@ public class PurchaseOrder : OrderAggregateRoot
         DeliveryArea = deliveryArea;
         DeliveryAddress = deliveryAddress;
         Remark = remark;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="skuAttributes">Sku属性值(可空)</param>
     /// <param name="otherAttributes">非关键属性值(可空)</param>
     internal void AddItem(
-        BusinessOrderTypeEnum relationType,
+        string relationType,
         long relationId,
         long relationItemId,
         string relationNumber,
@@ -279,7 +279,7 @@ public class PurchaseOrder : OrderAggregateRoot
             _purchaseOrderItems.Add(item);
         }
 
-        if (ProductType == ProductTypeEnum.EndProduct || ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.EndProduct) || ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
             long distinctCount = _purchaseOrderItems.Select(x => x.SpuId + "_" + x.WarehouseId).Distinct().LongCount();
             if (distinctCount > 1)
@@ -339,7 +339,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="name">审核人名称</param>
     public void Check(long userId, string name)
     {
-        if (Status != PurchaseOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("采购单" + Number + "当前状态不允许审核!");
         }
@@ -347,8 +347,8 @@ public class PurchaseOrder : OrderAggregateRoot
         CheckedBy = userId;
         CheckedByName = name;
         CheckedOn = DateTime.Now;
-        Status = PurchaseOrderStatusEnum.EnterStock;
-        Audit(AuditActionEnum.Check);
+        Status = nameof(PurchaseOrderStatusEnum.EnterStock);
+        Audit(nameof(AuditActionEnum.Check));
     }
 
     /// <summary>
@@ -357,7 +357,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     public void UnCheck(string? remark)
     {
-        if (Status != PurchaseOrderStatusEnum.EnterStock)
+        if (Status != nameof(PurchaseOrderStatusEnum.EnterStock))
         {
             throw new UserFriendlyException("采购单" + Number + "当前状态不允许弃审!");
         }
@@ -365,8 +365,8 @@ public class PurchaseOrder : OrderAggregateRoot
         CheckedBy = null;
         CheckedByName = null;
         CheckedOn = null;
-        Status = PurchaseOrderStatusEnum.Pending;
-        Audit(AuditActionEnum.UnCheck, remark);
+        Status = nameof(PurchaseOrderStatusEnum.Pending);
+        Audit(nameof(AuditActionEnum.UnCheck), remark);
     }
 
     /// <summary>
@@ -377,7 +377,7 @@ public class PurchaseOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (Status != PurchaseOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("采购单" + Number + "当前状态不允许取消!");
         }
@@ -385,9 +385,9 @@ public class PurchaseOrder : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = PurchaseOrderStatusEnum.Canceled;
+        Status = nameof(PurchaseOrderStatusEnum.Canceled);
         AddDomainEvent(new PurchaseOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -400,19 +400,19 @@ public class PurchaseOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
-            return SerialNumberTypeEnum.SemiProductPurchaseOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductPurchaseOrder);
         }
 
-        if (ProductType == ProductTypeEnum.EndProduct)
+        if (ProductType == nameof(ProductTypeEnum.EndProduct))
         {
-            return SerialNumberTypeEnum.EndProductPurchaseOrder;
+            return nameof(SerialNumberTypeEnum.EndProductPurchaseOrder);
         }
 
-        return SerialNumberTypeEnum.AccessoryPurchaseOrder;
+        return nameof(SerialNumberTypeEnum.AccessoryPurchaseOrder);
     }
 
     /// <summary>
@@ -448,22 +448,22 @@ public class PurchaseOrder : OrderAggregateRoot
         EnterStockQty = _purchaseOrderItems.Where(x => !x.IsDeleted).Sum(x => x.EnterStockQty);
         if (EnterStockQty == 0)
         {
-            Status = PurchaseOrderStatusEnum.EnterStock;
+            Status = nameof(PurchaseOrderStatusEnum.EnterStock);
             return;
         }
 
         if (Qty - EnterStockQty > 0)
         {
-            Status = PurchaseOrderStatusEnum.PartialEnterStock;
+            Status = nameof(PurchaseOrderStatusEnum.PartialEnterStock);
             return;
         }
 
         if (Qty - EnterStockQty == 0)
         {
-            Status = PurchaseOrderStatusEnum.AllEnterStock;
+            Status = nameof(PurchaseOrderStatusEnum.AllEnterStock);
             return;
         }
 
-        Status = PurchaseOrderStatusEnum.OverEnterStock;
+        Status = nameof(PurchaseOrderStatusEnum.OverEnterStock);
     }
 }

@@ -12,12 +12,12 @@ public class Spu : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 组别
     /// </summary>
-    public SpuGroupEnum? Group { get; private set; }
+    public string? Group { get; private set; }
 
     /// <summary>
     /// 供应商Id
@@ -111,8 +111,8 @@ public class Spu : AuditedAggregateRoot
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="attachmentIds">附件Id集合</param>
     internal Spu(
-        ProductTypeEnum productType,
-        SpuGroupEnum? group,
+        string productType,
+        string? group,
         long supplierId,
         long? brandId,
         string code,
@@ -164,7 +164,7 @@ public class Spu : AuditedAggregateRoot
     /// <param name="companyIds">公司Id集合</param>
     /// <param name="attachmentIds">附件Id集合</param>
     public void Modify(
-        SpuGroupEnum? group,
+        string? group,
         long supplierId,
         long? brandId,
         string code,

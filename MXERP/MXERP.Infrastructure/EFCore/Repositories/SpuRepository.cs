@@ -31,7 +31,7 @@ public class SpuRepository : EfCoreRepository<MXERPDbContext, Spu>, ISpuReposito
     }
 
     /// <inheritdoc />
-    public async Task<Spu?> GetByProductTypeAndCodeAsync(ProductTypeEnum productType, string code, CancellationToken cancellationToken = default)
+    public async Task<Spu?> GetByProductTypeAndCodeAsync(string productType, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .FirstOrDefaultAsync(x => x.ProductType == productType && x.Code == code, cancellationToken);

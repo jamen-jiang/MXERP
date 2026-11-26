@@ -27,7 +27,7 @@ public class Work : AuditedAggregateRoot
     /// <param name="businessType">业务类型</param>
     /// <param name="businessId">业务Id</param>
     /// <param name="businessNumber">业务编号</param>
-    public Work(string workflowId, string name, WorkBusinessTypeEnum businessType, long businessId, string businessNumber)
+    public Work(string workflowId, string name, string businessType, long businessId, string businessNumber)
         : this()
     {
         WorkflowId = workflowId;
@@ -35,7 +35,7 @@ public class Work : AuditedAggregateRoot
         BusinessType = businessType;
         BusinessId = businessId;
         BusinessNumber = businessNumber;
-        Status = WorkStatusEnum.Running;
+        Status = nameof(WorkStatusEnum.Running);
     }
 
     /// <summary>
@@ -51,7 +51,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 业务类型
     /// </summary>
-    public WorkBusinessTypeEnum BusinessType { get; private set; }
+    public string BusinessType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 业务Id
@@ -66,7 +66,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 当前任务(可空)
     /// </summary>
-    public TaskEnum? CurrentTask { get; private set; }
+    public string? CurrentTask { get; private set; }
 
     /// <summary>
     /// 当前任务分配人(可空)
@@ -76,7 +76,7 @@ public class Work : AuditedAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public WorkStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
 
     /// <summary>
     /// 完成时间(可空)
@@ -101,7 +101,7 @@ public class Work : AuditedAggregateRoot
     /// </summary>
     /// <param name="currentTask">当前任务</param>
     /// <param name="currentTaskAssigner">当前任务分配人</param>
-    public void Modify(TaskEnum currentTask, string currentTaskAssigner)
+    public void Modify(string currentTask, string currentTaskAssigner)
     {
         CurrentTask = currentTask;
         CurrentTaskAssigner = currentTaskAssigner;
@@ -114,7 +114,7 @@ public class Work : AuditedAggregateRoot
     {
         CurrentTask = null;
         CurrentTaskAssigner = null;
-        Status = WorkStatusEnum.Finished;
+        Status = nameof(WorkStatusEnum.Finished);
         FinishedOn = DateTime.Now;
     }
 
@@ -126,7 +126,7 @@ public class Work : AuditedAggregateRoot
     /// <param name="assigneeName">处理人名称</param>
     /// <param name="status">审批状态</param>
     /// <param name="remark">备注(可空)</param>
-    public void AddLog(string taskName, long assigneeId, string assigneeName, UserTaskStatusEnum status, string? remark)
+    public void AddLog(string taskName, long assigneeId, string assigneeName, string status, string? remark)
     {
         CurrentTask = null;
         CurrentTaskAssigner = null;

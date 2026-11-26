@@ -17,7 +17,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 盘点数量
     /// </summary>
@@ -33,7 +33,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public InventoryOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 完成人Id(可空)
     /// </summary>
@@ -88,12 +88,12 @@ public class InventoryOrder : OrderAggregateRoot
     /// </summary>
     /// <param name="productType">产品类型</param>
     /// <param name="remark">备注(可空)</param>
-    internal InventoryOrder(ProductTypeEnum productType, string? remark)
+    internal InventoryOrder(string productType, string? remark)
         : this()
     {
         ProductType = productType;
         Remark = remark;
-        Status = InventoryOrderStatusEnum.Pending;
+        Status = nameof(InventoryOrderStatusEnum.Pending);
     }
 
     /// <summary>
@@ -102,13 +102,13 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     public void Modify(string? remark)
     {
-        if (Status != InventoryOrderStatusEnum.Pending)
+        if (Status != nameof(InventoryOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("盘点单" + Number + "当前状态不允许修改!");
         }
 
         Remark = remark;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="name">审核人名称</param>
     internal void Check(long userId, string name)
     {
-        if (Status != InventoryOrderStatusEnum.Pending)
+        if (Status != nameof(InventoryOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("盘点单" + Number + "当前状态不允许审核!");
         }
@@ -126,9 +126,9 @@ public class InventoryOrder : OrderAggregateRoot
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = InventoryOrderStatusEnum.Finished;
+        Status = nameof(InventoryOrderStatusEnum.Finished);
         AddDomainEvent(new InventoryOrderCheckedEvent(this));
-        Audit(AuditActionEnum.Check);
+        Audit(nameof(AuditActionEnum.Check));
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public class InventoryOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (Status != InventoryOrderStatusEnum.Pending)
+        if (Status != nameof(InventoryOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("盘点单" + Number + "当前状态不允许取消!");
         }
@@ -147,9 +147,9 @@ public class InventoryOrder : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = InventoryOrderStatusEnum.Canceled;
+        Status = nameof(InventoryOrderStatusEnum.Canceled);
         AddDomainEvent(new InventoryOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -231,19 +231,19 @@ public class InventoryOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
-            return SerialNumberTypeEnum.SemiProductInventoryOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductInventoryOrder);
         }
 
-        if (ProductType == ProductTypeEnum.EndProduct)
+        if (ProductType == nameof(ProductTypeEnum.EndProduct))
         {
-            return SerialNumberTypeEnum.EndProductInventoryOrder;
+            return nameof(SerialNumberTypeEnum.EndProductInventoryOrder);
         }
 
-        return SerialNumberTypeEnum.AccessoryInventoryOrder;
+        return nameof(SerialNumberTypeEnum.AccessoryInventoryOrder);
     }
 
     /// <summary>

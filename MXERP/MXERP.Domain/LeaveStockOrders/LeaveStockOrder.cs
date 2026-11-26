@@ -27,14 +27,14 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <param name="originalId">原出库单Id（可空）</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockOrder(ProductTypeEnum productType, long? originalId, LeaveStockBusinessTypeEnum businessType, string? remark)
+    internal LeaveStockOrder(string productType, long? originalId, string businessType, string? remark)
         : this()
     {
         ProductType = productType;
         OriginalId = originalId;
         BusinessType = businessType;
         Remark = remark;
-        Status = LeaveStockOrderStatusEnum.Pending;
+        Status = nameof(LeaveStockOrderStatusEnum.Pending);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <param name="relationType">关联类型</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockOrder(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum relationType, LeaveStockBusinessTypeEnum businessType, string? remark)
+    internal LeaveStockOrder(string productType, long? originalId, string relationType, string businessType, string? remark)
         : this(productType, originalId, businessType, remark)
     {
         RelationType = relationType;
@@ -54,7 +54,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 原出库单Id（可空）
@@ -64,12 +64,12 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 关联类型（可空）
     /// </summary>
-    public BusinessOrderTypeEnum? RelationType { get; private set; }
+    public string? RelationType { get; private set; }
 
     /// <summary>
     /// 业务类型
     /// </summary>
-    public LeaveStockBusinessTypeEnum BusinessType { get; private set; }
+    public string BusinessType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 数量
@@ -84,7 +84,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 出库状态
     /// </summary>
-    public LeaveStockOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
 
     /// <summary>
     /// 备注（可空）
@@ -140,15 +140,15 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
     /// <exception cref="UserFriendlyException">当前状态不允许修改时抛出</exception>
-    public void Modify(LeaveStockBusinessTypeEnum businessType, string? remark)
+    public void Modify(string businessType, string? remark)
     {
-        if (LeaveStockOrderStatusEnum.Pending != Status)
+        if (nameof(LeaveStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"出库单{Number}当前状态不允许修改!");
         }
         BusinessType = businessType;
         Remark = remark;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -163,16 +163,16 @@ public class LeaveStockOrder : OrderAggregateRoot
         {
             throw new UserFriendlyException($"出库单{Number}出库数量不允许等于0!");
         }
-        if (LeaveStockOrderStatusEnum.Pending != Status)
+        if (nameof(LeaveStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"出库单{Number}当前状态不允许审核!");
         }
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = LeaveStockOrderStatusEnum.Finished;
+        Status = nameof(LeaveStockOrderStatusEnum.Finished);
         AddDomainEvent(new LeaveStockOrderFinishedEvent(this));
-        Audit(AuditActionEnum.Finish);
+        Audit(nameof(AuditActionEnum.Finish));
     }
 
     /// <summary>
@@ -188,16 +188,16 @@ public class LeaveStockOrder : OrderAggregateRoot
         {
             throw new UserFriendlyException("不允许取消关联单生成的出库单!");
         }
-        if (LeaveStockOrderStatusEnum.Pending != Status)
+        if (nameof(LeaveStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"出库单{Number}当前状态不允许取消!");
         }
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = LeaveStockOrderStatusEnum.Canceled;
+        Status = nameof(LeaveStockOrderStatusEnum.Canceled);
         AddDomainEvent(new LeaveStockOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -216,7 +216,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
     /// <exception cref="UserFriendlyException">红冲/正常出库单数量方向错误时抛出</exception>
-    internal void AddItem(long? originalId, BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal void AddItem(long? originalId, string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         if (qty == 0)
         {
@@ -251,7 +251,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <param name="price">价格</param>
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
-    public void AddItem(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    public void AddItem(string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         AddItem(null, relationType, relationId, relationItemId, relationNumber, spuId, skuId, warehouseId, qty, price, skuAttributes, otherAttributes);
     }
@@ -352,7 +352,7 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">当前状态不允许冲销 / 项不存在时抛出</exception>
     public void UpdateReversalQty(long itemId, double qty)
     {
-        if (LeaveStockOrderStatusEnum.Finished != Status)
+        if (nameof(LeaveStockOrderStatusEnum.Finished) != Status)
         {
             throw new UserFriendlyException($"出库单{Number}当前状态不允许冲销!");
         }
@@ -369,17 +369,17 @@ public class LeaveStockOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductTypeEnum.SemiProduct == ProductType)
+        if (nameof(ProductTypeEnum.SemiProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.SemiProductLeaveStockOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductLeaveStockOrder);
         }
-        if (ProductTypeEnum.EndProduct == ProductType)
+        if (nameof(ProductTypeEnum.EndProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.EndProductLeaveStockOrder;
+            return nameof(SerialNumberTypeEnum.EndProductLeaveStockOrder);
         }
-        return SerialNumberTypeEnum.AccessoryLeaveStockOrder;
+        return nameof(SerialNumberTypeEnum.AccessoryLeaveStockOrder);
     }
 
     /// <summary>

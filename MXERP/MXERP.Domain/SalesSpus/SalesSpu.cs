@@ -12,7 +12,7 @@ public class SalesSpu : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 公司Id
@@ -117,7 +117,7 @@ public class SalesSpu : AuditedAggregateRoot
     /// <param name="attachmentIds">附件Id集合</param>
     /// <param name="markingAttachmentIds">打标附件Id集合</param>
     internal SalesSpu(
-        ProductTypeEnum productType,
+        string productType,
         long companyId,
         string code,
         string name,

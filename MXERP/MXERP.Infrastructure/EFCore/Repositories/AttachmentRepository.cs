@@ -23,7 +23,7 @@ public class AttachmentRepository : EfCoreRepository<MXERPDbContext, Attachment>
     }
 
     /// <inheritdoc />
-    public async Task<List<Attachment>> GetByOwnerTypeAndOwnerIdAsync(AttachmentOwnerTypeEnum ownerType, long ownerId, CancellationToken cancellationToken = default)
+    public async Task<List<Attachment>> GetByOwnerTypeAndOwnerIdAsync(string ownerType, long ownerId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .Where(x => x.OwnerType == ownerType && x.OwnerId == ownerId)
@@ -31,7 +31,7 @@ public class AttachmentRepository : EfCoreRepository<MXERPDbContext, Attachment>
     }
 
     /// <inheritdoc />
-    public async Task<List<Attachment>> GetByOwnerTypeAndOwnerIdExcludeIdsAsync(AttachmentOwnerTypeEnum ownerType, long ownerId, IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+    public async Task<List<Attachment>> GetByOwnerTypeAndOwnerIdExcludeIdsAsync(string ownerType, long ownerId, IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
     {
         IQueryable<Attachment> query = (await GetQueryableAsync())
             .Where(x => x.OwnerType == ownerType && x.OwnerId == ownerId);

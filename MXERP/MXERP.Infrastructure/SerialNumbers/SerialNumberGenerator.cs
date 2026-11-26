@@ -35,7 +35,7 @@ public class SerialNumberGenerator : ISerialNumberGenerator
     }
 
     /// <inheritdoc />
-    public async Task<string> NextAsync(SerialNumberTypeEnum type, CancellationToken cancellationToken = default)
+    public async Task<string> NextAsync(string type, CancellationToken cancellationToken = default)
     {
         await using ISnowDistributedLockHandle handle = await _distributedLock.TryAcquireAsync($"{LockPrefix}:{type}", cancellationToken: cancellationToken)
             ?? throw new UserFriendlyException($"流水号类型 {type} 加锁失败!");

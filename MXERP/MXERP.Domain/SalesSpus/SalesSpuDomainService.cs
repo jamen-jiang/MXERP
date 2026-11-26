@@ -30,7 +30,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<SalesSpu> CreateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default)
+    public async Task<SalesSpu> CreateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? attachmentIds, IReadOnlyCollection<long>? markingAttachmentIds, CancellationToken cancellationToken = default)
     {
         if (await _salesSpuRepository.IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(productType, companyId, code, null, cancellationToken))
         {
@@ -42,7 +42,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<SalesSpu> ImportGenerateAsync(ProductTypeEnum productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default)
+    public async Task<SalesSpu> ImportGenerateAsync(string productType, long companyId, string code, string name, string? description, string? bulkOrderPacketInfo, string? retailOrderPacketInfo, SortedDictionary<string, object?>? attributes, IReadOnlyCollection<long>? workStepIds, IReadOnlyCollection<SalesSpuAssignItemData>? salesSpuAssignItems, CancellationToken cancellationToken = default)
     {
         List<long> finalWorkStepIds = workStepIds == null ? new List<long>() : workStepIds.ToList();
         List<SalesSpuAssignItemData> finalAssignItems = salesSpuAssignItems == null ? new List<SalesSpuAssignItemData>() : salesSpuAssignItems.ToList();
@@ -54,8 +54,8 @@ public class SalesSpuDomainService : ISalesSpuDomainService
         }
         else
         {
-            List<Attachment> attachments = await _attachmentRepository.GetByOwnerTypeAndOwnerIdAsync(AttachmentOwnerTypeEnum.SalesLens, model.Id, cancellationToken);
-            List<Attachment> markingAttachments = await _attachmentRepository.GetByOwnerTypeAndOwnerIdAsync(AttachmentOwnerTypeEnum.SalesLensMarking, model.Id, cancellationToken);
+            List<Attachment> attachments = await _attachmentRepository.GetByOwnerTypeAndOwnerIdAsync(nameof(AttachmentOwnerTypeEnum.SalesLens), model.Id, cancellationToken);
+            List<Attachment> markingAttachments = await _attachmentRepository.GetByOwnerTypeAndOwnerIdAsync(nameof(AttachmentOwnerTypeEnum.SalesLensMarking), model.Id, cancellationToken);
             await ModifyAsync(model, code, name, description, bulkOrderPacketInfo, retailOrderPacketInfo, attributes, attachments.Select(x => x.Id).ToList(), markingAttachments.Select(x => x.Id).ToList(), cancellationToken);
         }
 
@@ -197,7 +197,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
     /// <param name="productType">产品类型</param>
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
-    private async Task ValidateAttributesAsync(ProductTypeEnum productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
+    private async Task ValidateAttributesAsync(string productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
     {
         if (attributes == null)
         {
@@ -206,7 +206,7 @@ public class SalesSpuDomainService : ISalesSpuDomainService
 
         foreach (string attributeCode in attributes.Keys)
         {
-            if (!await _attributeRepository.IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(productType, AttributeScopeEnum.SalesSpu, attributeCode, null, cancellationToken))
+            if (!await _attributeRepository.IsExistByProductTypeAndScopeAndCodeExcludeIdAsync(productType, nameof(AttributeScopeEnum.SalesSpu), attributeCode, null, cancellationToken))
             {
                 throw new UserFriendlyException("属性" + attributeCode + ":不存在!");
             }

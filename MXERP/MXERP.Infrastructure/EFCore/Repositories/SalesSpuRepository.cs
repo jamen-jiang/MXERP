@@ -23,14 +23,14 @@ public class SalesSpuRepository : EfCoreRepository<MXERPDbContext, SalesSpu>, IS
     }
 
     /// <inheritdoc />
-    public async Task<SalesSpu?> GetByProductTypeAndCompanyIdAndCodeAsync(ProductTypeEnum productType, long companyId, string code, CancellationToken cancellationToken = default)
+    public async Task<SalesSpu?> GetByProductTypeAndCompanyIdAndCodeAsync(string productType, long companyId, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .FirstOrDefaultAsync(x => x.ProductType == productType && x.CompanyId == companyId && x.Code == code, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(ProductTypeEnum productType, long companyId, string code, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByProductTypeAndCompanyIdAndCodeExcludeIdAsync(string productType, long companyId, string code, long? id = null, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync())
             .AnyAsync(x => x.ProductType == productType && x.CompanyId == companyId && x.Code == code && x.Id != id, cancellationToken);

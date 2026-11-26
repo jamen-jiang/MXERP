@@ -26,7 +26,7 @@ public interface ILeaveStockBatchFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出库批次</returns>
-    Task<LeaveStockBatch> CreateAsync(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
+    Task<LeaveStockBatch> CreateAsync(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 创建出库批次（部门场景）
@@ -43,5 +43,5 @@ public interface ILeaveStockBatchFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出库批次</returns>
-    Task<LeaveStockBatch> CreateAsync(ProductTypeEnum productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
+    Task<LeaveStockBatch> CreateAsync(string productType, long? leaveStockPlanId, long? purchaseBatchId, string? purchaseBatchNumber, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
 }

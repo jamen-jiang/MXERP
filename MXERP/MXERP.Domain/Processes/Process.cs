@@ -11,7 +11,7 @@ public class Process : AuditedAggregateRoot
     /// <summary>
     /// 工序类型
     /// </summary>
-    public ProcessTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
 
     /// <summary>
     /// 工序代码
@@ -66,7 +66,7 @@ public class Process : AuditedAggregateRoot
     /// <param name="isCFUsable">车房可用</param>
     /// <param name="isKCUsable">库存可用</param>
     /// <param name="remark">备注(可空)</param>
-    internal Process(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
+    internal Process(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
     {
         string? trimmedCode = code?.Trim();
         string? trimmedName = name?.Trim();
@@ -101,7 +101,7 @@ public class Process : AuditedAggregateRoot
     /// <param name="isCFUsable">车房可用</param>
     /// <param name="isKCUsable">库存可用</param>
     /// <param name="remark">备注(可空)</param>
-    internal void Modify(ProcessTypeEnum type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
+    internal void Modify(string type, string code, string name, decimal price, decimal cost, bool isCFUsable, bool isKCUsable, string? remark)
     {
         string? trimmedCode = code?.Trim();
         string? trimmedName = name?.Trim();

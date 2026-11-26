@@ -30,7 +30,7 @@ public class EnterStockOrderFactory : IEnterStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>入库单聚合</returns>
-    public async Task<EnterStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, EnterStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default)
+    public async Task<EnterStockOrder> CreateAsync(string productType, long? originalId, string businessType, string? remark, CancellationToken cancellationToken = default)
     {
         EnterStockOrder model = new EnterStockOrder(productType, originalId, businessType, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);
@@ -48,7 +48,7 @@ public class EnterStockOrderFactory : IEnterStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>入库单聚合</returns>
-    public async Task<EnterStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum businessOrderType, EnterStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default)
+    public async Task<EnterStockOrder> CreateAsync(string productType, long? originalId, string businessOrderType, string businessType, string? remark, CancellationToken cancellationToken = default)
     {
         EnterStockOrder model = new EnterStockOrder(productType, originalId, businessOrderType, businessType, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);

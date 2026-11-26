@@ -42,7 +42,7 @@ public interface IExternalLeaveStockOrderFactory
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>外部出库单聚合</returns>
     Task<ExternalLeaveStockOrder> CreateAsync(
-        ProductTypeEnum productType,
+        string productType,
         long storeId,
         long companyId,
         string customerOrderNumber,

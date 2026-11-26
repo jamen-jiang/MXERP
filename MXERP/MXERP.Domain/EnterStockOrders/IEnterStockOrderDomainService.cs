@@ -61,7 +61,7 @@ public interface IEnterStockOrderDomainService
     /// <param name="userName">操作人名称</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>入库单</returns>
-    Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, EnterStockBusinessTypeEnum businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default);
+    Task<EnterStockOrder> GenerateFromLeaveStockBatchAsync(long leaveStockBatchId, string businessType, string remark, IReadOnlyCollection<SkuInfoData> skuInfos, long userId, string userName, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 更新冲销数量

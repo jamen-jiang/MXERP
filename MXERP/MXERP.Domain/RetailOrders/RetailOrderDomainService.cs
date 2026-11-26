@@ -144,7 +144,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
             throw new UserFriendlyException("散镜订单不存在!");
         }
 
-        bool isExistLeaveStockBatch = await _leaveStockBatchRepository.IsExistByRelationAsync(BusinessOrderTypeEnum.RetailOrder, model.Id, cancellationToken);
+        bool isExistLeaveStockBatch = await _leaveStockBatchRepository.IsExistByRelationAsync(nameof(BusinessOrderTypeEnum.RetailOrder), model.Id, cancellationToken);
         if (isExistLeaveStockBatch)
         {
             throw new UserFriendlyException("散镜订单" + model.Number + "已生成出库批次不允许弃审!");
@@ -505,7 +505,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
 
         AddItem(
             model,
-            EyeTypeEnum.R,
+            nameof(EyeTypeEnum.R),
             masterData.SalesSpuR,
             masterData.CustomerSpuR,
             masterData.SpuR,
@@ -526,7 +526,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
 
         AddItem(
             model,
-            EyeTypeEnum.L,
+            nameof(EyeTypeEnum.L),
             masterData.SalesSpuL,
             masterData.CustomerSpuL,
             masterData.SpuL,
@@ -550,7 +550,7 @@ public class RetailOrderDomainService : IRetailOrderDomainService
 
     private static void AddItem(
         RetailOrder model,
-        EyeTypeEnum eyeType,
+        string eyeType,
         SalesSpu salesSpu,
         CustomerSpu? customerSpu,
         Spu spu,

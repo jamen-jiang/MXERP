@@ -23,13 +23,13 @@ public class LeaveStockPlanRepository : EfCoreRepository<MXERPDbContext, LeaveSt
     }
 
     /// <inheritdoc />
-    public async Task<LeaveStockPlan?> GetByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
+    public async Task<LeaveStockPlan?> GetByRelationAsync(string relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId, cancellationToken);
     }

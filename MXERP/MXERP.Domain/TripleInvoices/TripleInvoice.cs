@@ -85,7 +85,7 @@ public class TripleInvoice : OrderAggregateRoot
     /// <summary>
     /// 度数类型R
     /// </summary>
-    public DegreesTypeEnum DegreesTypeR { get; private set; }
+    public string DegreesTypeR { get; private set; } = string.Empty;
     /// <summary>
     /// SPHR
     /// </summary>
@@ -166,7 +166,7 @@ public class TripleInvoice : OrderAggregateRoot
     /// <summary>
     /// 度数类型L
     /// </summary>
-    public DegreesTypeEnum DegreesTypeL { get; private set; }
+    public string DegreesTypeL { get; private set; } = string.Empty;
     /// <summary>
     /// SPHL
     /// </summary>
@@ -301,9 +301,9 @@ public class TripleInvoice : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        return SerialNumberTypeEnum.TripleInvoice;
+        return nameof(SerialNumberTypeEnum.TripleInvoice);
     }
 
     /// <summary>

@@ -25,7 +25,7 @@ public class PurchaseBatchFactory : IPurchaseBatchFactory
     }
 
     /// <inheritdoc />
-    public async Task<PurchaseBatch> CreateAsync(ProductTypeEnum productType, long? purchasePlanId, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default)
+    public async Task<PurchaseBatch> CreateAsync(string productType, long? purchasePlanId, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default)
     {
         PurchaseBatch model = new PurchaseBatch(productType, purchasePlanId, storeId, companyId, relationType, relationId, relationItemId, relationNumber, relationCustomerOrderNumber, relationCustomerPONumber, relationOrderRef, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);
@@ -34,7 +34,7 @@ public class PurchaseBatchFactory : IPurchaseBatchFactory
     }
 
     /// <inheritdoc />
-    public async Task<PurchaseBatch> CreateAsync(ProductTypeEnum productType, long? purchasePlanId, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default)
+    public async Task<PurchaseBatch> CreateAsync(string productType, long? purchasePlanId, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default)
     {
         PurchaseBatch model = new PurchaseBatch(productType, purchasePlanId, departmentId, companyId, relationType, relationId, relationNumber, remark);
         string number = await _serialNumberGenerator.NextAsync(model.GetSerialNumberType(), cancellationToken);

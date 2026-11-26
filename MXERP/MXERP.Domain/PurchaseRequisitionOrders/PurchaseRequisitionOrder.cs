@@ -41,7 +41,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public PurchaseRequisitionOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 备注（可空）
     /// </summary>
@@ -127,7 +127,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         DepartmentId = departmentId;
         CompanyId = companyId;
         Remark = remark;
-        Status = PurchaseRequisitionOrderStatusEnum.Pending;
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.Pending);
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Modify(long departmentId, long companyId, string? remark)
     {
-        if (Status != PurchaseRequisitionOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseRequisitionOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("申购单" + Number + "当前状态不允许修改!");
         }
@@ -147,7 +147,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         CompanyId = companyId;
         Remark = remark;
         UpdateQty();
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -244,7 +244,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="name">提交人名称</param>
     public void Commit(long userId, string name)
     {
-        if (Status != PurchaseRequisitionOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseRequisitionOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("申购单" + Number + "当前状态不允许提交!");
         }
@@ -252,9 +252,9 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         CommittedBy = userId;
         CommittedByName = name;
         CommittedOn = DateTime.Now;
-        Status = PurchaseRequisitionOrderStatusEnum.PendingApproval;
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.PendingApproval);
         AddDomainEvent(new PurchaseRequisitionOrderCommittedEvent(this));
-        Audit(AuditActionEnum.Commit);
+        Audit(nameof(AuditActionEnum.Commit));
     }
 
     /// <summary>
@@ -265,8 +265,8 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         CommittedBy = null;
         CommittedByName = null;
         CommittedOn = null;
-        Status = PurchaseRequisitionOrderStatusEnum.Pending;
-        Audit(AuditActionEnum.UnCommit);
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.Pending);
+        Audit(nameof(AuditActionEnum.UnCommit));
     }
 
     /// <summary>
@@ -277,16 +277,16 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (Status != PurchaseRequisitionOrderStatusEnum.Pending)
+        if (Status != nameof(PurchaseRequisitionOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("申购单" + Number + "当前状态不允许取消!");
         }
 
-        Status = PurchaseRequisitionOrderStatusEnum.Canceled;
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.Canceled);
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -296,7 +296,7 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// <param name="name">审核人名称</param>
     public void Check(long userId, string name)
     {
-        if (Status != PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck)
+        if (Status != nameof(PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck))
         {
             throw new UserFriendlyException("申购单" + Number + "当前状态不允许采购审核!");
         }
@@ -307,12 +307,12 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
             throw new UserFriendlyException("申购单" + Number + "必须所有产品已分配!");
         }
 
-        Status = PurchaseRequisitionOrderStatusEnum.Delivery;
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.Delivery);
         CheckedBy = userId;
         CheckedByName = name;
         CheckedOn = DateTime.Now;
         AddDomainEvent(new PurchaseRequisitionOrderPurchaseCheckedEvent(this));
-        Audit(AuditActionEnum.Check);
+        Audit(nameof(AuditActionEnum.Check));
     }
 
     /// <summary>
@@ -414,9 +414,9 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     }
 
     /// <inheritdoc />
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        return SerialNumberTypeEnum.PurchaseRequisitionOrder;
+        return nameof(SerialNumberTypeEnum.PurchaseRequisitionOrder);
     }
 
     /// <summary>
@@ -424,27 +424,27 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
     /// </summary>
     /// <param name="task">任务类型</param>
     /// <param name="taskStatus">任务状态</param>
-    public void ChangeStatus(TaskEnum task, UserTaskStatusEnum taskStatus)
+    public void ChangeStatus(string task, string taskStatus)
     {
-        if (task == TaskEnum.Check)
+        if (task == nameof(TaskEnum.Check))
         {
-            if (taskStatus != UserTaskStatusEnum.Approve)
+            if (taskStatus != nameof(UserTaskStatusEnum.Approve))
             {
-                Status = PurchaseRequisitionOrderStatusEnum.ApprovalRejected;
+                Status = nameof(PurchaseRequisitionOrderStatusEnum.ApprovalRejected);
             }
 
             return;
         }
 
-        if (task == TaskEnum.Approve)
+        if (task == nameof(TaskEnum.Approve))
         {
-            if (taskStatus == UserTaskStatusEnum.Approve)
+            if (taskStatus == nameof(UserTaskStatusEnum.Approve))
             {
-                Status = PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck;
+                Status = nameof(PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck);
             }
             else
             {
-                Status = PurchaseRequisitionOrderStatusEnum.ApprovalRejected;
+                Status = nameof(PurchaseRequisitionOrderStatusEnum.ApprovalRejected);
             }
         }
     }
@@ -501,23 +501,23 @@ public class PurchaseRequisitionOrder : OrderAggregateRoot
         LeaveStockQty = _purchaseRequisitionOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
         if (LeaveStockQty == 0)
         {
-            Status = PurchaseRequisitionOrderStatusEnum.Delivery;
+            Status = nameof(PurchaseRequisitionOrderStatusEnum.Delivery);
             return;
         }
 
         double diff = Qty - LeaveStockQty;
         if (diff > 0)
         {
-            Status = PurchaseRequisitionOrderStatusEnum.PartialDelivered;
+            Status = nameof(PurchaseRequisitionOrderStatusEnum.PartialDelivered);
             return;
         }
 
         if (diff == 0)
         {
-            Status = PurchaseRequisitionOrderStatusEnum.AllDelivered;
+            Status = nameof(PurchaseRequisitionOrderStatusEnum.AllDelivered);
             return;
         }
 
-        Status = PurchaseRequisitionOrderStatusEnum.OverDelivered;
+        Status = nameof(PurchaseRequisitionOrderStatusEnum.OverDelivered);
     }
 }

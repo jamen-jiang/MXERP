@@ -15,7 +15,7 @@ public class ExternalOrderLog : LogAggregateRoot
     /// <summary>
     /// 类型
     /// </summary>
-    public ExternalOrderLogTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
     /// <summary>
     /// 流水號HK（可空）
     /// </summary>
@@ -104,7 +104,7 @@ public class ExternalOrderLog : LogAggregateRoot
     /// <param name="isSuccess">是否成功</param>
     /// <param name="errorMessage">错误信息（可空）</param>
     /// <param name="exception">异常信息（可空）</param>
-    public ExternalOrderLog(string? traceId, ExternalOrderLogTypeEnum type, long? userId, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? hkNumber, string? documentaryBarCode, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string apiUrl, string apiMethod, string? ip, string? city, string? userAgent, string? browser, string? os, string? request, string? response, bool isSuccess, string? errorMessage, string? exception)
+    public ExternalOrderLog(string? traceId, string type, long? userId, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? hkNumber, string? documentaryBarCode, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string apiUrl, string apiMethod, string? ip, string? city, string? userAgent, string? browser, string? os, string? request, string? response, bool isSuccess, string? errorMessage, string? exception)
         : base(userId, userName, startedOn, endedOn, elapsedMilliseconds, request, response, isSuccess, errorMessage, exception)
     {
         TraceId = traceId;

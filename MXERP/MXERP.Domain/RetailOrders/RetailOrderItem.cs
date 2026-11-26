@@ -16,7 +16,7 @@ public class RetailOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 眼睛类型(R或L)
     /// </summary>
-    public EyeTypeEnum EyeType { get; private set; }
+    public string EyeType { get; private set; } = string.Empty;
     /// <summary>
     /// 销售产品Id
     /// </summary>
@@ -44,7 +44,7 @@ public class RetailOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 度数类型
     /// </summary>
-    public DegreesTypeEnum DegreesType { get; private set; }
+    public string DegreesType { get; private set; } = string.Empty;
     /// <summary>
     /// SPH
     /// </summary>
@@ -132,7 +132,7 @@ public class RetailOrderItem : DeletionAuditedEntity
     /// <param name="decenter">移心(可空)</param>
     /// <param name="prism">棱镜(可空)</param>
     /// <param name="qty">数量</param>
-    internal RetailOrderItem(EyeTypeEnum eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
+    internal RetailOrderItem(string eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
     {
         if (qty > 1)
         {
@@ -150,11 +150,11 @@ public class RetailOrderItem : DeletionAuditedEntity
         Cyl = cyl;
         if (sph > 0)
         {
-            DegreesType = DegreesTypeEnum.ZhengSan;
+            DegreesType = nameof(DegreesTypeEnum.ZhengSan);
         }
         else
         {
-            DegreesType = DegreesTypeEnum.FuSan;
+            DegreesType = nameof(DegreesTypeEnum.FuSan);
         }
         Add = add;
         Diameter = diameter;
@@ -172,7 +172,7 @@ public class RetailOrderItem : DeletionAuditedEntity
     /// <summary>
     /// 修改订单项
     /// </summary>
-    internal void Modify(EyeTypeEnum eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
+    internal void Modify(string eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
     {
         EyeType = eyeType;
         SalesSpuId = salesSpuId;
@@ -185,11 +185,11 @@ public class RetailOrderItem : DeletionAuditedEntity
         Cyl = cyl;
         if (sph > 0)
         {
-            DegreesType = DegreesTypeEnum.ZhengSan;
+            DegreesType = nameof(DegreesTypeEnum.ZhengSan);
         }
         else
         {
-            DegreesType = DegreesTypeEnum.FuSan;
+            DegreesType = nameof(DegreesTypeEnum.FuSan);
         }
         Add = add;
         Diameter = diameter;

@@ -22,7 +22,7 @@ public class CustomerSpuFactory : ICustomerSpuFactory
     }
 
     /// <inheritdoc />
-    public async Task<CustomerSpu> CreateAsync(ProductTypeEnum productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
+    public async Task<CustomerSpu> CreateAsync(string productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, IReadOnlyCollection<long>? attachmentIds, CancellationToken cancellationToken = default)
     {
         if (await _customerSpuRepository.IsExistByProductTypeAndCodeAsync(productType, code, cancellationToken))
         {

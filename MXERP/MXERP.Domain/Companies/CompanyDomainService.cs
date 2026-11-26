@@ -21,7 +21,7 @@ public class CompanyDomainService : ICompanyDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Company> ModifyAsync(long id, CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Company> ModifyAsync(long id, string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
     {
         Company? company = await _repository.FindAsync(id, true, cancellationToken);
         if (company is null)
@@ -34,7 +34,7 @@ public class CompanyDomainService : ICompanyDomainService
     }
 
     /// <inheritdoc />
-    public async Task ModifyAsync(Company company, CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
+    public async Task ModifyAsync(Company company, string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistByCodeExcludeIdAsync(code, company.Id, cancellationToken))
         {
@@ -45,7 +45,7 @@ public class CompanyDomainService : ICompanyDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Company> ImportGenerateAsync(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
+    public async Task<Company> ImportGenerateAsync(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark, CancellationToken cancellationToken = default)
     {
         Company? company = await _repository.GetByCodeAsync(code, cancellationToken);
         if (company is null)

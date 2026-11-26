@@ -25,7 +25,7 @@ public class LeaveWarehouseOrderFactory : ILeaveWarehouseOrderFactory
     }
 
     /// <inheritdoc />
-    public async Task<LeaveWarehouseOrder> CreateAsync(ProductTypeEnum productType, LeaveWarehouseOrderTypeEnum type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress, CancellationToken cancellationToken = default)
+    public async Task<LeaveWarehouseOrder> CreateAsync(string productType, string type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress, CancellationToken cancellationToken = default)
     {
         LeaveWarehouseOrder model = new LeaveWarehouseOrder(productType, type, companyId, sendCompanyId, sender, senderTelephone, sendArea, sendAddress, deliveryCompanyId, deliveryer, deliveryerTelephone, deliveryArea, deliveryAddress);
 

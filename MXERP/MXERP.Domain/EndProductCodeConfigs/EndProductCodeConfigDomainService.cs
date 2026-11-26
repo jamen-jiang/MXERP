@@ -22,7 +22,7 @@ public class EndProductCodeConfigDomainService : IEndProductCodeConfigDomainServ
     }
 
     /// <inheritdoc />
-    public async Task<EndProductCodeConfig> ModifyAsync(long id, EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default)
+    public async Task<EndProductCodeConfig> ModifyAsync(long id, string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default)
     {
         EndProductCodeConfig? model = await _repository.FindAsync(id, true, cancellationToken);
         if (model is null)
@@ -35,7 +35,7 @@ public class EndProductCodeConfigDomainService : IEndProductCodeConfigDomainServ
     }
 
     /// <inheritdoc />
-    public async Task ModifyAsync(EndProductCodeConfig model, EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default)
+    public async Task ModifyAsync(EndProductCodeConfig model, string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default)
     {
         if (await _repository.IsExistBySpuIdAndDegreesTypeExcludeIdAsync(spuId, degreesType, model.Id, cancellationToken))
         {
@@ -46,7 +46,7 @@ public class EndProductCodeConfigDomainService : IEndProductCodeConfigDomainServ
     }
 
     /// <inheritdoc />
-    public async Task<EndProductCodeConfig> ImportGenerateAsync(EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort, CancellationToken cancellationToken = default)
+    public async Task<EndProductCodeConfig> ImportGenerateAsync(string category, long spuId, string degreesType, int? sort, CancellationToken cancellationToken = default)
     {
         EndProductCodeConfig? model = await _repository.GetBySpuIdAndDegreesTypeAsync(spuId, degreesType, cancellationToken);
         if (model is null)

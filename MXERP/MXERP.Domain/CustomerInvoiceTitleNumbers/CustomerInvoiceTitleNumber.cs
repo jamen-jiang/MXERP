@@ -41,7 +41,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
     /// <summary>
     /// 规则(可空)
     /// </summary>
-    public DateTypeEnum? Rule { get; private set; }
+    public string? Rule { get; private set; }
 
     /// <summary>
     /// 构造器(供 EF 使用)
@@ -66,7 +66,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
         Day = now.Day;
 
         PadNumber = customerInvoiceTitlePadNumber;
-        Rule = DateTypeEnum.Month;
+        Rule = nameof(DateTypeEnum.Month);
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
     /// </summary>
     /// <param name="padNumber">补充数字</param>
     /// <param name="rule">规则(可空)</param>
-    public void Modify(int padNumber, DateTypeEnum? rule)
+    public void Modify(int padNumber, string? rule)
     {
         PadNumber = padNumber;
         if (rule is not null)
@@ -97,7 +97,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
         if (Year != nowYear)
         {
             Year = nowYear;
-            if (DateTypeEnum.Year == Rule)
+            if (nameof(DateTypeEnum.Year) == Rule)
             {
                 number = 1;
             }
@@ -106,7 +106,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
         if (Month != nowMonth)
         {
             Month = nowMonth;
-            if (DateTypeEnum.Month == Rule)
+            if (nameof(DateTypeEnum.Month) == Rule)
             {
                 number = 1;
             }
@@ -115,7 +115,7 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
         if (Day != nowDay)
         {
             Day = nowDay;
-            if (DateTypeEnum.Day == Rule)
+            if (nameof(DateTypeEnum.Day) == Rule)
             {
                 number = 1;
             }
@@ -136,17 +136,17 @@ public class CustomerInvoiceTitleNumber : AuditedAggregateRoot
         int nowMonth = now.Month;
         int nowDay = now.Day;
 
-        if (Year != nowYear && DateTypeEnum.Year == Rule)
+        if (Year != nowYear && nameof(DateTypeEnum.Year) == Rule)
         {
             number = 1;
         }
 
-        if (Month != nowMonth && DateTypeEnum.Month == Rule)
+        if (Month != nowMonth && nameof(DateTypeEnum.Month) == Rule)
         {
             number = 1;
         }
 
-        if (Day != nowDay && DateTypeEnum.Day == Rule)
+        if (Day != nowDay && nameof(DateTypeEnum.Day) == Rule)
         {
             number = 1;
         }

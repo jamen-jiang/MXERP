@@ -67,7 +67,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
             return new List<PurchaseOrder>();
         }
 
-        ProductTypeEnum productType = purchaseBatchs[0].ProductType;
+        string productType = purchaseBatchs[0].ProductType;
 
         List<long> skuIds = datas.SelectMany(x => x.SkuInfos).Select(x => x.SkuId).Distinct().ToList();
         List<Sku> skus = await _skuRepository.GetListByIdsAsync(skuIds, cancellationToken);
@@ -106,7 +106,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
                 {
                     PurchaseOrder model = await _purchaseOrderFactory.CreateAsync(
                         productType,
-                        BusinessOrderTypeEnum.PurchaseBatch,
+                        nameof(BusinessOrderTypeEnum.PurchaseBatch),
                         companyId,
                         positionId,
                         supplierId,
@@ -147,7 +147,7 @@ public class PurchaseOrderDomainService : IPurchaseOrderDomainService
                             }
 
                             model.AddItem(
-                                BusinessOrderTypeEnum.PurchaseBatch,
+                                nameof(BusinessOrderTypeEnum.PurchaseBatch),
                                 purchaseBatch.Id,
                                 item.Id,
                                 purchaseBatch.Number,

@@ -23,13 +23,13 @@ public class EndProductCodeConfigRepository : EfCoreRepository<MXERPDbContext, E
     }
 
     /// <inheritdoc />
-    public async Task<EndProductCodeConfig?> GetBySpuIdAndDegreesTypeAsync(long spuId, DegreesTypeEnum degreesType, CancellationToken cancellationToken = default)
+    public async Task<EndProductCodeConfig?> GetBySpuIdAndDegreesTypeAsync(long spuId, string degreesType, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.SpuId == spuId && x.DegreesType == degreesType, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistBySpuIdAndDegreesTypeExcludeIdAsync(long spuId, DegreesTypeEnum degreesType, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistBySpuIdAndDegreesTypeExcludeIdAsync(long spuId, string degreesType, long? id = null, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.SpuId == spuId && x.DegreesType == degreesType && x.Id != id, cancellationToken);
     }

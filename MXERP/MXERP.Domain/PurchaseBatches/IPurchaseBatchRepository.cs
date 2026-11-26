@@ -23,7 +23,7 @@ public interface IPurchaseBatchRepository : IRepository<PurchaseBatch>
     /// <param name="relationId">关联Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购批次列表</returns>
-    Task<List<PurchaseBatch>> GetListByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default);
+    Task<List<PurchaseBatch>> GetListByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断关联类型 + 关联Id是否存在（不含已取消）
@@ -32,7 +32,7 @@ public interface IPurchaseBatchRepository : IRepository<PurchaseBatch>
     /// <param name="relationId">关联Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断关联类型 + 关联Id + 关联项Id是否存在（不含已取消）
@@ -42,5 +42,5 @@ public interface IPurchaseBatchRepository : IRepository<PurchaseBatch>
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default);
+    Task<bool> IsExistByRelationAsync(string relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default);
 }

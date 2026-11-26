@@ -29,14 +29,14 @@ public class BulkOrderRepository : EfCoreRepository<MXERPDbContext, BulkOrder>, 
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByCustomerOrderNumberAndCustomerPONumberAndProductTypeExcludeIdAsync(string customerOrderNumber, string? customerPONumber, ProductTypeEnum productType, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByCustomerOrderNumberAndCustomerPONumberAndProductTypeExcludeIdAsync(string customerOrderNumber, string? customerPONumber, string productType, long? id = null, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerOrderNumber == customerOrderNumber && x.CustomerPONumber == customerPONumber && x.ProductType == productType && x.Id != id && x.Status != BulkOrderStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerOrderNumber == customerOrderNumber && x.CustomerPONumber == customerPONumber && x.ProductType == productType && x.Id != id && x.Status != nameof(BulkOrderStatusEnum.Canceled), cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByCustomerPONumberAndProductTypeExcludeIdAsync(string customerPONumber, ProductTypeEnum productType, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByCustomerPONumberAndProductTypeExcludeIdAsync(string customerPONumber, string productType, long? id = null, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerPONumber == customerPONumber && x.ProductType == productType && x.Id != id && x.Status != BulkOrderStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerPONumber == customerPONumber && x.ProductType == productType && x.Id != id && x.Status != nameof(BulkOrderStatusEnum.Canceled), cancellationToken);
     }
 }

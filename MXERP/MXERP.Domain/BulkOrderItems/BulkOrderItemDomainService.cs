@@ -115,7 +115,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单:" + bulkOrderId + "不存在!");
         }
 
-        if (bulkOrder.Status != BulkOrderStatusEnum.Pending)
+        if (bulkOrder.Status != nameof(BulkOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("批量订单" + bulkOrder.Number + "当前状态不允许添加批量订单项!");
         }
@@ -144,7 +144,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单:" + item.BulkOrderId + "不存在!");
         }
 
-        if (bulkOrder.Status != BulkOrderStatusEnum.Pending)
+        if (bulkOrder.Status != nameof(BulkOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("批量订单" + bulkOrder.Number + "当前状态不允许修改批量订单项!");
         }
@@ -162,13 +162,13 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单项" + id + "不存在!");
         }
 
-        bool hasLeaveStockBatch = await _leaveStockBatchRepository.IsExistByRelationAsync(BusinessOrderTypeEnum.BulkOrder, model.BulkOrderId, model.Id, cancellationToken);
+        bool hasLeaveStockBatch = await _leaveStockBatchRepository.IsExistByRelationAsync(nameof(BusinessOrderTypeEnum.BulkOrder), model.BulkOrderId, model.Id, cancellationToken);
         if (hasLeaveStockBatch)
         {
             throw new UserFriendlyException("批量订单项" + id + "已生成出库批次不允许取消确认!");
         }
 
-        bool hasPurchaseBatch = await _purchaseBatchRepository.IsExistByRelationAsync(BusinessOrderTypeEnum.BulkOrder, model.BulkOrderId, model.Id, cancellationToken);
+        bool hasPurchaseBatch = await _purchaseBatchRepository.IsExistByRelationAsync(nameof(BusinessOrderTypeEnum.BulkOrder), model.BulkOrderId, model.Id, cancellationToken);
         if (hasPurchaseBatch)
         {
             throw new UserFriendlyException("批量订单项" + id + "已生成采购批次不允许取消确认!");
@@ -248,7 +248,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单:" + bulkOrderItem.BulkOrderId + "不存在!");
         }
 
-        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        string businessOrderType = nameof(BusinessOrderTypeEnum.BulkOrder);
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrder.Id, id, cancellationToken);
         if (leaveStockPlan is null)
@@ -426,7 +426,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("批量订单" + bulkOrder.Number + ":销售产品不存在!");
         }
 
-        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        string businessOrderType = nameof(BusinessOrderTypeEnum.BulkOrder);
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrder.Id, bulkOrderItem.Id, cancellationToken);
         if (leaveStockPlan is null)
@@ -539,7 +539,7 @@ public class BulkOrderItemDomainService : IBulkOrderItemDomainService
             throw new UserFriendlyException("销售产品:" + bulkOrderItem.SalesSpuId + "不存在!");
         }
 
-        BusinessOrderTypeEnum businessOrderType = BusinessOrderTypeEnum.BulkOrder;
+        string businessOrderType = nameof(BusinessOrderTypeEnum.BulkOrder);
 
         LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(businessOrderType, bulkOrderItem.BulkOrderId, bulkOrderItem.Id, cancellationToken);
         if (leaveStockPlan is null)

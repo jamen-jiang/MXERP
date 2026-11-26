@@ -11,5 +11,5 @@ public interface ISerialNumberGenerator
     /// <param name="type">流水号类型</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>生成的流水号</returns>
-    Task<string> NextAsync(SerialNumberTypeEnum type, CancellationToken cancellationToken = default);
+    Task<string> NextAsync(string type, CancellationToken cancellationToken = default);
 }

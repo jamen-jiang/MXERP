@@ -20,5 +20,5 @@ public interface ISerialNumberFactory
     /// <param name="rule">规则(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>流水号聚合</returns>
-    Task<SerialNumber> CreateAsync(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule, CancellationToken cancellationToken = default);
+    Task<SerialNumber> CreateAsync(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule, CancellationToken cancellationToken = default);
 }

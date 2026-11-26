@@ -12,11 +12,11 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -97,7 +97,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <param name="relationCustomerPONumber">业务单客户PO号（可空）</param>
     /// <param name="relationOrderRef">业务单公司订单编号（可空）</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockPlan(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
+    internal LeaveStockPlan(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark)
         : this()
     {
         ProductType = productType;
@@ -123,7 +123,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
     /// <param name="relationId">关联Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="remark">备注（可空）</param>
-    internal LeaveStockPlan(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark)
+    internal LeaveStockPlan(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark)
         : this()
     {
         ProductType = productType;
@@ -194,7 +194,7 @@ public class LeaveStockPlan : AuditedAggregateRoot
         UpdateQty();
         AddDomainEvent(new LeaveStockPlanItemAddedEvent(this, RelationType, RelationId, RelationItemId, item.RelationItemId, skuId, warehouseId, qty));
 
-        if (BusinessOrderTypeEnum.BulkOrder == RelationType)
+        if (nameof(BusinessOrderTypeEnum.BulkOrder) == RelationType)
         {
             int distinctSalesSpuCount = _leaveStockPlanItems.Select(x => x.SalesSpuId).Distinct().Count();
             if (distinctSalesSpuCount > 1)

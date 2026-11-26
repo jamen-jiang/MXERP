@@ -14,7 +14,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 客户单号
     /// </summary>
@@ -50,7 +50,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public BulkOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 通过人Id(可空)
     /// </summary>
@@ -129,7 +129,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="deliveryOn">预出货时间(可空)</param>
     /// <param name="qty">数量</param>
     /// <param name="remark">备注(可空)</param>
-    internal BulkOrder(ProductTypeEnum productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark)
+    internal BulkOrder(string productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark)
     {
         string? trimmedCustomerOrderNumber = TrimToNull(customerOrderNumber);
 
@@ -144,7 +144,7 @@ public class BulkOrder : OrderAggregateRoot
         DeliveryOn = deliveryOn;
         Qty = qty;
         Remark = remark;
-        Status = BulkOrderStatusEnum.Pending;
+        Status = nameof(BulkOrderStatusEnum.Pending);
         AddDomainEvent(new BulkOrderAddedEvent(this));
     }
 
@@ -161,7 +161,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void Modify(string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark)
     {
-        if (Status != BulkOrderStatusEnum.Pending)
+        if (Status != nameof(BulkOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("批量订单" + Number + "当前状态不允许修改!");
         }
@@ -185,7 +185,7 @@ public class BulkOrder : OrderAggregateRoot
         DeliveryOn = deliveryOn;
         Qty = qty;
         Remark = remark;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -195,14 +195,14 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="deliveryOn">预出货时间(可空)</param>
     public void Modify(string? transportWay, DateTime? deliveryOn)
     {
-        if (Status != BulkOrderStatusEnum.Pending)
+        if (Status != nameof(BulkOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("批量订单" + Number + "当前状态不允许修改!");
         }
 
         TransportWay = transportWay;
         DeliveryOn = deliveryOn;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void Cancel(long userId, string name, string? remark)
     {
-        if (Status != BulkOrderStatusEnum.Pending)
+        if (Status != nameof(BulkOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("批量订单" + Number + "当前状态不允许取消!");
         }
@@ -276,9 +276,9 @@ public class BulkOrder : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = BulkOrderStatusEnum.Canceled;
+        Status = nameof(BulkOrderStatusEnum.Canceled);
         AddDomainEvent(new BulkOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -288,7 +288,7 @@ public class BulkOrder : OrderAggregateRoot
     /// <param name="name">完成人名称</param>
     public void Finish(long userId, string name)
     {
-        if (Status != BulkOrderStatusEnum.AllDelivered && Status != BulkOrderStatusEnum.OverDelivered)
+        if (Status != nameof(BulkOrderStatusEnum.AllDelivered) && Status != nameof(BulkOrderStatusEnum.OverDelivered))
         {
             throw new UserFriendlyException("批量订单" + Number + "当前状态不允许完成!");
         }
@@ -296,22 +296,22 @@ public class BulkOrder : OrderAggregateRoot
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = BulkOrderStatusEnum.Finished;
-        Audit(AuditActionEnum.Finish);
+        Status = nameof(BulkOrderStatusEnum.Finished);
+        Audit(nameof(AuditActionEnum.Finish));
     }
 
     /// <summary>
     /// 获取流水号类型
     /// </summary>
     /// <returns>流水号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
-            return SerialNumberTypeEnum.SemiProductBulkOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductBulkOrder);
         }
 
-        return SerialNumberTypeEnum.EndProductBulkOrder;
+        return nameof(SerialNumberTypeEnum.EndProductBulkOrder);
     }
 
 
@@ -322,19 +322,19 @@ public class BulkOrder : OrderAggregateRoot
     {
         if (LeaveStockQty == 0)
         {
-            Status = BulkOrderStatusEnum.Pending;
+            Status = nameof(BulkOrderStatusEnum.Pending);
         }
         else if (Qty - LeaveStockQty > 0)
         {
-            Status = BulkOrderStatusEnum.PartialDelivered;
+            Status = nameof(BulkOrderStatusEnum.PartialDelivered);
         }
         else if (Qty - LeaveStockQty == 0)
         {
-            Status = BulkOrderStatusEnum.AllDelivered;
+            Status = nameof(BulkOrderStatusEnum.AllDelivered);
         }
         else
         {
-            Status = BulkOrderStatusEnum.OverDelivered;
+            Status = nameof(BulkOrderStatusEnum.OverDelivered);
         }
     }
 

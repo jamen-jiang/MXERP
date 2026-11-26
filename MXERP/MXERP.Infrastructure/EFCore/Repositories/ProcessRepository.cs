@@ -23,13 +23,13 @@ public class ProcessRepository : EfCoreRepository<MXERPDbContext, Process>, IPro
     }
 
     /// <inheritdoc />
-    public async Task<Process?> GetByTypeAndCodeAsync(ProcessTypeEnum type, string code, CancellationToken cancellationToken = default)
+    public async Task<Process?> GetByTypeAndCodeAsync(string type, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.Type == type && x.Code == code, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByTypeAndCodeExcludeIdAsync(ProcessTypeEnum type, string code, long? id = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByTypeAndCodeExcludeIdAsync(string type, string code, long? id = null, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.Type == type && x.Code == code && x.Id != id, cancellationToken);
     }

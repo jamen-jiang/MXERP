@@ -29,8 +29,8 @@ public interface IPurchaseOrderFactory
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购单聚合</returns>
     Task<PurchaseOrder> CreateAsync(
-        ProductTypeEnum productType,
-        BusinessOrderTypeEnum relationType,
+        string productType,
+        string relationType,
         long companyId,
         long? positionId,
         long supplierId,

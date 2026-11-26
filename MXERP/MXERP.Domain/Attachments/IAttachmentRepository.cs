@@ -14,7 +14,7 @@ public interface IAttachmentRepository : IRepository<Attachment>
     /// <param name="ownerId">持有者Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>附件列表</returns>
-    Task<List<Attachment>> GetByOwnerTypeAndOwnerIdAsync(AttachmentOwnerTypeEnum ownerType, long ownerId, CancellationToken cancellationToken = default);
+    Task<List<Attachment>> GetByOwnerTypeAndOwnerIdAsync(string ownerType, long ownerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 按持有者类型 + 持有者Id查询列表(排除指定Id)
@@ -25,5 +25,5 @@ public interface IAttachmentRepository : IRepository<Attachment>
     /// <param name="ids">要排除的附件Id列表</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>附件列表</returns>
-    Task<List<Attachment>> GetByOwnerTypeAndOwnerIdExcludeIdsAsync(AttachmentOwnerTypeEnum ownerType, long ownerId, IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default);
+    Task<List<Attachment>> GetByOwnerTypeAndOwnerIdExcludeIdsAsync(string ownerType, long ownerId, IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default);
 }

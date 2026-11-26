@@ -46,7 +46,7 @@ public class BulkOrderDomainService : IBulkOrderDomainService
     }
 
     /// <inheritdoc />
-    public async Task<BulkOrder> CreateAsync(ProductTypeEnum productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark, CancellationToken cancellationToken = default)
+    public async Task<BulkOrder> CreateAsync(string productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark, CancellationToken cancellationToken = default)
     {
         if (qty <= 0)
         {
@@ -140,7 +140,7 @@ public class BulkOrderDomainService : IBulkOrderDomainService
     /// <param name="id">排除的主键Id(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>任务</returns>
-    private async Task ValidateAsync(ProductTypeEnum productType, long companyId, string? customerPONumber, long? id, CancellationToken cancellationToken = default)
+    private async Task ValidateAsync(string productType, long companyId, string? customerPONumber, long? id, CancellationToken cancellationToken = default)
     {
         Company? company = await _companyRepository.FindAsync(companyId, true, cancellationToken);
         if (company is null)

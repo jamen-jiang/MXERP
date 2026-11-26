@@ -26,7 +26,7 @@ public class ExternalLeaveStockOrderFactory : IExternalLeaveStockOrderFactory
 
     /// <inheritdoc />
     public async Task<ExternalLeaveStockOrder> CreateAsync(
-        ProductTypeEnum productType,
+        string productType,
         long storeId,
         long companyId,
         string customerOrderNumber,

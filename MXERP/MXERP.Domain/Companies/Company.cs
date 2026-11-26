@@ -1,5 +1,6 @@
 using Snow.Domain.Entities.Auditing;
 using Snow.Exceptions;
+using MXERP.Domain.Common.Enums;
 
 namespace MXERP.Domain.Companies;
 
@@ -11,11 +12,11 @@ public class Company : AuditedAggregateRoot
     /// <summary>
     /// 区域
     /// </summary>
-    public CompanyRegionEnum Region { get; private set; }
+    public string Region { get; private set; } = string.Empty;
     /// <summary>
     /// 组别(可空)
     /// </summary>
-    public CompanyGroupEnum? Group { get; private set; }
+    public string? Group { get; private set; }
     /// <summary>
     /// 代码
     /// </summary>
@@ -117,7 +118,7 @@ public class Company : AuditedAggregateRoot
     /// <param name="billingAddress">账户地址(可空)</param>
     /// <param name="sort">排序(可空)</param>
     /// <param name="remark">备注(可空)</param>
-    internal Company(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
+    internal Company(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
         : this()
     {
         if (code.IsNullOrWhiteSpace())
@@ -126,8 +127,8 @@ public class Company : AuditedAggregateRoot
         }
 
 
-        Region = region;
-        Group = group;
+        Region = region.ToEnumName<CompanyRegionEnum>("区域");
+        Group = string.IsNullOrWhiteSpace(group) ? null : group.ToEnumName<CompanyGroupEnum>("组别");
         Code = code.Trim();
         Name = name?.Trim() ?? string.Empty;
         ShortName = shortName?.Trim();
@@ -163,7 +164,7 @@ public class Company : AuditedAggregateRoot
     /// <param name="billingAddress">账户地址(可空)</param>
     /// <param name="sort">排序(可空)</param>
     /// <param name="remark">备注(可空)</param>
-    internal void Modify(CompanyRegionEnum region, CompanyGroupEnum? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
+    internal void Modify(string region, string? group, string code, string name, string? shortName, string? numberCode, string? telephone, string? fax, string? email, string? areaCode, string? postCode, long currencyId, string? address, string? billingAddress, int? sort, string? remark)
     {
         if (code.IsNullOrWhiteSpace())
         {
@@ -171,8 +172,8 @@ public class Company : AuditedAggregateRoot
         }
 
 
-        Region = region;
-        Group = group;
+        Region = region.ToEnumName<CompanyRegionEnum>("区域");
+        Group = string.IsNullOrWhiteSpace(group) ? null : group.ToEnumName<CompanyGroupEnum>("组别");
         Code = code.Trim();
         Name = name?.Trim() ?? string.Empty;
         ShortName = shortName?.Trim();

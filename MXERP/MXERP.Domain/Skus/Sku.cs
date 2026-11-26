@@ -13,7 +13,7 @@ public class Sku : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// SpuId
@@ -91,7 +91,7 @@ public class Sku : AuditedAggregateRoot
     /// <param name="keyAttributes">关键属性值</param>
     /// <param name="otherAttributes">非关键属性值</param>
     internal Sku(
-        ProductTypeEnum productType,
+        string productType,
         long spuId,
         string? opc,
         decimal? purchasePrice,

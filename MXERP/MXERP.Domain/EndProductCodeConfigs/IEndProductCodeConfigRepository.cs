@@ -15,7 +15,7 @@ public interface IEndProductCodeConfigRepository : IRepository<EndProductCodeCon
     /// <param name="degreesType">度数类型</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>配置, 不存在返回 null</returns>
-    Task<EndProductCodeConfig?> GetBySpuIdAndDegreesTypeAsync(long spuId, DegreesTypeEnum degreesType, CancellationToken cancellationToken = default);
+    Task<EndProductCodeConfig?> GetBySpuIdAndDegreesTypeAsync(long spuId, string degreesType, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 判断产品Id和度数类型是否存在(排除指定主键)
@@ -25,5 +25,5 @@ public interface IEndProductCodeConfigRepository : IRepository<EndProductCodeCon
     /// <param name="id">排除的主键Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>true 表示已存在</returns>
-    Task<bool> IsExistBySpuIdAndDegreesTypeExcludeIdAsync(long spuId, DegreesTypeEnum degreesType, long? id = null, CancellationToken cancellationToken = default);
+    Task<bool> IsExistBySpuIdAndDegreesTypeExcludeIdAsync(long spuId, string degreesType, long? id = null, CancellationToken cancellationToken = default);
 }

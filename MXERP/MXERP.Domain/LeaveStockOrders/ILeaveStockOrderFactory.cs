@@ -16,7 +16,7 @@ public interface ILeaveStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出库单聚合</returns>
-    Task<LeaveStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, LeaveStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default);
+    Task<LeaveStockOrder> CreateAsync(string productType, long? originalId, string businessType, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 创建出库单（带关联类型）
@@ -28,5 +28,5 @@ public interface ILeaveStockOrderFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>出库单聚合</returns>
-    Task<LeaveStockOrder> CreateAsync(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum businessOrderType, LeaveStockBusinessTypeEnum businessType, string? remark, CancellationToken cancellationToken = default);
+    Task<LeaveStockOrder> CreateAsync(string productType, long? originalId, string businessOrderType, string businessType, string? remark, CancellationToken cancellationToken = default);
 }

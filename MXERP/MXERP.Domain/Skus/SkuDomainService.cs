@@ -31,14 +31,14 @@ public class SkuDomainService : ISkuDomainService
     }
 
     /// <inheritdoc />
-    public async Task<Sku> CreateAsync(ProductTypeEnum productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default)
+    public async Task<Sku> CreateAsync(string productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default)
     {
         SplitAttributes split = await SplitAttributesAsync(productType, attributes, cancellationToken);
         return await BuildSkuAsync(productType, spuId, opc, purchasePrice, currencyId, unitId, taxRateId, moq, split.Key, split.Other, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<Sku> ImportGenerateAsync(ProductTypeEnum productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default)
+    public async Task<Sku> ImportGenerateAsync(string productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default)
     {
         SplitAttributes split = await SplitAttributesAsync(productType, attributes, cancellationToken);
         string signature = Sku.CalculateSignature(spuId, split.Key);
@@ -80,11 +80,11 @@ public class SkuDomainService : ISkuDomainService
         List<Sku> existing = await _skuRepository.GetListBySpuIdAsync(spu.Id, cancellationToken);
         List<Sku> toSave = new List<Sku>();
 
-        if (ProductTypeEnum.Accessory == spu.ProductType)
+        if (nameof(ProductTypeEnum.Accessory) == spu.ProductType)
         {
             await CreateForAccessoryAsync(spu, existing, toSave, cancellationToken);
         }
-        else if (ProductTypeEnum.EndProduct == spu.ProductType)
+        else if (nameof(ProductTypeEnum.EndProduct) == spu.ProductType)
         {
             await CreateForEndProductAsync(spu, existing, toSave, cancellationToken);
         }
@@ -107,7 +107,7 @@ public class SkuDomainService : ISkuDomainService
     /// <param name="otherAttributes">非关键属性(已拆分)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>SKU</returns>
-    private async Task<Sku> BuildSkuAsync(ProductTypeEnum productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? keyAttributes, SortedDictionary<string, object?>? otherAttributes, CancellationToken cancellationToken)
+    private async Task<Sku> BuildSkuAsync(string productType, long spuId, string? opc, decimal? purchasePrice, long? currencyId, long? unitId, long? taxRateId, decimal? moq, SortedDictionary<string, object?>? keyAttributes, SortedDictionary<string, object?>? otherAttributes, CancellationToken cancellationToken)
     {
         Spu? spu = await _spuRepository.FindAsync(spuId, true, cancellationToken);
         if (spu == null)
@@ -160,7 +160,7 @@ public class SkuDomainService : ISkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>拆分结果</returns>
-    private async Task<SplitAttributes> SplitAttributesAsync(ProductTypeEnum productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
+    private async Task<SplitAttributes> SplitAttributesAsync(string productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
     {
         SortedDictionary<string, object?> key = new SortedDictionary<string, object?>();
         SortedDictionary<string, object?> other = new SortedDictionary<string, object?>();
@@ -190,7 +190,7 @@ public class SkuDomainService : ISkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>非关键属性字典</returns>
-    private async Task<SortedDictionary<string, object?>> FilterOtherAttributesAsync(ProductTypeEnum productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
+    private async Task<SortedDictionary<string, object?>> FilterOtherAttributesAsync(string productType, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken)
     {
         SortedDictionary<string, object?> other = new SortedDictionary<string, object?>();
         if (attributes != null)
@@ -215,9 +215,9 @@ public class SkuDomainService : ISkuDomainService
     /// <param name="attributeCode">属性代码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>属性</returns>
-    private async Task<AttributeEntity> GetAttributeAsync(ProductTypeEnum productType, string attributeCode, CancellationToken cancellationToken)
+    private async Task<AttributeEntity> GetAttributeAsync(string productType, string attributeCode, CancellationToken cancellationToken)
     {
-        AttributeEntity? attribute = await _attributeRepository.GetByProductTypeAndScopeAndCodeAsync(productType, AttributeScopeEnum.Sku, attributeCode, cancellationToken);
+        AttributeEntity? attribute = await _attributeRepository.GetByProductTypeAndScopeAndCodeAsync(productType, nameof(AttributeScopeEnum.Sku), attributeCode, cancellationToken);
         if (attribute == null)
         {
             throw new UserFriendlyException("属性" + attributeCode + ":不存在!");

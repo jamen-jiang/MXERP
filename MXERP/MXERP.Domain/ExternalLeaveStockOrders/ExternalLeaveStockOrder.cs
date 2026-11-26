@@ -14,7 +14,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
     /// <summary>
     /// 门店Id
     /// </summary>
@@ -54,7 +54,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public ExternalLeaveStockOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 订单时间
     /// </summary>
@@ -216,7 +216,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="deliveryOn">预出货时间（可空）</param>
     /// <param name="remark">备注（可空）</param>
     internal ExternalLeaveStockOrder(
-        ProductTypeEnum productType,
+        string productType,
         long storeId,
         long companyId,
         string customerOrderNumber,
@@ -272,7 +272,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         OrderOn = orderOn;
         DeliveryOn = deliveryOn;
         Remark = remark;
-        Status = ExternalLeaveStockOrderStatusEnum.Pending;
+        Status = nameof(ExternalLeaveStockOrderStatusEnum.Pending);
         AddDomainEvent(new ExternalLeaveStockOrderAddedOrModifiedEvent(this));
     }
 
@@ -329,7 +329,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         DateTime? deliveryOn,
         string? remark)
     {
-        if (Status != ExternalLeaveStockOrderStatusEnum.Pending)
+        if (Status != nameof(ExternalLeaveStockOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("外部出库单" + Number + "当前状态不允许修改!");
         }
@@ -359,7 +359,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         DeliveryOn = deliveryOn;
         Remark = remark;
         AddDomainEvent(new ExternalLeaveStockOrderAddedOrModifiedEvent(this));
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -371,7 +371,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="inDepartmentId">入部门Id</param>
     internal void AddTracking(long workStepId, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        if (Status == ExternalLeaveStockOrderStatusEnum.Canceled)
+        if (Status == nameof(ExternalLeaveStockOrderStatusEnum.Canceled))
         {
             throw new UserFriendlyException("外部出库单" + Number + "已取消,不允许录入!");
         }
@@ -398,7 +398,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="name">完成人名称</param>
     public void Finish(long userId, string name)
     {
-        if (Status != ExternalLeaveStockOrderStatusEnum.Pending)
+        if (Status != nameof(ExternalLeaveStockOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("外部出库单" + Number + "当前状态不允许完成!");
         }
@@ -406,8 +406,8 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = ExternalLeaveStockOrderStatusEnum.Finished;
-        Audit(AuditActionEnum.Finish);
+        Status = nameof(ExternalLeaveStockOrderStatusEnum.Finished);
+        Audit(nameof(AuditActionEnum.Finish));
     }
 
     /// <summary>
@@ -418,7 +418,7 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
     /// <param name="remark">备注（可空）</param>
     public void Cancel(long userId, string name, string? remark)
     {
-        if (Status != ExternalLeaveStockOrderStatusEnum.Pending)
+        if (Status != nameof(ExternalLeaveStockOrderStatusEnum.Pending))
         {
             throw new UserFriendlyException("外部出库单" + Number + "当前状态不允许取消!");
         }
@@ -426,9 +426,9 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = ExternalLeaveStockOrderStatusEnum.Canceled;
+        Status = nameof(ExternalLeaveStockOrderStatusEnum.Canceled);
         AddDomainEvent(new ExternalLeaveStockOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -442,17 +442,17 @@ public class ExternalLeaveStockOrder : OrderAggregateRoot
         PrintedBy = userId;
         PrintedByName = name;
         PrintedOn = DateTime.Now;
-        Audit(AuditActionEnum.Print);
+        Audit(nameof(AuditActionEnum.Print));
     }
 
     /// <inheritdoc />
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductType == ProductTypeEnum.SemiProduct)
+        if (ProductType == nameof(ProductTypeEnum.SemiProduct))
         {
-            return SerialNumberTypeEnum.SemiProductExternalLeaveStockOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductExternalLeaveStockOrder);
         }
 
-        return SerialNumberTypeEnum.EndProductExternalLeaveStockOrder;
+        return nameof(SerialNumberTypeEnum.EndProductExternalLeaveStockOrder);
     }
 }

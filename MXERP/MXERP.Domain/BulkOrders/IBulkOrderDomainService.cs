@@ -23,7 +23,7 @@ public interface IBulkOrderDomainService
     /// <param name="remark">备注(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>批量订单</returns>
-    Task<BulkOrder> CreateAsync(ProductTypeEnum productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark, CancellationToken cancellationToken = default);
+    Task<BulkOrder> CreateAsync(string productType, long storeId, long companyId, string customerOrderNumber, string? customerPONumber, string? orderRef, string? customerSerialNumber, string? transportWay, DateTime? deliveryOn, double qty, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改批量订单(按Id查询后修改)

@@ -23,13 +23,13 @@ public class CustomerSpuRepository : EfCoreRepository<MXERPDbContext, CustomerSp
     }
 
     /// <inheritdoc />
-    public async Task<CustomerSpu?> GetByProductTypeAndCodeAsync(ProductTypeEnum productType, string code, CancellationToken cancellationToken = default)
+    public async Task<CustomerSpu?> GetByProductTypeAndCodeAsync(string productType, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.ProductType == productType && x.Code == code, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByProductTypeAndCodeAsync(ProductTypeEnum productType, string code, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByProductTypeAndCodeAsync(string productType, string code, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.ProductType == productType && x.Code == code, cancellationToken);
     }

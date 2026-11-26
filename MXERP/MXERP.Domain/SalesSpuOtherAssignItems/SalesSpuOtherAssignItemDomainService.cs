@@ -77,14 +77,14 @@ public class SalesSpuOtherAssignItemDomainService : ISalesSpuOtherAssignItemDoma
         }
         else
         {
-            salesSpu = await _salesSpuRepository.GetByProductTypeAndCompanyIdAndCodeAsync(ProductTypeEnum.EndProduct, company.Id, salesCode, cancellationToken);
+            salesSpu = await _salesSpuRepository.GetByProductTypeAndCompanyIdAndCodeAsync(nameof(ProductTypeEnum.EndProduct), company.Id, salesCode, cancellationToken);
             if (salesSpu == null)
             {
                 errors.Add("销售产品" + salesCode + "不存在");
             }
         }
 
-        Spu? spu = await _spuRepository.GetByProductTypeAndCodeAsync(ProductTypeEnum.EndProduct, spuCode, cancellationToken);
+        Spu? spu = await _spuRepository.GetByProductTypeAndCodeAsync(nameof(ProductTypeEnum.EndProduct), spuCode, cancellationToken);
         if (spu == null)
         {
             errors.Add("产品" + spuCode + "不存在");

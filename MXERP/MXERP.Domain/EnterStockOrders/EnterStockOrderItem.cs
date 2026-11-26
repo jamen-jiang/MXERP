@@ -139,7 +139,7 @@ public class EnterStockOrderItem : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal void AddEnterStockOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal void AddEnterStockOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         _enterStockOrderRelations.Add(new EnterStockOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
     }

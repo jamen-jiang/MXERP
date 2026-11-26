@@ -27,14 +27,14 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="originalId">原入库单Id（可空）</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal EnterStockOrder(ProductTypeEnum productType, long? originalId, EnterStockBusinessTypeEnum businessType, string? remark)
+    internal EnterStockOrder(string productType, long? originalId, string businessType, string? remark)
         : this()
     {
         ProductType = productType;
         OriginalId = originalId;
         BusinessType = businessType;
         Remark = remark;
-        Status = EnterStockOrderStatusEnum.Pending;
+        Status = nameof(EnterStockOrderStatusEnum.Pending);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="relationType">关联类型</param>
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
-    internal EnterStockOrder(ProductTypeEnum productType, long? originalId, BusinessOrderTypeEnum relationType, EnterStockBusinessTypeEnum businessType, string? remark)
+    internal EnterStockOrder(string productType, long? originalId, string relationType, string businessType, string? remark)
         : this(productType, originalId, businessType, remark)
     {
         RelationType = relationType;
@@ -54,7 +54,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 原入库单Id（可空）
@@ -64,12 +64,12 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 关联类型（可空）
     /// </summary>
-    public BusinessOrderTypeEnum? RelationType { get; private set; }
+    public string? RelationType { get; private set; }
 
     /// <summary>
     /// 业务类型
     /// </summary>
-    public EnterStockBusinessTypeEnum BusinessType { get; private set; }
+    public string BusinessType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 数量
@@ -84,7 +84,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public EnterStockOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
 
     /// <summary>
     /// 备注（可空）
@@ -140,15 +140,15 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="businessType">业务类型</param>
     /// <param name="remark">备注（可空）</param>
     /// <exception cref="UserFriendlyException">当前状态不允许修改时抛出</exception>
-    public void Modify(EnterStockBusinessTypeEnum businessType, string? remark)
+    public void Modify(string businessType, string? remark)
     {
-        if (EnterStockOrderStatusEnum.Pending != Status)
+        if (nameof(EnterStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"入库单{Number}当前状态不允许修改!");
         }
         BusinessType = businessType;
         Remark = remark;
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -163,16 +163,16 @@ public class EnterStockOrder : OrderAggregateRoot
         {
             throw new UserFriendlyException($"入库单{Number}入库数量不允许等于0!");
         }
-        if (EnterStockOrderStatusEnum.Pending != Status)
+        if (nameof(EnterStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"入库单{Number}当前状态不允许审核!");
         }
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = EnterStockOrderStatusEnum.Finished;
+        Status = nameof(EnterStockOrderStatusEnum.Finished);
         AddDomainEvent(new EnterStockOrderFinishedEvent(this));
-        Audit(AuditActionEnum.Finish);
+        Audit(nameof(AuditActionEnum.Finish));
     }
 
     /// <summary>
@@ -188,16 +188,16 @@ public class EnterStockOrder : OrderAggregateRoot
         {
             throw new UserFriendlyException("不允许取消关联单生成的入库单!");
         }
-        if (EnterStockOrderStatusEnum.Pending != Status)
+        if (nameof(EnterStockOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException($"入库单{Number}当前状态不允许取消!");
         }
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = EnterStockOrderStatusEnum.Canceled;
+        Status = nameof(EnterStockOrderStatusEnum.Canceled);
         AddDomainEvent(new EnterStockOrderCanceledEvent(this));
-        Audit(AuditActionEnum.Cancel, remark);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -216,7 +216,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
     /// <exception cref="UserFriendlyException">红冲/正常入库单数量方向错误时抛出</exception>
-    internal void AddItem(long? originalId, BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal void AddItem(long? originalId, string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         if (qty == 0)
         {
@@ -251,7 +251,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <param name="price">价格</param>
     /// <param name="skuAttributes">Sku 属性值（可空）</param>
     /// <param name="otherAttributes">非关键属性值（可空）</param>
-    internal void AddItem(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal void AddItem(string relationType, long relationId, long relationItemId, string relationNumber, long spuId, long skuId, long warehouseId, double qty, decimal price, SortedDictionary<string, object?>? skuAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         AddItem(null, relationType, relationId, relationItemId, relationNumber, spuId, skuId, warehouseId, qty, price, skuAttributes, otherAttributes);
     }
@@ -352,7 +352,7 @@ public class EnterStockOrder : OrderAggregateRoot
     /// <exception cref="UserFriendlyException">当前状态不允许冲销 / 项不存在时抛出</exception>
     public void UpdateReversalQty(long itemId, double qty)
     {
-        if (EnterStockOrderStatusEnum.Finished != Status)
+        if (nameof(EnterStockOrderStatusEnum.Finished) != Status)
         {
             throw new UserFriendlyException($"入库单{Number}当前状态不允许冲销!");
         }
@@ -369,17 +369,17 @@ public class EnterStockOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (ProductTypeEnum.SemiProduct == ProductType)
+        if (nameof(ProductTypeEnum.SemiProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.SemiProductEnterStockOrder;
+            return nameof(SerialNumberTypeEnum.SemiProductEnterStockOrder);
         }
-        if (ProductTypeEnum.EndProduct == ProductType)
+        if (nameof(ProductTypeEnum.EndProduct) == ProductType)
         {
-            return SerialNumberTypeEnum.EndProductEnterStockOrder;
+            return nameof(SerialNumberTypeEnum.EndProductEnterStockOrder);
         }
-        return SerialNumberTypeEnum.AccessoryEnterStockOrder;
+        return nameof(SerialNumberTypeEnum.AccessoryEnterStockOrder);
     }
 
     /// <summary>

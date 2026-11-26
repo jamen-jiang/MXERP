@@ -64,13 +64,13 @@ public class TripleInvoiceDomainService : ITripleInvoiceDomainService
             throw new UserFriendlyException("门店" + store.Code + "发票抬头为空!");
         }
 
-        RetailOrderItem? itemR = retailOrder.RetailOrderItems.FirstOrDefault(x => EyeTypeEnum.R == x.EyeType);
+        RetailOrderItem? itemR = retailOrder.RetailOrderItems.FirstOrDefault(x => nameof(EyeTypeEnum.R) == x.EyeType);
         if (itemR is null)
         {
             throw new UserFriendlyException("散镜订单项R不存在!");
         }
 
-        RetailOrderItem? itemL = retailOrder.RetailOrderItems.FirstOrDefault(x => EyeTypeEnum.L == x.EyeType);
+        RetailOrderItem? itemL = retailOrder.RetailOrderItems.FirstOrDefault(x => nameof(EyeTypeEnum.L) == x.EyeType);
         if (itemL is null)
         {
             throw new UserFriendlyException("散镜订单项L不存在!");

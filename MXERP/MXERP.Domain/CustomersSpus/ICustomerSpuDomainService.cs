@@ -18,5 +18,5 @@ public interface ICustomerSpuDomainService
     /// <param name="brandId">品牌Id</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>客人镜种</returns>
-    Task<CustomerSpu> ImportGenerateAsync(ProductTypeEnum productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, CancellationToken cancellationToken = default);
+    Task<CustomerSpu> ImportGenerateAsync(string productType, string code, string name, string? bagNumber, long salesSpuId, long brandId, CancellationToken cancellationToken = default);
 }

@@ -11,7 +11,7 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <summary>
     /// 权限对象
     /// </summary>
-    public MasterEnum Master { get; private set; }
+    public string Master { get; private set; } = string.Empty;
     /// <summary>
     /// 权限对象值
     /// </summary>
@@ -19,7 +19,7 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <summary>
     /// 权限通道
     /// </summary>
-    public AccessEnum Access { get; private set; }
+    public string Access { get; private set; } = string.Empty;
     /// <summary>
     /// 权限通道值
     /// </summary>
@@ -43,7 +43,7 @@ public class Privilege : DeletionAuditedAggregateRoot
     /// <param name="masterValue">权限对象值</param>
     /// <param name="access">权限通道</param>
     /// <param name="accessValue">权限通道值</param>
-    public Privilege(MasterEnum master, long masterValue, AccessEnum access, long accessValue)
+    public Privilege(string master, long masterValue, string access, long accessValue)
     {
         Master = master;
         MasterValue = masterValue;

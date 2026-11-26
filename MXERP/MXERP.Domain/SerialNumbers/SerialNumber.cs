@@ -12,7 +12,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <summary>
     /// 类型
     /// </summary>
-    public SerialNumberTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
 
     /// <summary>
     /// 号码
@@ -67,7 +67,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <summary>
     /// 规则(可空)
     /// </summary>
-    public DateTypeEnum? Rule { get; private set; }
+    public string? Rule { get; private set; }
 
     /// <summary>
     /// 构造器(供 EF 使用)
@@ -87,7 +87,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <param name="isSplit">是否分割</param>
     /// <param name="splitSymbol">分割符号</param>
     /// <param name="rule">规则(可空)</param>
-    internal SerialNumber(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule)
+    internal SerialNumber(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule)
     {
         Type = type;
         Number = 1;
@@ -117,7 +117,7 @@ public class SerialNumber : AuditedAggregateRoot
     /// <param name="isSplit">是否分割</param>
     /// <param name="splitSymbol">分割符号</param>
     /// <param name="rule">规则(可空)</param>
-    public void Modify(SerialNumberTypeEnum type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, DateTypeEnum? rule)
+    public void Modify(string type, string prefix, string? dateFormat, int pad, string padSymbol, bool isSplit, string splitSymbol, string? rule)
     {
         Type = type;
         Prefix = prefix;
@@ -144,7 +144,7 @@ public class SerialNumber : AuditedAggregateRoot
         if (Year != nowYear)
         {
             Year = nowYear;
-            if (DateTypeEnum.Year == Rule)
+            if (nameof(DateTypeEnum.Year) == Rule)
             {
                 number = 1;
             }
@@ -153,7 +153,7 @@ public class SerialNumber : AuditedAggregateRoot
         if (Month != nowMonth)
         {
             Month = nowMonth;
-            if (DateTypeEnum.Month == Rule)
+            if (nameof(DateTypeEnum.Month) == Rule)
             {
                 number = 1;
             }
@@ -162,7 +162,7 @@ public class SerialNumber : AuditedAggregateRoot
         if (Day != nowDay)
         {
             Day = nowDay;
-            if (DateTypeEnum.Day == Rule)
+            if (nameof(DateTypeEnum.Day) == Rule)
             {
                 number = 1;
             }

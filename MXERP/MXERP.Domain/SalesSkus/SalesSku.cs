@@ -13,7 +13,7 @@ public class SalesSku : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 公司Id
@@ -61,7 +61,7 @@ public class SalesSku : AuditedAggregateRoot
     /// <param name="opc">Opc</param>
     /// <param name="keyAttributes">关键属性值</param>
     /// <param name="otherAttributes">非关键属性值</param>
-    internal SalesSku(ProductTypeEnum productType, long companyId, long salesSpuId, string? opc, SortedDictionary<string, object?>? keyAttributes, SortedDictionary<string, object?>? otherAttributes)
+    internal SalesSku(string productType, long companyId, long salesSpuId, string? opc, SortedDictionary<string, object?>? keyAttributes, SortedDictionary<string, object?>? otherAttributes)
     {
         ProductType = productType;
         CompanyId = companyId;

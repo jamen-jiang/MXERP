@@ -11,7 +11,7 @@ public class SignInLog : LogAggregateRoot
     /// <summary>
     /// 登录类型
     /// </summary>
-    public SignEntryTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
 
     /// <summary>
     /// 登录账号(可空)
@@ -86,7 +86,7 @@ public class SignInLog : LogAggregateRoot
     /// <param name="isSuccess">是否成功</param>
     /// <param name="errorMessage">错误信息(可空)</param>
     /// <param name="exception">异常信息(可空)</param>
-    public SignInLog(SignEntryTypeEnum type, long? userId, string? userCode, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? token, string? refreshToken, string? oldRefreshToken, string? ip, string? city, string? userAgent, string? browser, string? os, bool isSuccess, string? errorMessage, string? exception)
+    public SignInLog(string type, long? userId, string? userCode, string? userName, DateTime startedOn, DateTime endedOn, long elapsedMilliseconds, string? token, string? refreshToken, string? oldRefreshToken, string? ip, string? city, string? userAgent, string? browser, string? os, bool isSuccess, string? errorMessage, string? exception)
         : base(userId, userName, startedOn, endedOn, elapsedMilliseconds, null, null, isSuccess, errorMessage, exception)
     {
         Type = type;

@@ -23,13 +23,13 @@ public class PurchasePlanRepository : EfCoreRepository<MXERPDbContext, PurchaseP
     }
 
     /// <inheritdoc />
-    public async Task<PurchasePlan?> GetByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
+    public async Task<PurchasePlan?> GetByRelationAsync(string relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).Include(x => x.PurchasePlanItems).FirstOrDefaultAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, long? relationItemId, CancellationToken cancellationToken = default)
     {
         return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId, cancellationToken);
     }

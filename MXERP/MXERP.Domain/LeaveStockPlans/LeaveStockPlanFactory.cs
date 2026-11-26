@@ -22,7 +22,7 @@ public class LeaveStockPlanFactory : ILeaveStockPlanFactory
     }
 
     /// <inheritdoc />
-    public async Task<LeaveStockPlan> CreateAsync(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default)
+    public async Task<LeaveStockPlan> CreateAsync(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default)
     {
         bool isExist = await _leaveStockPlanRepository.IsExistByRelationAsync(relationType, relationId, relationItemId, cancellationToken);
         if (isExist)
@@ -34,7 +34,7 @@ public class LeaveStockPlanFactory : ILeaveStockPlanFactory
     }
 
     /// <inheritdoc />
-    public async Task<LeaveStockPlan> CreateAsync(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default)
+    public async Task<LeaveStockPlan> CreateAsync(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default)
     {
         bool isExist = await _leaveStockPlanRepository.IsExistByRelationAsync(relationType, relationId, null, cancellationToken);
         if (isExist)

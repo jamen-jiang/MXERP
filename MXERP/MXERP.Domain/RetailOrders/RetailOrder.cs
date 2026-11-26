@@ -66,7 +66,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <summary>
     /// 状态
     /// </summary>
-    public RetailOrderStatusEnum Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
     /// <summary>
     /// 发票打印时间(可空)
     /// </summary>
@@ -217,7 +217,7 @@ public class RetailOrder : OrderAggregateRoot
         Material = material;
         Remark = remark;
         Process = new ProcessVO(coating, tintingColor, mirror, tintingCode, tintingName, uv ?? false, hard ?? false, polish ?? false, auro, edge, superHole, special, specialCode, zuanKong, frame);
-        Status = RetailOrderStatusEnum.Pending;
+        Status = nameof(RetailOrderStatusEnum.Pending);
         AddDomainEvent(new RetailOrderAddedEvent(this));
     }
 
@@ -226,7 +226,7 @@ public class RetailOrder : OrderAggregateRoot
     /// </summary>
     public void Modify(string? outArea, string? sequenceNumber, string? hkNumber, string customerOrderNumber, string? customerPONumber, string? documentaryBarCode, int outGood, string? outGoodTime, string? material, string? coating, string? tintingColor, string? mirror, string? tintingCode, string? tintingName, bool? uv, bool? hard, bool? polish, string? auro, string? edge, string? superHole, string? special, string? specialCode, string? zuanKong, string? frame, string? remark)
     {
-        if (RetailOrderStatusEnum.Pending != Status)
+        if (nameof(RetailOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许修改!");
         }
@@ -242,7 +242,7 @@ public class RetailOrder : OrderAggregateRoot
         Material = material;
         Remark = remark;
         Process = new ProcessVO(coating, tintingColor, mirror, tintingCode, tintingName, uv ?? false, hard ?? false, polish ?? false, auro, edge, superHole, special, specialCode, zuanKong, frame);
-        Audit(AuditActionEnum.Modify);
+        Audit(nameof(AuditActionEnum.Modify));
     }
 
     /// <summary>
@@ -256,7 +256,7 @@ public class RetailOrder : OrderAggregateRoot
         PrintedBy = userId;
         PrintedByName = name;
         PrintedOn = DateTime.Now;
-        Audit(AuditActionEnum.Print);
+        Audit(nameof(AuditActionEnum.Print));
     }
 
     /// <summary>
@@ -266,7 +266,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="name">审核人名称</param>
     public void Check(long userId, string name)
     {
-        if (RetailOrderStatusEnum.Pending != Status)
+        if (nameof(RetailOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许审核!");
         }
@@ -274,9 +274,9 @@ public class RetailOrder : OrderAggregateRoot
         CheckedBy = userId;
         CheckedByName = name;
         CheckedOn = DateTime.Now;
-        Status = RetailOrderStatusEnum.Delivery;
+        Status = nameof(RetailOrderStatusEnum.Delivery);
         AddDomainEvent(new RetailOrderCheckedEvent(this));
-        Audit(AuditActionEnum.Check);
+        Audit(nameof(AuditActionEnum.Check));
     }
 
     /// <summary>
@@ -285,7 +285,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void UnCheck(string? remark)
     {
-        if (RetailOrderStatusEnum.Delivery != Status)
+        if (nameof(RetailOrderStatusEnum.Delivery) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许弃审!");
         }
@@ -293,8 +293,8 @@ public class RetailOrder : OrderAggregateRoot
         CheckedBy = null;
         CheckedByName = null;
         CheckedOn = null;
-        Status = RetailOrderStatusEnum.Pending;
-        Audit(AuditActionEnum.UnCheck, remark);
+        Status = nameof(RetailOrderStatusEnum.Pending);
+        Audit(nameof(AuditActionEnum.UnCheck), remark);
     }
 
     /// <summary>
@@ -305,7 +305,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void Cancel(long userId, string name, string? remark)
     {
-        if (RetailOrderStatusEnum.Pending != Status)
+        if (nameof(RetailOrderStatusEnum.Pending) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许取消!");
         }
@@ -313,8 +313,8 @@ public class RetailOrder : OrderAggregateRoot
         CanceledBy = userId;
         CanceledByName = name;
         CanceledOn = DateTime.Now;
-        Status = RetailOrderStatusEnum.Canceled;
-        Audit(AuditActionEnum.Cancel, remark);
+        Status = nameof(RetailOrderStatusEnum.Canceled);
+        Audit(nameof(AuditActionEnum.Cancel), remark);
     }
 
     /// <summary>
@@ -324,7 +324,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="name">完成人名称</param>
     internal void Finish(long userId, string name)
     {
-        if (RetailOrderStatusEnum.Delivered != Status)
+        if (nameof(RetailOrderStatusEnum.Delivered) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许完成!");
         }
@@ -332,9 +332,9 @@ public class RetailOrder : OrderAggregateRoot
         FinishedBy = userId;
         FinishedByName = name;
         FinishedOn = DateTime.Now;
-        Status = RetailOrderStatusEnum.Finished;
+        Status = nameof(RetailOrderStatusEnum.Finished);
         AddDomainEvent(new RetailOrderFinishedEvent(this));
-        Audit(AuditActionEnum.Finish);
+        Audit(nameof(AuditActionEnum.Finish));
     }
 
     /// <summary>
@@ -343,7 +343,7 @@ public class RetailOrder : OrderAggregateRoot
     /// <param name="remark">备注(可空)</param>
     internal void UnFinish(string? remark)
     {
-        if (RetailOrderStatusEnum.Finished != Status)
+        if (nameof(RetailOrderStatusEnum.Finished) != Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "当前状态不允许退回!");
         }
@@ -351,14 +351,14 @@ public class RetailOrder : OrderAggregateRoot
         FinishedBy = null;
         FinishedByName = null;
         FinishedOn = null;
-        Status = RetailOrderStatusEnum.Delivered;
-        Audit(AuditActionEnum.UnFinish, remark);
+        Status = nameof(RetailOrderStatusEnum.Delivered);
+        Audit(nameof(AuditActionEnum.UnFinish), remark);
     }
 
     /// <summary>
     /// 添加或修改项
     /// </summary>
-    public void AddOrModifyItem(EyeTypeEnum eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
+    public void AddOrModifyItem(string eyeType, long salesSpuId, string salesSpuCode, long? customerSpuId, string? customerSpuCode, long spuId, long warehouseId, int sph, int cyl, int? add, int? diameter, int? axis, double? pd, double? ph, string? baseCurve, double? centerThickness, bool? knifeSide, string? decenter, string? prism, double qty)
     {
         RetailOrderItem? retailOrderItem = GetItem(eyeType);
         if (retailOrderItem is not null)
@@ -394,7 +394,7 @@ public class RetailOrder : OrderAggregateRoot
     /// </summary>
     internal void AddTracking(long workStepId, long employeeId, long outDepartmentId, long inDepartmentId)
     {
-        if (RetailOrderStatusEnum.Canceled == Status)
+        if (nameof(RetailOrderStatusEnum.Canceled) == Status)
         {
             throw new UserFriendlyException("散镜订单" + Number + "已取消,不允许录入!");
         }
@@ -435,12 +435,12 @@ public class RetailOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        return SerialNumberTypeEnum.RetailOrder;
+        return nameof(SerialNumberTypeEnum.RetailOrder);
     }
 
-    private RetailOrderItem? GetItem(EyeTypeEnum eyeType)
+    private RetailOrderItem? GetItem(string eyeType)
     {
         return _retailOrderItems.FirstOrDefault(x => x.EyeType == eyeType);
     }
@@ -460,11 +460,11 @@ public class RetailOrder : OrderAggregateRoot
         LeaveStockQty = _retailOrderItems.Where(x => !x.IsDeleted).Sum(x => x.LeaveStockQty);
         if (Qty - LeaveStockQty > 0)
         {
-            Status = RetailOrderStatusEnum.Delivery;
+            Status = nameof(RetailOrderStatusEnum.Delivery);
         }
         else
         {
-            Status = RetailOrderStatusEnum.Delivered;
+            Status = nameof(RetailOrderStatusEnum.Delivered);
         }
     }
 

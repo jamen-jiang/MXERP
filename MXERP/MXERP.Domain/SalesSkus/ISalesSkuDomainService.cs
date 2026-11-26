@@ -16,7 +16,7 @@ public interface ISalesSkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>销售SKU聚合</returns>
-    Task<SalesSku> CreateAsync(ProductTypeEnum productType, long salesSpuId, string? opc, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
+    Task<SalesSku> CreateAsync(string productType, long salesSpuId, string? opc, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 导入生成(存在则修改, 不存在则新建)
@@ -27,7 +27,7 @@ public interface ISalesSkuDomainService
     /// <param name="attributes">属性值</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>销售SKU聚合</returns>
-    Task<SalesSku> ImportGenerateAsync(ProductTypeEnum productType, long salesSpuId, string? opc, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
+    Task<SalesSku> ImportGenerateAsync(string productType, long salesSpuId, string? opc, SortedDictionary<string, object?>? attributes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改(按Id查询后修改)

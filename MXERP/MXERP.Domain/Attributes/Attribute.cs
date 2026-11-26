@@ -12,12 +12,12 @@ public class Attribute : AuditedAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 范围
     /// </summary>
-    public AttributeScopeEnum Scope { get; private set; }
+    public string Scope { get; private set; } = string.Empty;
 
     /// <summary>
     /// 属性代码
@@ -37,12 +37,12 @@ public class Attribute : AuditedAggregateRoot
     /// <summary>
     /// 输入类型
     /// </summary>
-    public InputTypeEnum InputType { get; private set; }
+    public string InputType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 数据类型
     /// </summary>
-    public DataTypeEnum DataType { get; private set; }
+    public string DataType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 是否必填
@@ -114,13 +114,13 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="sort">排序</param>
     /// <param name="remark">备注</param>
     internal Attribute(
-        ProductTypeEnum productType,
-        AttributeScopeEnum scope,
+        string productType,
+        string scope,
         string code,
         string name,
         bool isKey,
-        InputTypeEnum inputType,
-        DataTypeEnum dataType,
+        string inputType,
+        string dataType,
         bool isRequired,
         bool isFilter,
         int? sort,
@@ -161,7 +161,7 @@ public class Attribute : AuditedAggregateRoot
     /// <param name="isFilter">是否用于筛选</param>
     /// <param name="sort">排序</param>
     /// <param name="remark">备注</param>
-    public void Modify(string name, InputTypeEnum inputType, bool isRequired, bool isFilter, int? sort, string? remark)
+    public void Modify(string name, string inputType, bool isRequired, bool isFilter, int? sort, string? remark)
     {
         string? trimmedName = name?.Trim();
         if (string.IsNullOrEmpty(trimmedName))

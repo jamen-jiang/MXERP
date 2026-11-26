@@ -23,7 +23,7 @@ public interface IPurchasePlanFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购计划</returns>
-    Task<PurchasePlan> CreateAsync(ProductTypeEnum productType, long storeId, long companyId, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
+    Task<PurchasePlan> CreateAsync(string productType, long storeId, long companyId, string relationType, long relationId, long? relationItemId, string relationNumber, string? relationCustomerOrderNumber, string? relationCustomerPONumber, string? relationOrderRef, string? remark, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 生成采购计划（部门场景）
@@ -37,5 +37,5 @@ public interface IPurchasePlanFactory
     /// <param name="remark">备注（可空）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>采购计划</returns>
-    Task<PurchasePlan> CreateAsync(ProductTypeEnum productType, long departmentId, long companyId, BusinessOrderTypeEnum relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
+    Task<PurchasePlan> CreateAsync(string productType, long departmentId, long companyId, string relationType, long relationId, string relationNumber, string? remark, CancellationToken cancellationToken = default);
 }

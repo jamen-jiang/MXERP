@@ -19,7 +19,7 @@ public class LeaveStockPlanItemDeletedEvent : DomainEvent
     /// <param name="skuId">产品SkuId</param>
     /// <param name="warehouseId">仓库Id</param>
     /// <param name="qty">数量</param>
-    public LeaveStockPlanItemDeletedEvent(LeaveStockPlan leaveStockPlan, BusinessOrderTypeEnum relationType, long relationId, long? relationItemId, long itemRelationItemId, long skuId, long warehouseId, double qty)
+    public LeaveStockPlanItemDeletedEvent(LeaveStockPlan leaveStockPlan, string relationType, long relationId, long? relationItemId, long itemRelationItemId, long skuId, long warehouseId, double qty)
         : base(leaveStockPlan)
     {
         RelationType = relationType;
@@ -34,7 +34,7 @@ public class LeaveStockPlanItemDeletedEvent : DomainEvent
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; }
+    public string RelationType { get; }
 
     /// <summary>
     /// 关联Id

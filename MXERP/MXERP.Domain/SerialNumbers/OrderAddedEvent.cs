@@ -11,14 +11,14 @@ public class OrderAddedEvent : DomainEvent
     /// <summary>
     /// 类型
     /// </summary>
-    public SerialNumberTypeEnum Type { get; }
+    public string Type { get; }
 
     /// <summary>
     /// 构造器
     /// </summary>
     /// <param name="order">订单聚合根</param>
     /// <param name="type">流水号类型</param>
-    public OrderAddedEvent(IAggregateRoot order, SerialNumberTypeEnum type)
+    public OrderAddedEvent(IAggregateRoot order, string type)
         : base(order)
     {
         Type = type;

@@ -18,7 +18,7 @@ public class AppDomainService : IAppDomainService
     }
 
     /// <inheritdoc />
-    public async Task<AppGenerateResult> CreateAsync(AppTypeEnum type, long? parentId, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort, CancellationToken cancellationToken = default)
+    public async Task<AppGenerateResult> CreateAsync(string type, long? parentId, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort, CancellationToken cancellationToken = default)
     {
         App app = new App(type, parentId, await GetLevelAsync(parentId, cancellationToken), name, path, component, redirect, license, remark, title, i18nKey, icon, isKeepAlive, fixedIndexInTab, isMultiTab, isHide, sort);
         List<App> apps = new List<App>();

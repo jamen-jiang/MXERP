@@ -24,7 +24,7 @@ public class InventoryOrderFactory : IInventoryOrderFactory
     }
 
     /// <inheritdoc />
-    public async Task<InventoryOrder> CreateAsync(ProductTypeEnum productType, string? remark, CancellationToken cancellationToken = default)
+    public async Task<InventoryOrder> CreateAsync(string productType, string? remark, CancellationToken cancellationToken = default)
     {
         InventoryOrder model = new InventoryOrder(productType, remark);
 

@@ -16,7 +16,7 @@ public class PurchaseOrderRelation : DeletionAuditedEntity
     /// <summary>
     /// 关联类型
     /// </summary>
-    public BusinessOrderTypeEnum RelationType { get; private set; }
+    public string RelationType { get; private set; } = string.Empty;
     /// <summary>
     /// 关联Id
     /// </summary>
@@ -49,7 +49,7 @@ public class PurchaseOrderRelation : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal PurchaseOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal PurchaseOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         RelationType = relationType;
         RelationId = relationId;

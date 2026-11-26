@@ -32,36 +32,36 @@ public class LeaveStockBatchRepository : EfCoreRepository<MXERPDbContext, LeaveS
     /// <inheritdoc />
     public async Task<LeaveStockBatch?> GetByNumberAsync(string number, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.Number == number && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).FirstOrDefaultAsync(x => x.Number == number && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled), cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<List<LeaveStockBatch>> GetListByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<List<LeaveStockBatch>> GetListByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).Where(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != LeaveStockBatchStatusEnum.Canceled).ToListAsync(cancellationToken);
+        return await (await GetQueryableAsync()).Where(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled)).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<List<LeaveStockBatch>> GetListByPurchaseBatchIdAsync(long purchaseBatchId, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).Where(x => x.PurchaseBatchId == purchaseBatchId && x.Status != LeaveStockBatchStatusEnum.Canceled).ToListAsync(cancellationToken);
+        return await (await GetQueryableAsync()).Where(x => x.PurchaseBatchId == purchaseBatchId && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled)).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled), cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsExistByRelationAsync(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistByRelationAsync(string relationType, long relationId, long relationItemId, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.RelationType == relationType && x.RelationId == relationId && x.RelationItemId == relationItemId && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled), cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<bool> IsExistByPurchaseBatchIdAsync(long purchaseBatchId, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.PurchaseBatchId == purchaseBatchId && x.Status != LeaveStockBatchStatusEnum.Canceled, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.PurchaseBatchId == purchaseBatchId && x.Status != nameof(LeaveStockBatchStatusEnum.Canceled), cancellationToken);
     }
 }

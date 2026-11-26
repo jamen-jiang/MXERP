@@ -37,7 +37,7 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <param name="deliveryerTelephone">收货人电话(可空)</param>
     /// <param name="deliveryArea">收货地区(可空)</param>
     /// <param name="deliveryAddress">收货地址(可空)</param>
-    internal LeaveWarehouseOrder(ProductTypeEnum productType, LeaveWarehouseOrderTypeEnum type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress)
+    internal LeaveWarehouseOrder(string productType, string type, long companyId, long sendCompanyId, string sender, string? senderTelephone, string? sendArea, string? sendAddress, long deliveryCompanyId, string deliveryer, string? deliveryerTelephone, string? deliveryArea, string? deliveryAddress)
         : this()
     {
         ProductType = productType;
@@ -58,12 +58,12 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// <summary>
     /// 产品类型
     /// </summary>
-    public ProductTypeEnum ProductType { get; private set; }
+    public string ProductType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 类型
     /// </summary>
-    public LeaveWarehouseOrderTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
 
     /// <summary>
     /// 公司Id
@@ -283,14 +283,14 @@ public class LeaveWarehouseOrder : OrderAggregateRoot
     /// 序列号类型
     /// </summary>
     /// <returns>序列号类型</returns>
-    public override SerialNumberTypeEnum GetSerialNumberType()
+    public override string GetSerialNumberType()
     {
-        if (Type == LeaveWarehouseOrderTypeEnum.Second)
+        if (Type == nameof(LeaveWarehouseOrderTypeEnum.Second))
         {
-            return SerialNumberTypeEnum.SecondLeaveWarehouseOrder;
+            return nameof(SerialNumberTypeEnum.SecondLeaveWarehouseOrder);
         }
 
-        return SerialNumberTypeEnum.NormalLeaveWarehouseOrder;
+        return nameof(SerialNumberTypeEnum.NormalLeaveWarehouseOrder);
     }
 
     /// <summary>

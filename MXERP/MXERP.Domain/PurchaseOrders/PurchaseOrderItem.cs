@@ -161,7 +161,7 @@ public class PurchaseOrderItem : DeletionAuditedEntity
     /// <param name="relationItemId">关联项Id</param>
     /// <param name="relationNumber">关联号</param>
     /// <param name="qty">数量</param>
-    internal void AddPurchaseOrderRelation(BusinessOrderTypeEnum relationType, long relationId, long relationItemId, string relationNumber, double qty)
+    internal void AddPurchaseOrderRelation(string relationType, long relationId, long relationItemId, string relationNumber, double qty)
     {
         _purchaseOrderRelations.Add(new PurchaseOrderRelation(relationType, relationId, relationItemId, relationNumber, qty));
     }

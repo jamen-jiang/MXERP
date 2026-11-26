@@ -12,7 +12,7 @@ public class EndProductCodeConfig : AuditedAggregateRoot
     /// <summary>
     /// 分类(Total / Inactive)
     /// </summary>
-    public EndProductCodeCategoryEnum Category { get; private set; }
+    public string Category { get; private set; } = string.Empty;
 
     /// <summary>
     /// 产品Id
@@ -22,7 +22,7 @@ public class EndProductCodeConfig : AuditedAggregateRoot
     /// <summary>
     /// 度数类型(+/- 正散 / -/- 负散)
     /// </summary>
-    public DegreesTypeEnum DegreesType { get; private set; }
+    public string DegreesType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 排序(可空)
@@ -43,7 +43,7 @@ public class EndProductCodeConfig : AuditedAggregateRoot
     /// <param name="spuId">产品Id</param>
     /// <param name="degreesType">度数类型</param>
     /// <param name="sort">排序(可空)</param>
-    internal EndProductCodeConfig(EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort)
+    internal EndProductCodeConfig(string category, long spuId, string degreesType, int? sort)
     {
         Category = category;
         SpuId = spuId;
@@ -58,7 +58,7 @@ public class EndProductCodeConfig : AuditedAggregateRoot
     /// <param name="spuId">产品Id</param>
     /// <param name="degreesType">度数类型</param>
     /// <param name="sort">排序(可空)</param>
-    internal void Modify(EndProductCodeCategoryEnum category, long spuId, DegreesTypeEnum degreesType, int? sort)
+    internal void Modify(string category, long spuId, string degreesType, int? sort)
     {
         Category = category;
         SpuId = spuId;

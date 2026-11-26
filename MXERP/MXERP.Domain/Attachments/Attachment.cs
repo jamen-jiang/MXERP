@@ -16,7 +16,7 @@ public class Attachment : AuditedAggregateRoot
     /// <summary>
     /// 持有者类型
     /// </summary>
-    public AttachmentOwnerTypeEnum OwnerType { get; private set; }
+    public string OwnerType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 文件名称
@@ -57,7 +57,7 @@ public class Attachment : AuditedAggregateRoot
     /// <param name="ownerType">持有者类型</param>
     /// <param name="fileExtend">文件后缀名</param>
     /// <param name="fileSize">文件大小</param>
-    public Attachment(long? ownerId, AttachmentOwnerTypeEnum ownerType, string fileExtend, long fileSize)
+    public Attachment(long? ownerId, string ownerType, string fileExtend, long fileSize)
     {
         OwnerId = ownerId;
         OwnerType = ownerType;
@@ -81,7 +81,7 @@ public class Attachment : AuditedAggregateRoot
     /// <param name="fileSize">文件大小</param>
     /// <param name="savePath">保存路径</param>
     /// <param name="basePath">绝对路径</param>
-    public Attachment(long? ownerId, AttachmentOwnerTypeEnum ownerType, string fileName, string fileExtend, long fileSize, string savePath, string basePath)
+    public Attachment(long? ownerId, string ownerType, string fileName, string fileExtend, long fileSize, string savePath, string basePath)
     {
         OwnerId = ownerId;
         OwnerType = ownerType;

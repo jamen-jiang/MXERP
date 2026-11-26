@@ -11,7 +11,7 @@ public class App : AuditedAggregateRoot
     /// <summary>
     /// 类型
     /// </summary>
-    public AppTypeEnum Type { get; private set; }
+    public string Type { get; private set; } = string.Empty;
     /// <summary>
     /// 父Id(可空)
     /// </summary>
@@ -76,7 +76,7 @@ public class App : AuditedAggregateRoot
     /// <param name="isMultiTab">是否多页签</param>
     /// <param name="isHide">是否隐藏</param>
     /// <param name="sort">排序(可空)</param>
-    internal App(AppTypeEnum type, long? parentId, string? level, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort)
+    internal App(string type, long? parentId, string? level, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort)
     {
         Type = type;
         ParentId = parentId;

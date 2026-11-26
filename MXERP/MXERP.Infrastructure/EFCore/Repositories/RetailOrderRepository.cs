@@ -57,13 +57,13 @@ public class RetailOrderRepository : EfCoreRepository<MXERPDbContext, RetailOrde
     /// <inheritdoc />
     public async Task<bool> IsExistByCustomerOrderNumberAndCustomerPONumberExcludeIdAsync(string customerOrderNumber, string? customerPONumber, long? id = null, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerOrderNumber == customerOrderNumber && x.CustomerPONumber == customerPONumber && x.Status != RetailOrderStatusEnum.Canceled && x.Id != id, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerOrderNumber == customerOrderNumber && x.CustomerPONumber == customerPONumber && x.Status != nameof(RetailOrderStatusEnum.Canceled) && x.Id != id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<bool> IsExistByCustomerPONumberExcludeIdAsync(string customerPONumber, long? id = null, CancellationToken cancellationToken = default)
     {
-        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerPONumber == customerPONumber && x.Status != RetailOrderStatusEnum.Canceled && x.Id != id, cancellationToken);
+        return await (await GetQueryableAsync()).AnyAsync(x => x.CustomerPONumber == customerPONumber && x.Status != nameof(RetailOrderStatusEnum.Canceled) && x.Id != id, cancellationToken);
     }
 
     /// <inheritdoc />

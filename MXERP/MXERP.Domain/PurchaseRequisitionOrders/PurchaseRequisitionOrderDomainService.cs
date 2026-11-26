@@ -260,7 +260,7 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
             throw new UserFriendlyException("申购单不存在!");
         }
 
-        if (purchaseRequisitionOrder.Status != PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck)
+        if (purchaseRequisitionOrder.Status != nameof(PurchaseRequisitionOrderStatusEnum.PendingPurchaseCheck))
         {
             throw new UserFriendlyException("申购单" + purchaseRequisitionOrder.Number + "当前状态不允许分配!");
         }
@@ -359,17 +359,17 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
     /// <returns>出库计划</returns>
     private async Task<LeaveStockPlan> GetOrCreateLeaveStockPlanAsync(PurchaseRequisitionOrder purchaseRequisitionOrder, CancellationToken cancellationToken)
     {
-        LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.PurchaseRequisitionOrder, purchaseRequisitionOrder.Id, null, cancellationToken);
+        LeaveStockPlan? leaveStockPlan = await _leaveStockPlanRepository.GetByRelationAsync(nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder), purchaseRequisitionOrder.Id, null, cancellationToken);
         if (leaveStockPlan is not null)
         {
             return leaveStockPlan;
         }
 
         return await _leaveStockPlanFactory.CreateAsync(
-            ProductTypeEnum.Accessory,
+            nameof(ProductTypeEnum.Accessory),
             purchaseRequisitionOrder.DepartmentId,
             purchaseRequisitionOrder.CompanyId,
-            BusinessOrderTypeEnum.PurchaseRequisitionOrder,
+            nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder),
             purchaseRequisitionOrder.Id,
             purchaseRequisitionOrder.Number,
             purchaseRequisitionOrder.Remark,
@@ -384,17 +384,17 @@ public class PurchaseRequisitionOrderDomainService : IPurchaseRequisitionOrderDo
     /// <returns>采购计划</returns>
     private async Task<PurchasePlan> GetOrCreatePurchasePlanAsync(PurchaseRequisitionOrder purchaseRequisitionOrder, CancellationToken cancellationToken)
     {
-        PurchasePlan? purchasePlan = await _purchasePlanRepository.GetByRelationAsync(BusinessOrderTypeEnum.PurchaseRequisitionOrder, purchaseRequisitionOrder.Id, null, cancellationToken);
+        PurchasePlan? purchasePlan = await _purchasePlanRepository.GetByRelationAsync(nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder), purchaseRequisitionOrder.Id, null, cancellationToken);
         if (purchasePlan is not null)
         {
             return purchasePlan;
         }
 
         return await _purchasePlanFactory.CreateAsync(
-            ProductTypeEnum.Accessory,
+            nameof(ProductTypeEnum.Accessory),
             purchaseRequisitionOrder.DepartmentId,
             purchaseRequisitionOrder.CompanyId,
-            BusinessOrderTypeEnum.PurchaseRequisitionOrder,
+            nameof(BusinessOrderTypeEnum.PurchaseRequisitionOrder),
             purchaseRequisitionOrder.Id,
             purchaseRequisitionOrder.Number,
             purchaseRequisitionOrder.Remark,

@@ -26,7 +26,7 @@ public interface IAppDomainService
     /// <param name="sort">排序(可空)</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>生成结果(应用 + 子应用列表)</returns>
-    Task<AppGenerateResult> CreateAsync(AppTypeEnum type, long? parentId, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort, CancellationToken cancellationToken = default);
+    Task<AppGenerateResult> CreateAsync(string type, long? parentId, string? name, string? path, string? component, string? redirect, string? license, string? remark, string title, string? i18nKey, string? icon, bool isKeepAlive, int? fixedIndexInTab, bool isMultiTab, bool isHide, int? sort, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 修改应用(含层级编排)
